@@ -9,13 +9,12 @@ interface PhoneCardProps {
 }
 
 export default function PhoneCard({ phone }: PhoneCardProps) {
-  const { name, spec, imageUrl, isAvailable } = phone;
+  const { id, name, spec, imageUrl, isAvailable } = phone;
   const isSearchMode = typeof isAvailable === 'boolean';
   const isBooked = isSearchMode && !isAvailable;
 
-  return (
-    <div className={`relative rounded-lg overflow-hidden shadow-lg bg-brand-gray-medium transition-all duration-300 ${isBooked ? 'opacity-50 grayscale' : 'hover:shadow-brand-yellow/30 hover:scale-105'}`}>
-      
+  const CardContent = (
+    <>
       {/* Image Container */}
       <div className="relative w-full h-64">
         <Image
@@ -33,19 +32,29 @@ export default function PhoneCard({ phone }: PhoneCardProps) {
 
       {/* Content */}
       <div className="p-4">
-        <h3 className="text-lg font-bold text-white">{name}</h3>
+        <h3 className="text-lg font-bold text-white truncate">{name}</h3>
         <p className="text-sm text-brand-gray-light">{spec}</p>
         
         <div className="mt-4 flex justify-end">
-          {isBooked ? (
-             <span className="text-brand-gray-light cursor-not-allowed">查看詳情 →</span>
-          ) : (
-            <Link href={`/phones/${phone.id}`} className="text-brand-yellow font-bold hover:text-yellow-300 transition-colors">
-              查看詳情 →
-            </Link>
-          )}
+          <span className={`font-bold transition-colors ${isBooked ? 'text-brand-gray-light cursor-not-allowed' : 'text-brand-yellow group-hover:text-yellow-300'}`}>
+            查看詳情 →
+          </span>
         </div>
       </div>
-    </div>
-  )
+    </>
+  );
+
+  if (isBooked) {
+    return (
+      <div className="relative rounded-lg overflow-hidden shadow-lg bg-brand-gray-medium opacity-50 grayscale">
+        {CardContent}
+      </div>
+    );
+  }
+
+  return (
+    <Link href={`/phones/${id}`} className="group block rounded-lg overflow-hidden shadow-lg bg-brand-gray-medium transition-all duration-300 hover:shadow-brand-yellow/30 hover:scale-105">
+      {CardContent}
+    </Link>
+  );
 } 

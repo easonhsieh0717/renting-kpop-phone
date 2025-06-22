@@ -107,7 +107,7 @@ export default function PhoneDetailClient({ phone, vercelEnv, bookedDates }: Pho
               </Link>
             </li>
             <li className="text-brand-gray">/</li>
-            <li className="text-brand-white font-bold">{phone.name} ({phone.specs})</li>
+            <li className="text-brand-white font-bold">{phone.name} ({phone.spec})</li>
           </ol>
         </nav>
 
