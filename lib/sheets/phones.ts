@@ -104,7 +104,7 @@ export async function getPhoneModels(): Promise<string[]> {
   try {
     const phones = await getPhones();
     const models = phones.map(phone => phone.model);
-    const uniqueModels = [...new Set(models)];
+    const uniqueModels = Array.from(new Set(models));
     return uniqueModels;
   } catch (err) {
     console.error('Error getting phone models:', err);
