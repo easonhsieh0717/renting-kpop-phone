@@ -43,7 +43,10 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         <div className="text-center mb-12">
           <h2 className="text-4xl font-bold text-white">搜尋結果</h2>
           <p className="text-brand-gray-light mt-2">
-            為您找到 {phones.length} 支在 <span className="text-brand-yellow">{from}</span> 至 <span className="text-brand-yellow">{to || from}</span> 期間可用的手機
+            {from && to 
+              ? `為您找到 ${phones.length} 支在 ${from} 至 ${to} 期間可用的手機`
+              : `為您找到 ${phones.length} 支符合條件的手機`
+            }
           </p>
         </div>
       )}
