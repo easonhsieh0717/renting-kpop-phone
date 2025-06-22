@@ -23,23 +23,6 @@ const parseDate = (dateStr: string | undefined | null) => {
   return new Date(dateStr);
 };
 
-const useMediaQuery = (query: string) => {
-  const [matches, setMatches] = useState(false);
-
-  useEffect(() => {
-    const media = window.matchMedia(query);
-    const updateMatches = () => setMatches(media.matches);
-    
-    // Set initial state on mount and update on change
-    updateMatches();
-    media.addEventListener('change', updateMatches);
-
-    return () => media.removeEventListener('change', updateMatches);
-  }, [query]);
-
-  return matches;
-}
-
 const today = new Date();
 const fromDate = new Date(today.getFullYear(), today.getMonth(), 1);
 const toDate = new Date(today.getFullYear() + 1, 11, 31); // End of next year
@@ -63,8 +46,6 @@ export default function SearchForm({ models, searchParams }: SearchFormProps) {
     setModel(searchParams.model || '');
   }, [searchParams]);
 
-  const isMobile = useMediaQuery('(max-width: 768px)');
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     // 從現有的 URL 參數開始建立，以保留其他可能的參數
@@ -86,41 +67,49 @@ export default function SearchForm({ models, searchParams }: SearchFormProps) {
     }
     router.push(`/?${params.toString()}`)
   }
+  
+  const dayPickerProps = {
+    mode: 'range' as const,
+    selected: range,
+    onSelect: setRange,
+    toDate: toDate,
+    defaultMonth: range?.from || today,
+    disabled: { before: today },
+    classNames: {
+      caption: 'flex justify-center items-center mb-2',
+      caption_label: 'text-base font-bold text-brand-yellow',
+      nav_button: 'h-6 w-6 flex items-center justify-center rounded-full hover:bg-white/10',
+      head_cell: 'text-brand-yellow font-bold w-10 h-10',
+      day: 'h-10 w-10 rounded-full transition-colors hover:bg-brand-yellow/20',
+      day_selected: 'opacity-100',
+      day_range_middle: 'text-white !bg-brand-yellow/50 !rounded-none',
+      day_range_start: '!bg-brand-yellow !text-brand-black !rounded-full',
+      day_range_end: '!bg-brand-yellow !text-brand-black !rounded-full',
+      day_disabled: 'text-brand-gray-dark line-through opacity-50',
+    }
+  };
 
   return (
     <form onSubmit={handleSubmit} className="bg-brand-gray-dark p-8 rounded-xl shadow-2xl space-y-6">
       <h2 className="text-3xl font-black text-brand-yellow text-center">尋找你的追星神器</h2>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Date Range Picker */}
         <div className="md:col-span-2">
           <label className="block text-sm font-bold text-brand-gray-light mb-2">租借日期</label>
+          {/* Desktop Calendar */}
           <DayPicker
-            mode="range"
-            selected={range}
-            onSelect={setRange}
-            numberOfMonths={isMobile ? 1 : 2}
-            defaultMonth={range?.from || today}
-            fromMonth={fromDate}
-            toDate={toDate}
-            className="bg-brand-black/50 p-4 rounded-md text-sm"
-             classNames={{
-                caption: 'flex justify-center items-center mb-2',
-                caption_label: 'text-base font-bold text-brand-yellow',
-                nav_button: 'h-6 w-6 flex items-center justify-center rounded-full hover:bg-white/10',
-                head_cell: 'text-brand-yellow font-bold w-10 h-10',
-                day: 'h-10 w-10 rounded-full transition-colors hover:bg-brand-yellow/20',
-                day_selected: 'opacity-100',
-                day_range_middle: 'text-white !bg-brand-yellow/50 !rounded-none',
-                day_range_start: '!bg-brand-yellow !text-brand-black !rounded-full',
-                day_range_end: '!bg-brand-yellow !text-brand-black !rounded-full',
-                day_disabled: 'text-brand-gray-dark line-through opacity-50',
-            }}
-            disabled={{ before: today }}
+            {...dayPickerProps}
+            numberOfMonths={2}
+            className="bg-brand-black/50 p-4 rounded-md text-sm hidden md:block"
+          />
+          {/* Mobile Calendar */}
+          <DayPicker
+            {...dayPickerProps}
+            numberOfMonths={1}
+            className="bg-brand-black/50 p-4 rounded-md text-sm block md:hidden"
           />
         </div>
 
-        {/* Model Selector & Submit Button */}
         <div className="space-y-6 flex flex-col justify-between">
           <div>
             <label htmlFor="model" className="block text-sm font-bold text-brand-gray-light mb-2">手機型號 (可選)</label>
