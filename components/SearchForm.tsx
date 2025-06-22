@@ -41,6 +41,7 @@ const useMediaQuery = (query: string) => {
 }
 
 const today = new Date();
+const fromDate = new Date(today.getFullYear(), today.getMonth(), 1);
 const toDate = new Date(today.getFullYear() + 1, 11, 31); // End of next year
 
 export default function SearchForm({ models, searchParams }: SearchFormProps) {
@@ -99,6 +100,8 @@ export default function SearchForm({ models, searchParams }: SearchFormProps) {
             selected={range}
             onSelect={setRange}
             numberOfMonths={isMobile ? 1 : 2}
+            month={range?.from || today}
+            fromMonth={fromDate}
             toDate={toDate}
             className="bg-brand-black/50 p-4 rounded-md text-sm"
              classNames={{
@@ -113,7 +116,7 @@ export default function SearchForm({ models, searchParams }: SearchFormProps) {
                 day_range_end: '!bg-brand-yellow !text-brand-black !rounded-full',
                 day_disabled: 'text-brand-gray-dark line-through opacity-50',
             }}
-            disabled={{ before: new Date() }}
+            disabled={{ before: today }}
           />
         </div>
 
