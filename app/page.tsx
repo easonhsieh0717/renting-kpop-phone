@@ -1,7 +1,7 @@
 import PhoneCard from '../components/PhoneCard'
 import SearchForm from '../components/SearchForm'
 import { getPhoneModels } from '../lib/sheets/phones'
-import { getAvailablePhones } from '../lib/search'
+import { getPhonesWithAvailability } from '../lib/search'
 import { MapPin, Phone, Train } from 'lucide-react'
 
 interface HomePageProps {
@@ -14,13 +14,8 @@ interface HomePageProps {
 
 export default async function HomePage({ searchParams }: HomePageProps) {
   const { from, to, model } = searchParams;
-  
-  const [phones, models] = await Promise.all([
-    getAvailablePhones(searchParams),
-    getPhoneModels()
-  ]);
-
-  const isSearching = from || to || model;
+  const models = await getPhoneModels();
+  const phones = await getPhonesWithAvailability({ from, to, model });
 
   return (
     <div className="container mx-auto px-4 py-12 md:py-20">
@@ -40,33 +35,24 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       </div>
 
       {/* Search Results Title */}
-      {isSearching && (
-        <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold text-white">搜尋結果</h2>
-          <p className="text-brand-gray-light mt-2">
-            {from && to 
-              ? `為您找到 ${phones.length} 支在 ${from} 至 ${to} 期間可用的手機`
-              : `為您找到 ${phones.length} 支符合條件的手機`
-            }
-          </p>
-        </div>
-      )}
+      <div className="mt-8">
+        <h2 className="text-2xl font-bold mb-6 text-brand-yellow text-center">
+          {model ? `${model} - 搜尋結果` : '所有可租借手機'}
+        </h2>
 
-      {/* Phone Grid */}
-      {phones.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-          {phones.map((phone) => (
-            <PhoneCard key={phone.id} phone={phone} />
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-12">
-          <h3 className="text-2xl font-bold text-brand-yellow">找不到可用的手機</h3>
-          <p className="text-brand-gray-light text-lg mt-4">
-            {isSearching ? "請試著調整您的日期或型號，或清除搜尋條件以查看所有手機。" : "目前沒有可供租借的手機，請稍後再來查看。"}
-          </p>
-        </div>
-      )}
+        {phones && phones.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {phones.map((phone) => (
+              <PhoneCard key={phone.id} phone={phone} />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center text-brand-gray-light py-20">
+            <h3 className="text-3xl font-bold">查無結果</h3>
+            <p className="mt-2">很抱歉，目前沒有符合條件「{model}」的手機。</p>
+          </div>
+        )}
+      </div>
 
       {/* Footer Info */}
       <footer className="text-center mt-20 pt-10 border-t border-brand-gray-dark">

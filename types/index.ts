@@ -9,6 +9,7 @@ export interface Phone {
   daily_rate_3_plus: number
   deposit: number
   active: boolean
+  isAvailable?: boolean
 }
 
 export interface PhonePrice {
