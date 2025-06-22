@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import PriceCalendar from '../../../components/PriceCalendar'
 import Link from 'next/link'
 import { Phone, Discount } from '../../../types'
@@ -63,14 +63,14 @@ export default function PhoneDetailClient({ phone, vercelEnv, bookedDates }: Pho
   }, [reservation.price, appliedDiscount, rentalDays]);
 
 
-  const handleDateChange = (range: DateRange | undefined, price: number, errorMsg?: string) => {
+  const handleDateChange = useCallback((range: DateRange | undefined, price: number, errorMsg?: string) => {
     setReservation({ range, price });
     setCalendarError(errorMsg);
     // Reset discount if date changes
     setAppliedDiscount(null);
     setDiscountCode('');
     setDiscountError('');
-  };
+  }, []);
 
   const handleApplyDiscount = async () => {
     setDiscountError('');
@@ -229,35 +229,35 @@ export default function PhoneDetailClient({ phone, vercelEnv, bookedDates }: Pho
             {/* Price Calendar */}
             <PriceCalendar phone={phone} onDateChange={handleDateChange} disabledDates={bookedDates} />
             
-            {/* Discount Code Section */}
-            <div className="mt-6">
-              <label htmlFor="discount" className="block text-sm font-medium text-brand-gray-light mb-1">折扣碼 (選填)</label>
-              <div className="flex space-x-2">
-                <input 
-                  type="text" 
-                  name="discount" 
-                  id="discount" 
-                  value={discountCode}
-                  onChange={(e) => setDiscountCode(e.target.value.toUpperCase())}
-                  className="w-full bg-brand-gray-dark border-brand-gray rounded-md p-2 text-brand-white focus:ring-brand-yellow focus:border-brand-yellow uppercase"
-                  placeholder="請輸入折扣碼"
-                  disabled={!!appliedDiscount}
-                />
-                <button 
-                  type="button" 
-                  onClick={handleApplyDiscount}
-                  disabled={!!appliedDiscount || !discountCode}
-                  className="bg-gray-500 text-white font-bold py-2 px-4 rounded-lg transition-colors hover:bg-gray-400 disabled:bg-brand-gray disabled:cursor-not-allowed"
-                >
-                  {appliedDiscount ? '已套用' : '套用'}
-                </button>
-              </div>
-              {discountError && <p className="text-red-500 mt-2 text-sm">{discountError}</p>}
-              {appliedDiscount && <p className="text-green-500 mt-2 text-sm">{appliedDiscount.description}</p>}
-            </div>
-
             {/* Customer Form */}
             <form onSubmit={handleSubmit} className="mt-6">
+              {/* Discount Code Section */}
+              <div className="mb-6">
+                <label htmlFor="discount" className="block text-sm font-medium text-brand-gray-light mb-1">折扣碼 (選填)</label>
+                <div className="flex space-x-2">
+                  <input 
+                    type="text" 
+                    name="discount" 
+                    id="discount" 
+                    value={discountCode}
+                    onChange={(e) => setDiscountCode(e.target.value.toUpperCase())}
+                    className="w-full bg-brand-gray-dark border-brand-gray rounded-md p-2 text-brand-white focus:ring-brand-yellow focus:border-brand-yellow uppercase"
+                    placeholder="請輸入折扣碼"
+                    disabled={!!appliedDiscount}
+                  />
+                  <button 
+                    type="button" 
+                    onClick={handleApplyDiscount}
+                    disabled={!!appliedDiscount || !discountCode}
+                    className="bg-gray-500 text-white font-bold py-2 px-4 rounded-lg transition-colors hover:bg-gray-400 disabled:bg-brand-gray disabled:cursor-not-allowed shrink-0"
+                  >
+                    {appliedDiscount ? '已套用' : '套用'}
+                  </button>
+                </div>
+                {discountError && <p className="text-red-500 mt-2 text-sm">{discountError}</p>}
+                {appliedDiscount && <p className="text-green-500 mt-2 text-sm">{appliedDiscount.description}</p>}
+              </div>
+
               <div className="space-y-4">
                 <div>
                   <label htmlFor="name" className="block text-sm font-medium text-brand-gray-light mb-1">姓名</label>
