@@ -100,7 +100,7 @@ export default function SearchForm({ models, searchParams }: SearchFormProps) {
             selected={range}
             onSelect={setRange}
             numberOfMonths={isMobile ? 1 : 2}
-            month={range?.from || today}
+            defaultMonth={range?.from || today}
             fromMonth={fromDate}
             toDate={toDate}
             className="bg-brand-black/50 p-4 rounded-md text-sm"
