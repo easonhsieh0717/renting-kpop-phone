@@ -1,6 +1,6 @@
-import { getPhones } from '@/lib/sheets/phones'
-import { getAllPaidReservations } from '@/lib/sheets/reservations'
-import { Phone } from '@/types'
+import { getPhones } from './sheets/phones'
+import { getAllPaidReservations } from './sheets/reservations'
+import { Phone } from '../types'
 
 interface SearchParams {
   from?: string | null;

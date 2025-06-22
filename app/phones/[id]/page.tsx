@@ -1,6 +1,6 @@
 import PhoneDetailClient from './client-page'
-import { getPhoneById } from '@/lib/sheets/phones'
-import { getBookedDates } from '@/lib/sheets/reservations'
+import { getPhoneById } from '../../../lib/sheets/phones'
+import { getBookedDates } from '../../../lib/sheets/reservations'
 import { notFound } from 'next/navigation'
 
 interface PhoneDetailPageProps {

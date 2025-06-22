@@ -1,6 +1,6 @@
 import { google } from 'googleapis'
-import { Phone } from '@/types'
-import { safeParseInt, safeParseBoolean } from '@/lib/utils'
+import { Phone } from '../../types'
+import { safeParseInt, safeParseBoolean } from '../utils'
 
 // 封裝 Google Sheets API 客戶端
 async function getGoogleSheetsClient() {

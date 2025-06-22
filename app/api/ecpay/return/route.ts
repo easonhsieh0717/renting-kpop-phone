@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { updateReservationStatus } from '@/lib/sheets/reservations';
+import { updateReservationStatus } from '../../../../lib/sheets/reservations';
 import crypto from 'crypto-js';
 
 // This function is copied from lib/ecpay.ts, ensure it's in sync or refactor to a shared utility

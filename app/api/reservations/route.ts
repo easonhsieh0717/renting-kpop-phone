@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { google } from 'googleapis';
-import { Phone } from '@/types';
-import { getECPayPaymentParams } from '@/lib/ecpay';
+import { Phone } from '../../../types';
+import { getECPayPaymentParams } from '../../../lib/ecpay';
 
 async function getGoogleSheetsClient() {
   const auth = new google.auth.GoogleAuth({

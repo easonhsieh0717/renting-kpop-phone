@@ -1,9 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import PriceCalendar from '@/components/PriceCalendar'
+import PriceCalendar from '../../../components/PriceCalendar'
 import Link from 'next/link'
-import { Phone } from '@/types'
+import { Phone } from '../../../types'
 import { DateRange } from 'react-day-picker'
 
 interface PhoneDetailClientProps {

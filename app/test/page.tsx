@@ -1,5 +1,5 @@
-import SearchForm from '@/components/SearchForm'
-import { getPhoneModels } from '@/lib/sheets/phones'
+import SearchForm from '../../components/SearchForm'
+import { getPhoneModels } from '../../lib/sheets/phones'
 
 export default async function TestPage() {
   const models = await getPhoneModels();

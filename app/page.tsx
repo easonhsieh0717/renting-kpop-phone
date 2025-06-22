@@ -1,7 +1,7 @@
-import PhoneCard from '@/components/PhoneCard'
-import SearchForm from '@/components/SearchForm'
-import { getPhoneModels } from '@/lib/sheets/phones'
-import { getAvailablePhones } from '@/lib/search'
+import PhoneCard from '../components/PhoneCard'
+import SearchForm from '../components/SearchForm'
+import { getPhoneModels } from '../lib/sheets/phones'
+import { getAvailablePhones } from '../lib/search'
 
 interface HomePageProps {
   searchParams: {

@@ -1,7 +1,7 @@
 'use client'
 
-import { Phone } from '@/types'
 import Link from 'next/link'
+import { Phone } from '../types'
 
 interface PhoneCardProps {
   phone: Phone
