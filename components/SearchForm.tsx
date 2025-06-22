@@ -28,18 +28,20 @@ const useMediaQuery = (query: string) => {
 
   useEffect(() => {
     const media = window.matchMedia(query);
-    if (media.matches !== matches) {
-      setMatches(media.matches);
-    }
-    const listener = () => {
-      setMatches(media.matches);
-    };
-    window.addEventListener('resize', listener);
-    return () => window.removeEventListener('resize', listener);
-  }, [matches, query]);
+    const updateMatches = () => setMatches(media.matches);
+    
+    // Set initial state on mount and update on change
+    updateMatches();
+    media.addEventListener('change', updateMatches);
+
+    return () => media.removeEventListener('change', updateMatches);
+  }, [query]);
 
   return matches;
 }
+
+const today = new Date();
+const toDate = new Date(today.getFullYear() + 1, 11, 31); // End of next year
 
 export default function SearchForm({ models, searchParams }: SearchFormProps) {
   const router = useRouter()
@@ -61,7 +63,6 @@ export default function SearchForm({ models, searchParams }: SearchFormProps) {
   }, [searchParams]);
 
   const isMobile = useMediaQuery('(max-width: 768px)');
-  const currentYear = new Date().getFullYear();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -98,7 +99,7 @@ export default function SearchForm({ models, searchParams }: SearchFormProps) {
             selected={range}
             onSelect={setRange}
             numberOfMonths={isMobile ? 1 : 2}
-            toYear={currentYear + 1}
+            toDate={toDate}
             className="bg-brand-black/50 p-4 rounded-md text-sm"
              classNames={{
                 caption: 'flex justify-center items-center mb-2',
