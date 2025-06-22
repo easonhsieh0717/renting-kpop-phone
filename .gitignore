@@ -50,7 +50,8 @@ pnpm-debug.log*
 next-env.d.ts
 
 # JSON key files
-*.json
+# *.json # This line was causing issues by ignoring essential files like package.json and tsconfig.json
+renting-*.json
 
 # Editor directories and files
 .vscode
