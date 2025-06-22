@@ -108,6 +108,12 @@ export default function PhoneDetailClient({ phone, vercelEnv, bookedDates }: Pho
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    // Final validation before submitting
+    if (calendarError) {
+      setError('您選擇的日期包含已被預約的時間，請重新選擇。');
+      return;
+    }
     
     if (!reservation.range?.from || !reservation.range?.to) {
       setError('請選擇租借日期');
@@ -248,8 +254,8 @@ export default function PhoneDetailClient({ phone, vercelEnv, bookedDates }: Pho
                   <button 
                     type="button" 
                     onClick={handleApplyDiscount}
-                    disabled={!!appliedDiscount || !discountCode}
-                    className="bg-gray-500 text-white font-bold py-2 px-4 rounded-lg transition-colors hover:bg-gray-400 disabled:bg-brand-gray disabled:cursor-not-allowed shrink-0"
+                    disabled={!!appliedDiscount || !discountCode || rentalDays <= 0}
+                    className="bg-brand-yellow text-brand-black font-bold py-2 px-4 rounded-lg transition-colors hover:bg-yellow-300 disabled:bg-brand-gray disabled:text-brand-gray-light disabled:cursor-not-allowed shrink-0"
                   >
                     {appliedDiscount ? '已套用' : '套用'}
                   </button>

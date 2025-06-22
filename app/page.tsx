@@ -77,8 +77,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             </ul>
           </div>
           <div className="text-brand-gray-light text-sm">
-             <h3 className="text-2xl font-bold text-brand-yellow mb-4">關於本站</h3>
-             <p>本站為 G-Dragon Peaceminusone 風格啟發的粉絲專案，僅供展示與測試用途。所有手機租借服務、維修與標價均為虛構情境，實際服務請洽詢 i時代維修中心。</p>
+             <h3 className="text-2xl font-bold text-brand-yellow mb-4">關於 i時代</h3>
+             <p>i時代維修中心提供專業、可靠的手機租借與維修服務。本站所有資訊僅供參考，最新優惠與服務詳情請以門市現場公告為準。</p>
           </div>
         </div>
         <div className="mt-10 pt-6 border-t border-brand-gray-dark/50 text-brand-gray-light text-sm">
