@@ -9,6 +9,9 @@
   h1, h2, h3, h4, h5, h6 {
     @apply font-bold;
   }
+  body {
+    @apply bg-brand-gray-dark text-brand-white;
+  }
 }
 
 @layer components {
@@ -25,7 +28,21 @@
   }
 }
 
+/* Custom Day Picker Styles */
+.day-range-selected {
+  @apply bg-brand-yellow !important;
+  @apply text-brand-black !important;
+}
+.day-range-start {
+  @apply rounded-l-full;
+}
+.day-range-end {
+  @apply rounded-r-full;
+}
+.day-today {
+  @apply text-brand-yellow font-bold;
+}
+
 body {
-  @apply bg-brand-black text-brand-white;
   background: linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #000000 100%);
 } 

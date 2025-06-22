@@ -17,9 +17,11 @@ export default function PhoneDetailClient({ phone, vercelEnv, bookedDates }: Pho
   const [customer, setCustomer] = useState({ name: '', email: '', phone: '' });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [calendarError, setCalendarError] = useState<string | undefined>('');
 
-  const handleDateChange = (range: DateRange | undefined, price: number) => {
+  const handleDateChange = (range: DateRange | undefined, price: number, errorMsg?: string) => {
     setReservation({ range, price });
+    setCalendarError(errorMsg);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -166,12 +168,13 @@ export default function PhoneDetailClient({ phone, vercelEnv, bookedDates }: Pho
               </div>
 
               {error && <p className="text-red-500 mt-4">{error}</p>}
+              {calendarError && <p className="text-red-500 mt-4">{calendarError}</p>}
               
               <button 
                 type="submit" 
-                disabled={isLoading || reservation.price === 0}
+                disabled={isLoading || reservation.price === 0 || !!calendarError}
                 className="w-full mt-6 bg-brand-yellow text-brand-black font-bold py-3 px-4 rounded-lg transition-all duration-300 hover:bg-yellow-300 disabled:bg-brand-gray disabled:cursor-not-allowed">
-                {isLoading ? '處理中...' : `立即預約 (總額 $${reservation.price})`}
+                {isLoading ? '處理中...' : (calendarError ? '日期無法預約' : `立即預約 (總額 NT$ ${reservation.price})`)}
               </button>
             </form>
           </div>

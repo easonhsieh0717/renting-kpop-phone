@@ -1,189 +1,102 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
-import { DateRange, DayPicker } from 'react-day-picker'
+import { useState, useEffect, useMemo } from 'react'
+import { DayPicker, DateRange } from 'react-day-picker'
 import 'react-day-picker/dist/style.css'
-import { clsx } from 'clsx'
 import { Phone } from '../types'
-import { format, differenceInDays, addDays } from 'date-fns'
-import { zhTW } from 'date-fns/locale'
-import { Calendar, CalendarDays, AlertCircle } from 'lucide-react'
+import { addDays, differenceInDays } from 'date-fns'
 
 interface PriceCalendarProps {
-  phone: Phone
-  onDateChange: (range: DateRange | undefined, price: number) => void;
+  phone: Phone;
+  onDateChange: (range: DateRange | undefined, price: number, error?: string) => void;
   disabledDates: { from: Date; to: Date }[];
 }
 
+// Helper to normalize date to the start of the day to prevent timezone issues
+const startOfDay = (date: Date): Date => {
+  const newDate = new Date(date);
+  newDate.setUTCHours(0, 0, 0, 0);
+  return newDate;
+};
+
 export default function PriceCalendar({ phone, onDateChange, disabledDates }: PriceCalendarProps) {
-  const [selectedRange, setSelectedRange] = useState<{
-    from: Date | undefined
-    to: Date | undefined
-  }>({ from: undefined, to: undefined })
+  const [range, setRange] = useState<DateRange | undefined>()
 
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false)
-
-  // 計算租借天數
-  const calculateDays = () => {
-    if (!selectedRange.from || !selectedRange.to) return 0
-    return Math.ceil((selectedRange.to.getTime() - selectedRange.from.getTime()) / (1000 * 60 * 60 * 24)) + 1
-  }
-
-  const daysCount = calculateDays()
-
-  // 計算每日租金
-  const getDailyRate = () => {
-    if (daysCount === 0) return phone.daily_rate_1_2
-    if (daysCount <= 2) {
-      return phone.daily_rate_1_2
-    }
-    return phone.daily_rate_3_plus
-  }
-
-  const dailyRate = getDailyRate()
-  const totalPrice = dailyRate * daysCount
-
-  const handleDateSelect = (range: any) => {
-    setSelectedRange(range)
-    if (range?.from && range?.to) {
-      setIsCalendarOpen(false)
-    }
-  }
+  // Memoize disabled dates to prevent recalculation on every render
+  const disabledDays = useMemo(() => {
+    // We need to re-create date objects as they are not serialized through client components
+    return disabledDates.map(r => ({ from: startOfDay(new Date(r.from)), to: startOfDay(new Date(r.to)) }));
+  }, [disabledDates]);
 
   useEffect(() => {
-    onDateChange(selectedRange, totalPrice);
-  }, [selectedRange, totalPrice, onDateChange]);
+    let price = 0;
+    let days = 0;
+    let currentError: string | undefined = undefined;
 
-  let footer = (
-    <div className="text-center p-4 bg-brand-gray-dark rounded-b-lg">
-      <p className="text-brand-gray-light">請選擇租借的起始與結束日期。</p>
-    </div>
-  )
+    if (range?.from && range?.to) {
+      const from = startOfDay(range.from);
+      const to = startOfDay(range.to);
+      days = differenceInDays(to, from) + 1;
 
-  if (selectedRange.from && !selectedRange.to) {
-    footer = (
-      <div className="text-center p-4 bg-brand-gray-dark rounded-b-lg">
-        <p className="text-brand-gray-light">請選擇租借的結束日期。</p>
-      </div>
-    )
-  } else if (selectedRange.from && selectedRange.to && phone) {
-    const finalDay = format(addDays(selectedRange.to!, 1), 'yyyy-MM-dd')
+      if (days > 0) {
+        const rate = days >= 3 ? phone.daily_rate_3_plus : phone.daily_rate_1_2;
+        price = days * rate;
+      }
 
-    footer = (
-      <div className="text-center p-6 bg-brand-gray-dark rounded-b-lg">
-        <div className="flex justify-between items-center mb-4">
-          <span className="text-brand-gray-light">租借天數:</span>
-          <span className="text-brand-white font-bold">{daysCount} 天</span>
-        </div>
-        <div className="flex justify-between items-center mb-4">
-          <span className="text-brand-gray-light">押金 (現場支付):</span>
-          <span className="text-brand-white font-bold">${phone.deposit}</span>
-        </div>
-        <div className="flex justify-between items-center mb-4">
-          <span className="text-brand-gray-light">預計歸還日 (緩衝一日):</span>
-          <span className="text-brand-white font-bold">{finalDay}</span>
-        </div>
-      </div>
-    )
-  }
+      // Check for overlap with disabled dates
+      const isOverlapping = disabledDays.some(disabledRange => 
+        (from <= disabledRange.to && to >= disabledRange.from)
+      );
+      
+      if (isOverlapping) {
+        currentError = '注意：您選取的日期與現有預約重疊！';
+        onDateChange(range, 0, currentError); // Pass error up
+        return;
+      }
+    }
+    
+    onDateChange(range, price, currentError);
+  }, [range, phone, onDateChange, disabledDays]);
+
+  const returnDate = range?.to ? addDays(startOfDay(range.to), 1) : null;
+  const rentalDays = range?.from && range?.to ? differenceInDays(startOfDay(range.to), startOfDay(range.from)) + 1 : 0;
 
   return (
-    <div className="space-y-6 bg-brand-gray-dark p-6 rounded-lg">
-      <div className="flex items-center justify-between">
-        <h3 className="text-2xl font-bold text-brand-yellow">
-          選擇租借日期
-        </h3>
-        <button
-          onClick={() => setIsCalendarOpen(!isCalendarOpen)}
-          className="flex items-center space-x-2 text-brand-white bg-white/10 hover:bg-white/20 px-4 py-2 rounded-md transition-colors"
-        >
-          <Calendar className="w-5 h-5" />
-          <span>{isCalendarOpen ? '關閉日曆' : '選擇日期'}</span>
-        </button>
-      </div>
-
-      {isCalendarOpen && (
-        <div className="bg-brand-black/50 p-4 rounded-md">
-          <DayPicker
-            id="price-calendar"
-            mode="range"
-            selected={selectedRange}
-            onSelect={handleDateSelect}
-            footer={footer}
-            className="bg-brand-gray-dark p-6 rounded-lg text-brand-white"
-            classNames={{
-              caption: 'flex justify-center items-center mb-4',
-              caption_label: 'text-lg font-bold text-brand-yellow',
-              nav_button: 'h-8 w-8 flex items-center justify-center rounded-full hover:bg-white/10',
-              head_cell: 'text-brand-yellow font-bold',
-              day: 'hover:bg-brand-yellow hover:text-brand-black rounded-full transition-colors',
-              day_selected: 'bg-brand-yellow text-brand-black font-bold rounded-full',
-              day_range_middle: 'bg-brand-yellow/50 text-brand-white rounded-none',
-              day_range_start: 'rounded-l-full',
-              day_range_end: 'rounded-r-full',
-              day_disabled: 'text-brand-gray-dark line-through',
-            }}
-            disabled={[
-              { before: new Date() },
-              ...disabledDates
-            ]}
-          />
-        </div>
-      )}
-
-      {/* 價格與押金說明 */}
-      <div className="text-sm space-y-2 p-4 bg-brand-black/30 rounded-lg">
-        <h4 className="font-bold text-lg mb-2 text-brand-yellow">租金與押金</h4>
-        <div className="flex justify-between text-brand-gray-light">
-          <span>1~2 天租金:</span>
-          <span className="font-medium">NT$ {phone.daily_rate_1_2} / 日</span>
-        </div>
-        <div className="flex justify-between text-brand-gray-light">
-          <span>3 天或以上租金:</span>
-          <span className="font-medium">NT$ {phone.daily_rate_3_plus} / 日</span>
-        </div>
-        <div className="flex justify-between border-t border-white/20 pt-2 mt-2 text-brand-gray-light">
-          <span>押金 (現場支付):</span>
-          <span className="font-medium">NT$ {phone.deposit}</span>
-        </div>
-      </div>
-
-      {/* 預約結果 */}
-      {totalPrice > 0 && (
-        <div className="p-4 space-y-4 bg-brand-black/30 rounded-lg">
-          <div className="flex items-center space-x-2 text-sm text-brand-gray-light">
-            <CalendarDays className="w-4 h-4 text-brand-yellow" />
-            <span>
-              {format(selectedRange.from!, 'yyyy/MM/dd')} - 
-              {format(selectedRange.to!, 'yyyy/MM/dd')}
+    <div className="bg-brand-gray-dark p-4 sm:p-6 rounded-lg shadow-inner">
+      <DayPicker
+        mode="range"
+        selected={range}
+        onSelect={setRange}
+        numberOfMonths={1}
+        disabled={[{ before: startOfDay(new Date()) }, ...disabledDays]}
+        modifiersClassNames={{
+          selected: 'day-range-selected',
+          range_start: 'day-range-start',
+          range_end: 'day-range-end',
+          today: 'day-today'
+        }}
+      />
+      <div className="mt-4 pt-4 border-t border-brand-gray">
+        <div className="space-y-2 text-sm text-brand-gray-light">
+          <div className="flex justify-between">
+            <span>租借天數:</span>
+            <span className="font-bold text-white">{rentalDays > 0 ? `${rentalDays} 天` : '-'}</span>
+          </div>
+          <div className="flex justify-between">
+            <span>押金 (現場支付):</span>
+            <span className="font-bold text-white">NT$ {phone.deposit.toLocaleString()}</span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="flex items-center">
+              預計歸還日
+              <span className="text-xs ml-1">(緩衝一日):</span>
+            </span>
+            <span className="font-bold text-white">
+              {returnDate ? returnDate.toISOString().split('T')[0] : '-'}
             </span>
           </div>
-          
-          <div className="space-y-2 text-brand-gray-light">
-            <div className="flex justify-between text-base">
-              <span>租借天數：</span>
-              <span className="font-bold">{daysCount} 天</span>
-            </div>
-            <div className="flex justify-between text-base">
-              <span>每日平均單價：</span>
-              <span className="font-bold">NT$ {dailyRate}</span>
-            </div>
-            <div className="border-t border-white/20 pt-3 mt-3">
-              <div className="flex justify-between font-bold text-xl">
-                <span className="text-brand-yellow">應付總額：</span>
-                <span className="text-brand-yellow">NT$ {totalPrice}</span>
-              </div>
-            </div>
-          </div>
         </div>
-      )}
-
-      <div className="flex items-center space-x-2 text-sm text-brand-black p-3 bg-brand-yellow rounded-lg">
-        <AlertCircle className="w-5 h-5" />
-        <p className="font-medium">確認租借後不予退款。</p>
       </div>
-
-      {footer}
     </div>
   )
 } 

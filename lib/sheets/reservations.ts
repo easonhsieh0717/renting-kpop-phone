@@ -117,12 +117,7 @@ export async function getBookedDates(phoneId: string): Promise<{ from: Date; to:
       const allReservations = await getAllPaidReservations();
       const bookedDates = allReservations
         .filter(r => r.phoneId === phoneId)
-        .map(r => {
-            // Add one day buffer to the end date for the calendar disabling
-            const endDate = new Date(r.to);
-            endDate.setDate(endDate.getDate() + 1);
-            return { from: r.from, to: endDate };
-        });
+        .map(r => ({ from: r.from, to: r.to })); // Return original dates
       return bookedDates;
     } catch (error) {
        console.error(`Error getting booked dates for ${phoneId}:`, error);
