@@ -2,6 +2,8 @@
 
 這是一個使用 Next.js, Tailwind CSS, 和 Google Sheets 作為資料庫的手機出租網站。專案主題靈感來自 G-Dragon 的 Peaceminusone 雛菊風格。
 
+## Getting Started
+
 ## 功能
 
 - **產品展示**: 從 Google Sheet 動態讀取並展示可供租借的手機列表。
