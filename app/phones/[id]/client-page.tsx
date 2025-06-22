@@ -1,10 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import PriceCalendar from '../../../components/PriceCalendar'
 import Link from 'next/link'
-import { Phone } from '../../../types'
+import { Phone, Discount } from '../../../types'
 import { DateRange } from 'react-day-picker'
+import { differenceInDays } from 'date-fns'
 
 interface PhoneDetailClientProps {
   phone: Phone;
@@ -12,16 +13,91 @@ interface PhoneDetailClientProps {
   bookedDates: { from: Date; to: Date }[];
 }
 
+// Helper to normalize date
+const startOfDay = (date: Date): Date => {
+  const newDate = new Date(date);
+  newDate.setUTCHours(0, 0, 0, 0);
+  return newDate;
+};
+
 export default function PhoneDetailClient({ phone, vercelEnv, bookedDates }: PhoneDetailClientProps) {
   const [reservation, setReservation] = useState<{range: DateRange | undefined, price: number}>({ range: undefined, price: 0 });
   const [customer, setCustomer] = useState({ name: '', email: '', phone: '' });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [calendarError, setCalendarError] = useState<string | undefined>('');
+  
+  // Discount States
+  const [discountCode, setDiscountCode] = useState('');
+  const [appliedDiscount, setAppliedDiscount] = useState<Discount | null>(null);
+  const [discountError, setDiscountError] = useState('');
+  const [discountAmount, setDiscountAmount] = useState(0);
+  const [finalPrice, setFinalPrice] = useState(0);
+
+  const rentalDays = useMemo(() => {
+    if (reservation.range?.from && reservation.range?.to) {
+      return differenceInDays(startOfDay(reservation.range.to), startOfDay(reservation.range.from)) + 1;
+    }
+    return 0;
+  }, [reservation.range]);
+
+  useEffect(() => {
+    let newFinalPrice = reservation.price;
+    let newDiscountAmount = 0;
+    if (appliedDiscount && reservation.price > 0) {
+      switch (appliedDiscount.type) {
+        case 'FIXED':
+          newDiscountAmount = appliedDiscount.value;
+          break;
+        case 'UNIQUE_ONCE':
+          newDiscountAmount = appliedDiscount.value;
+          break;
+        case 'PER_DAY':
+          newDiscountAmount = appliedDiscount.value * rentalDays;
+          break;
+      }
+      newFinalPrice = Math.max(0, reservation.price - newDiscountAmount);
+    }
+    setDiscountAmount(newDiscountAmount);
+    setFinalPrice(newFinalPrice);
+  }, [reservation.price, appliedDiscount, rentalDays]);
+
 
   const handleDateChange = (range: DateRange | undefined, price: number, errorMsg?: string) => {
     setReservation({ range, price });
     setCalendarError(errorMsg);
+    // Reset discount if date changes
+    setAppliedDiscount(null);
+    setDiscountCode('');
+    setDiscountError('');
+  };
+
+  const handleApplyDiscount = async () => {
+    setDiscountError('');
+    setAppliedDiscount(null);
+    if (!discountCode) {
+      setDiscountError('請輸入折扣碼');
+      return;
+    }
+    if (rentalDays <= 0) {
+      setDiscountError('請先選擇有效的租借日期');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/discounts/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: discountCode, rentalDays }),
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.message || '折扣碼驗證失敗');
+      }
+      setAppliedDiscount(result);
+    } catch (err: any) {
+      setDiscountError(err.message);
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -50,9 +126,12 @@ export default function PhoneDetailClient({ phone, vercelEnv, bookedDates }: Pho
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           phone: phone,
-          startDate: reservation.range.from.toISOString().split('T')[0],
-          endDate: reservation.range.to.toISOString().split('T')[0],
-          totalAmount: reservation.price,
+          startDate: reservation.range!.from!.toISOString().split('T')[0],
+          endDate: reservation.range!.to!.toISOString().split('T')[0],
+          totalAmount: finalPrice,
+          originalAmount: reservation.price,
+          discountCode: appliedDiscount?.code,
+          discountAmount: discountAmount,
           name: customer.name,
           email: customer.email,
           userPhone: customer.phone,
@@ -150,6 +229,33 @@ export default function PhoneDetailClient({ phone, vercelEnv, bookedDates }: Pho
             {/* Price Calendar */}
             <PriceCalendar phone={phone} onDateChange={handleDateChange} disabledDates={bookedDates} />
             
+            {/* Discount Code Section */}
+            <div className="mt-6">
+              <label htmlFor="discount" className="block text-sm font-medium text-brand-gray-light mb-1">折扣碼 (選填)</label>
+              <div className="flex space-x-2">
+                <input 
+                  type="text" 
+                  name="discount" 
+                  id="discount" 
+                  value={discountCode}
+                  onChange={(e) => setDiscountCode(e.target.value.toUpperCase())}
+                  className="w-full bg-brand-gray-dark border-brand-gray rounded-md p-2 text-brand-white focus:ring-brand-yellow focus:border-brand-yellow uppercase"
+                  placeholder="請輸入折扣碼"
+                  disabled={!!appliedDiscount}
+                />
+                <button 
+                  type="button" 
+                  onClick={handleApplyDiscount}
+                  disabled={!!appliedDiscount || !discountCode}
+                  className="bg-gray-500 text-white font-bold py-2 px-4 rounded-lg transition-colors hover:bg-gray-400 disabled:bg-brand-gray disabled:cursor-not-allowed"
+                >
+                  {appliedDiscount ? '已套用' : '套用'}
+                </button>
+              </div>
+              {discountError && <p className="text-red-500 mt-2 text-sm">{discountError}</p>}
+              {appliedDiscount && <p className="text-green-500 mt-2 text-sm">{appliedDiscount.description}</p>}
+            </div>
+
             {/* Customer Form */}
             <form onSubmit={handleSubmit} className="mt-6">
               <div className="space-y-4">
@@ -170,11 +276,28 @@ export default function PhoneDetailClient({ phone, vercelEnv, bookedDates }: Pho
               {error && <p className="text-red-500 mt-4">{error}</p>}
               {calendarError && <p className="text-red-500 mt-4">{calendarError}</p>}
               
+              <div className="mt-4 pt-4 border-t border-brand-gray space-y-2">
+                <div className="flex justify-between text-brand-gray-light">
+                  <span>小計</span>
+                  <span>NT$ {reservation.price.toLocaleString()}</span>
+                </div>
+                {appliedDiscount && (
+                  <div className="flex justify-between text-green-400">
+                    <span>折扣 ({appliedDiscount.code})</span>
+                    <span>- NT$ {discountAmount.toLocaleString()}</span>
+                  </div>
+                )}
+                <div className="flex justify-between text-brand-white font-bold text-xl">
+                  <span>總計</span>
+                  <span>NT$ {finalPrice.toLocaleString()}</span>
+                </div>
+              </div>
+
               <button 
                 type="submit" 
                 disabled={isLoading || reservation.price === 0 || !!calendarError}
                 className="w-full mt-6 bg-brand-yellow text-brand-black font-bold py-3 px-4 rounded-lg transition-all duration-300 hover:bg-yellow-300 disabled:bg-brand-gray disabled:cursor-not-allowed">
-                {isLoading ? '處理中...' : (calendarError ? '日期無法預約' : `立即預約 (總額 NT$ ${reservation.price})`)}
+                {isLoading ? '處理中...' : (calendarError ? '日期無法預約' : `立即預約 (總額 NT$ ${finalPrice.toLocaleString()})`)}
               </button>
             </form>
           </div>

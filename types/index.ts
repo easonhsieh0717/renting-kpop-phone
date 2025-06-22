@@ -32,4 +32,13 @@ export interface Reservation {
   totalPrice: number
   paymentStatus: 'paid' | 'pending' | 'failed'
   createdAt: string
+}
+
+export interface Discount {
+  code: string;
+  type: 'UNIQUE_ONCE' | 'FIXED' | 'PER_DAY';
+  value: number;
+  isActive: boolean;
+  minDays?: number;
+  description?: string;
 } 

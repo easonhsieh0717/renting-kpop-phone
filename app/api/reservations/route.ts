@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { google } from 'googleapis';
-import { Phone } from '../../../types';
+import { Phone, Discount } from '../../../types';
 import { getECPayPaymentParams } from '../../../lib/ecpay';
+import { deactivateDiscount, getDiscountByCode } from '../../../lib/sheets/discounts';
 
 async function getGoogleSheetsClient() {
   const auth = new google.auth.GoogleAuth({
@@ -43,21 +44,14 @@ async function ensureReservationsWorksheet(sheets: any, spreadsheetId: string) {
 
     // 設定標題行
     const headers = [
-      '訂單編號',
-      '手機ID',
-      '開始日期',
-      '結束日期',
-      '總金額',
-      '客戶姓名',
-      '客戶Email',
-      '客戶電話',
-      '付款狀態',
-      '建立時間',
+      '訂單編號', '手機ID', '開始日期', '結束日期', 
+      '原始總金額', '客戶姓名', '客戶Email', '客戶電話', 
+      '付款狀態', '建立時間', '折扣碼', '折扣金額', '最終金額'
     ];
 
     await sheets.spreadsheets.values.update({
       spreadsheetId,
-      range: 'reservations!A1:J1',
+      range: 'reservations!A1:M1',
       valueInputOption: 'RAW',
       requestBody: {
         values: [headers],
@@ -68,7 +62,18 @@ async function ensureReservationsWorksheet(sheets: any, spreadsheetId: string) {
   }
 }
 
-async function appendToSheet(values: any[]): Promise<string> {
+async function appendToSheet(values: { 
+  phone: Phone, 
+  startDate: string, 
+  endDate: string, 
+  name: string, 
+  userPhone: string, 
+  email: string, 
+  totalAmount: number, 
+  originalAmount: number, 
+  discountCode?: string, 
+  discountAmount?: number 
+}): Promise<string> {
   const sheets = await getGoogleSheetsClient();
   const spreadsheetId = process.env.GOOGLE_SHEET_ID;
   
@@ -83,16 +88,19 @@ async function appendToSheet(values: any[]): Promise<string> {
   const paymentStatus = 'PENDING';
 
   const newRow = [
-    orderId,      // 訂單編號
-    values[1].id, // 手機ID (phone.id)
-    values[3],    // 開始日期 (startDate)
-    values[4],    // 結束日期 (endDate)
-    values[8],    // 總金額 (totalAmount)
-    values[5],    // 客戶姓名 (name)
-    values[7],    // 客戶Email (email)
-    values[6],    // 客戶電話 (userPhone)
+    orderId,
+    values.phone.id,
+    values.startDate,
+    values.endDate,
+    values.originalAmount,
+    values.name,
+    values.email,
+    values.userPhone,
     paymentStatus,
     createdAt,
+    values.discountCode || '',
+    values.discountAmount || 0,
+    values.totalAmount
   ];
 
   console.log('Writing to Google Sheets:', newRow);
@@ -114,27 +122,28 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     console.log('Received reservation request:', body);
     
-    const { phone, startDate, endDate, name, userPhone, email, totalAmount } = body;
+    const { 
+      phone, startDate, endDate, name, userPhone, email, 
+      totalAmount, originalAmount, discountCode, discountAmount 
+    } = body;
 
-    if (!phone || !startDate || !endDate || !name || !userPhone || !email || !totalAmount) {
+    if (!phone || !startDate || !endDate || !name || !userPhone || !email || totalAmount === undefined) {
       console.error('Missing required fields:', body);
       return NextResponse.json({ message: 'Missing required fields' }, { status: 400 });
     }
 
-    const reservationData = [
-      null, // 訂單編號 (placeholder)
-      phone, // Pass the whole phone object
-      null, // This was phone.id, now handled in appendToSheet
-      startDate,
-      endDate,
-      name,
-      userPhone,
-      email,
-      totalAmount,
-      null, // 付款狀態 (placeholder)
-    ];
-
-    const orderId = await appendToSheet(reservationData);
+    const orderId = await appendToSheet({
+      phone, startDate, endDate, name, userPhone, email,
+      totalAmount, originalAmount, discountCode, discountAmount
+    });
+    
+    // Deactivate discount if it's a unique one
+    if (discountCode) {
+      const discount = await getDiscountByCode(discountCode);
+      if (discount && discount.type === 'UNIQUE_ONCE') {
+        await deactivateDiscount(discountCode);
+      }
+    }
 
     const isProduction = process.env.VERCEL_ENV === 'production';
 
@@ -149,7 +158,7 @@ export async function POST(req: NextRequest) {
     const ecpayParams = getECPayPaymentParams({
       merchantTradeNo: orderId,
       totalAmount: totalAmount,
-      itemName: phone.model,
+      itemName: `${phone.name} ${phone.spec}`,
       merchantID,
       hashKey,
       hashIV,

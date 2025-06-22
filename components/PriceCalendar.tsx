@@ -58,8 +58,9 @@ export default function PriceCalendar({ phone, onDateChange, disabledDates }: Pr
     onDateChange(range, price, currentError);
   }, [range, phone, onDateChange, disabledDays]);
 
-  const returnDate = range?.to ? addDays(startOfDay(range.to), 1) : null;
   const rentalDays = range?.from && range?.to ? differenceInDays(startOfDay(range.to), startOfDay(range.from)) + 1 : 0;
+  const hasBufferDay = rentalDays >= 3;
+  const returnDate = range?.to ? addDays(startOfDay(range.to), hasBufferDay ? 1 : 0) : null;
 
   return (
     <div className="bg-brand-gray-dark p-4 sm:p-6 rounded-lg shadow-inner">
@@ -89,7 +90,7 @@ export default function PriceCalendar({ phone, onDateChange, disabledDates }: Pr
           <div className="flex justify-between items-center">
             <span className="flex items-center">
               預計歸還日
-              <span className="text-xs ml-1">(緩衝一日):</span>
+              {hasBufferDay && <span className="text-xs ml-1 font-light text-brand-gray-light">(含緩衝一日)</span>}
             </span>
             <span className="font-bold text-white">
               {returnDate ? returnDate.toISOString().split('T')[0] : '-'}
