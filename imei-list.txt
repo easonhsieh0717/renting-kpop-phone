@@ -1,0 +1,23 @@
+IMEI 號碼列表（用於手機 ID）：
+
+1. 356789012345678
+2. 867530912345678
+3. 123456789012345
+4. 987654321098765
+5. 456789123456789
+6. 654321098765432
+
+Google Sheets 建議格式：
+| A (ID) | B (名稱) | C (圖片) | D (規格) | E (1-2天租金) | F (3天以上租金) | G (押金) | H (可用) |
+|--------|----------|----------|----------|---------------|----------------|----------|----------|
+| 356789012345678 | Samsung Galaxy S24 Ultra | /images/s24-ultra.jpg | 512GB, 黑色 | 500 | 450 | 3000 | TRUE |
+| 867530912345678 | Samsung Galaxy S24 Ultra | /images/s24-ultra.jpg | 256GB, 白色 | 500 | 450 | 3000 | TRUE |
+| 123456789012345 | Samsung Galaxy S25 Ultra | /images/s24-ultra.jpg | 512GB, 黑色 | 600 | 550 | 3000 | TRUE |
+| 987654321098765 | Samsung Galaxy S25 Ultra | /images/s24-ultra.jpg | 256GB, 白色 | 600 | 550 | 3000 | TRUE |
+| 456789123456789 | Samsung Galaxy S23 Ultra | /images/s24-ultra.jpg | 512GB, 黑色 | 400 | 350 | 3000 | TRUE |
+| 654321098765432 | Samsung Galaxy S23 Ultra | /images/s24-ultra.jpg | 256GB, 白色 | 400 | 350 | 3000 | TRUE |
+
+注意：
+- H 欄位 (可用) 可以填入：TRUE, FALSE, 1, 0, YES, NO
+- 只有 active = TRUE 的手機才會在網站上顯示
+- 如果要暫時下架某支手機，可以將 H 欄位設為 FALSE 
