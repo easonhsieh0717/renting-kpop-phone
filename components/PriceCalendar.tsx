@@ -6,18 +6,25 @@ import 'react-day-picker/dist/style.css'
 import { Phone } from '../types'
 import { addDays, differenceInDays } from 'date-fns'
 
+// A robust, timezone-safe function to get YYYY-MM-DD format
+const toYYYYMMDD = (date: Date) => {
+  const d = new Date(date);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+// A robust, timezone-safe function to normalize a date to the start of its day (local time)
+const startOfDay = (date: Date): Date => {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+};
+
 interface PriceCalendarProps {
   phone: Phone;
   onDateChange: (range: DateRange | undefined, price: number, error?: string) => void;
   disabledDates: { from: Date; to: Date }[];
 }
-
-// Helper to normalize date to the start of the day to prevent timezone issues
-const startOfDay = (date: Date): Date => {
-  const newDate = new Date(date);
-  newDate.setUTCHours(0, 0, 0, 0);
-  return newDate;
-};
 
 export default function PriceCalendar({ phone, onDateChange, disabledDates }: PriceCalendarProps) {
   const [range, setRange] = useState<DateRange | undefined>()
@@ -108,7 +115,7 @@ export default function PriceCalendar({ phone, onDateChange, disabledDates }: Pr
               {hasBufferDay && <span className="text-xs ml-1 font-light text-brand-gray-light">(含緩衝一日)</span>}
             </span>
             <span className="font-bold text-white">
-              {returnDate ? `${returnDate.toISOString().split('T')[0]} 22:00 前` : '-'}
+              {returnDate ? `${toYYYYMMDD(returnDate)} 22:00 前` : '-'}
             </span>
           </div>
         </div>
