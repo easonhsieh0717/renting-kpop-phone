@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { DayPicker, DateRange } from 'react-day-picker'
 import 'react-day-picker/dist/style.css'
 import { Phone } from '../types'
@@ -58,10 +58,24 @@ export default function PriceCalendar({ phone, onDateChange, disabledDates }: Pr
     onDateChange(range, price, currentError);
   }, [range, phone, onDateChange, disabledDays]);
 
-  const rentalDays = range?.from && range?.to ? differenceInDays(startOfDay(range.to), startOfDay(range.from)) + 1 : 0;
+  const rentalDays = useMemo(() => {
+    if (range?.from && range?.to) {
+      return differenceInDays(startOfDay(range.to), startOfDay(range.from)) + 1;
+    }
+    return 0;
+  }, [range]);
+  
   const hasBufferDay = rentalDays >= 3;
-  const bufferDays = hasBufferDay ? 1 : 0;
-  const returnDate = range?.to ? addDays(startOfDay(range.to), bufferDays) : null;
+
+  const returnDate = useMemo(() => {
+    if (!range?.to) return null;
+    const lastDay = startOfDay(range.to);
+    const bufferDays = hasBufferDay ? 1 : 0;
+    // Use native date manipulation to avoid timezone issues with external libraries
+    const returnDay = new Date(lastDay);
+    returnDay.setDate(returnDay.getDate() + bufferDays);
+    return returnDay;
+  }, [range?.to, hasBufferDay]);
 
   return (
     <div className="bg-brand-gray-dark p-4 sm:p-6 rounded-lg shadow-inner">
