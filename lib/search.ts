@@ -49,11 +49,17 @@ export async function getAvailablePhones({ from, to, model }: SearchParams): Pro
       
       // Check for any overlapping reservation
       return !phoneReservations.some(reservation => {
-        const reservationFrom = reservation.from;
-        const reservationTo = reservation.to;
+        const reservationFrom = new Date(reservation.from);
+        const reservationTo = new Date(reservation.to);
 
-        // Overlap condition:
-        // (StartA <= EndB) and (EndA >= StartB)
+        // It's crucial to set hours to 0 to compare dates only, ignoring time.
+        searchFrom.setHours(0, 0, 0, 0);
+        searchTo.setHours(0, 0, 0, 0);
+        reservationFrom.setHours(0, 0, 0, 0);
+        reservationTo.setHours(0, 0, 0, 0);
+
+        // Overlap condition: (StartA <= EndB) and (EndA >= StartB)
+        // This logic correctly checks for any kind of overlap between two date ranges.
         return searchFrom <= reservationTo && searchTo >= reservationFrom;
       });
     });
