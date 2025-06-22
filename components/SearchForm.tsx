@@ -31,6 +31,24 @@ const toYYYYMMDD = (date: Date) => {
   return `${year}-${month}-${day}`;
 }
 
+const useMediaQuery = (query: string) => {
+  const [matches, setMatches] = useState(false);
+
+  useEffect(() => {
+    const media = window.matchMedia(query);
+    if (media.matches !== matches) {
+      setMatches(media.matches);
+    }
+    const listener = () => {
+      setMatches(media.matches);
+    };
+    window.addEventListener('resize', listener);
+    return () => window.removeEventListener('resize', listener);
+  }, [matches, query]);
+
+  return matches;
+}
+
 export default function SearchForm({ models, searchParams }: SearchFormProps) {
   const router = useRouter()
   const currentParams = useSearchParams();
@@ -49,6 +67,9 @@ export default function SearchForm({ models, searchParams }: SearchFormProps) {
     });
     setModel(searchParams.model || '');
   }, [searchParams]);
+
+  const isMobile = useMediaQuery('(max-width: 768px)');
+  const currentYear = new Date().getFullYear();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -84,7 +105,8 @@ export default function SearchForm({ models, searchParams }: SearchFormProps) {
             mode="range"
             selected={range}
             onSelect={setRange}
-            numberOfMonths={2}
+            numberOfMonths={isMobile ? 1 : 2}
+            toYear={currentYear + 1}
             className="bg-brand-black/50 p-4 rounded-md text-sm"
              classNames={{
                 caption: 'flex justify-center items-center mb-2',
