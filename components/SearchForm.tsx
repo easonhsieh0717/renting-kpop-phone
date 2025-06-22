@@ -18,10 +18,18 @@ interface SearchFormProps {
 // 輔助函式，確保日期字串被解析為當地時區的午夜，避免時區問題
 const parseDate = (dateStr: string | undefined | null) => {
   if (!dateStr) return undefined;
-  // 將 'YYYY-MM-DD' 轉換為本地時區的 Date 物件
-  const [year, month, day] = dateStr.split('-').map(Number);
-  return new Date(year, month - 1, day);
+  // 將 'YYYY-MM-DD' 轉換為本地時區的 Date 物件，並加上 T00:00:00 來確保時區
+  const date = new Date(`${dateStr}T00:00:00`);
+  return date;
 };
+
+// 輔助函式，將 Date 物件格式化為 YYYY-MM-DD 字串，不受時區影響
+const toYYYYMMDD = (date: Date) => {
+  const year = date.getFullYear();
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const day = date.getDate().toString().padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
 
 export default function SearchForm({ models, searchParams }: SearchFormProps) {
   const router = useRouter()
@@ -47,12 +55,12 @@ export default function SearchForm({ models, searchParams }: SearchFormProps) {
     // 從現有的 URL 參數開始建立，以保留其他可能的參數
     const params = new URLSearchParams(currentParams.toString())
     if (range?.from) {
-      params.set('from', range.from.toISOString().split('T')[0])
+      params.set('from', toYYYYMMDD(range.from))
     } else {
       params.delete('from')
     }
     if (range?.to) {
-      params.set('to', range.to.toISOString().split('T')[0])
+      params.set('to', toYYYYMMDD(range.to))
     } else {
       params.delete('to')
     }
@@ -86,8 +94,8 @@ export default function SearchForm({ models, searchParams }: SearchFormProps) {
                 day: 'h-10 w-10 rounded-full transition-colors hover:bg-brand-yellow/20',
                 day_selected: 'bg-brand-yellow text-brand-black font-bold',
                 day_range_middle: '!bg-brand-yellow/50 !rounded-none text-white',
-                day_range_start: 'rounded-full',
-                day_range_end: 'rounded-full',
+                day_range_start: 'bg-brand-yellow text-brand-black rounded-full',
+                day_range_end: 'bg-brand-yellow text-brand-black rounded-full',
                 day_disabled: 'text-brand-gray-dark line-through opacity-50',
             }}
             disabled={{ before: new Date() }}
