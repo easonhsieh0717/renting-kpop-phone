@@ -94,20 +94,15 @@ export default function SearchForm({ models, searchParams }: SearchFormProps) {
       <h2 className="text-3xl font-black text-brand-yellow text-center">尋找你的追星神器</h2>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="md:col-span-2">
-          <label className="block text-sm font-bold text-brand-gray-light mb-2">租借日期</label>
-          {/* Desktop Calendar */}
-          <DayPicker
-            {...dayPickerProps}
-            numberOfMonths={2}
-            className="bg-brand-black/50 p-4 rounded-md text-sm hidden md:block"
-          />
-          {/* Mobile Calendar */}
-          <DayPicker
-            {...dayPickerProps}
-            numberOfMonths={1}
-            className="bg-brand-black/50 p-4 rounded-md text-sm block md:hidden"
-          />
+        <div className="md:col-span-2 flex justify-center">
+          <div>
+            <label className="block text-sm font-bold text-brand-gray-light mb-2">租借日期</label>
+            <DayPicker
+              {...dayPickerProps}
+              numberOfMonths={1}
+              className="bg-brand-black/50 p-4 rounded-md text-sm"
+            />
+          </div>
         </div>
 
         <div className="space-y-6 flex flex-col justify-between">
