@@ -35,7 +35,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
       {/* Search Form */}
       <div className="mb-16 max-w-5xl mx-auto">
-        <SearchForm models={models} />
+        <SearchForm models={models} searchParams={searchParams} />
       </div>
 
       {/* Search Results Title */}

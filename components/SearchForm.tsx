@@ -1,26 +1,57 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { DateRange } from 'react-day-picker'
 import { DayPicker } from 'react-day-picker'
 import 'react-day-picker/dist/style.css'
 
 interface SearchFormProps {
   models: string[];
+  searchParams: {
+    from?: string;
+    to?: string;
+    model?: string;
+  }
 }
 
-export default function SearchForm({ models }: SearchFormProps) {
-  const [range, setRange] = useState<DateRange | undefined>()
-  const [model, setModel] = useState<string>('')
+// 輔助函式，確保日期字串被解析為當地時區的午夜，避免時區問題
+const parseDate = (dateStr: string | undefined | null) => {
+  if (!dateStr) return undefined;
+  // 將 'YYYY-MM-DD' 轉換為本地時區的 Date 物件
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(year, month - 1, day);
+};
+
+export default function SearchForm({ models, searchParams }: SearchFormProps) {
   const router = useRouter()
+  const currentParams = useSearchParams();
+
+  const [range, setRange] = useState<DateRange | undefined>({
+    from: parseDate(searchParams.from),
+    to: parseDate(searchParams.to),
+  })
+  const [model, setModel] = useState<string>(searchParams.model || '')
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    const params = new URLSearchParams()
-    if (range?.from) params.set('from', range.from.toISOString().split('T')[0])
-    if (range?.to) params.set('to', range.to.toISOString().split('T')[0])
-    if (model) params.set('model', model)
+    // 從現有的 URL 參數開始建立，以保留其他可能的參數
+    const params = new URLSearchParams(currentParams.toString())
+    if (range?.from) {
+      params.set('from', range.from.toISOString().split('T')[0])
+    } else {
+      params.delete('from')
+    }
+    if (range?.to) {
+      params.set('to', range.to.toISOString().split('T')[0])
+    } else {
+      params.delete('to')
+    }
+    if (model) {
+      params.set('model', model)
+    } else {
+      params.delete('model')
+    }
     router.push(`/?${params.toString()}`)
   }
 
@@ -42,13 +73,13 @@ export default function SearchForm({ models }: SearchFormProps) {
                 caption: 'flex justify-center items-center mb-2',
                 caption_label: 'text-base font-bold text-brand-yellow',
                 nav_button: 'h-6 w-6 flex items-center justify-center rounded-full hover:bg-white/10',
-                head_cell: 'text-brand-yellow font-bold w-10',
-                day: 'hover:bg-brand-yellow hover:text-brand-black rounded-full transition-colors h-10 w-10',
-                day_selected: 'bg-brand-yellow text-brand-black font-bold rounded-full',
-                day_range_middle: 'bg-brand-yellow/50 text-brand-white rounded-none',
-                day_range_start: 'bg-brand-yellow text-brand-black rounded-full !rounded-l-full',
-                day_range_end: 'bg-brand-yellow text-brand-black rounded-full !rounded-r-full',
-                day_disabled: 'text-brand-gray-dark line-through',
+                head_cell: 'text-brand-yellow font-bold w-10 h-10',
+                day: 'h-10 w-10 rounded-full transition-colors hover:bg-brand-yellow/20',
+                day_selected: 'bg-brand-yellow text-brand-black font-bold',
+                day_range_middle: '!bg-brand-yellow/50 !rounded-none text-white',
+                day_range_start: 'rounded-full',
+                day_range_end: 'rounded-full',
+                day_disabled: 'text-brand-gray-dark line-through opacity-50',
             }}
             disabled={{ before: new Date() }}
           />
