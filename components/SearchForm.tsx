@@ -92,10 +92,10 @@ export default function SearchForm({ models, searchParams }: SearchFormProps) {
                 nav_button: 'h-6 w-6 flex items-center justify-center rounded-full hover:bg-white/10',
                 head_cell: 'text-brand-yellow font-bold w-10 h-10',
                 day: 'h-10 w-10 rounded-full transition-colors hover:bg-brand-yellow/20',
-                day_selected: 'bg-brand-yellow text-brand-black font-bold',
-                day_range_middle: '!bg-brand-yellow/50 !rounded-none text-white',
-                day_range_start: 'bg-brand-yellow text-brand-black rounded-full',
-                day_range_end: 'bg-brand-yellow text-brand-black rounded-full',
+                day_selected: 'opacity-100',
+                day_range_middle: 'text-white !bg-brand-yellow/50 !rounded-none',
+                day_range_start: '!bg-brand-yellow !text-brand-black !rounded-full',
+                day_range_end: '!bg-brand-yellow !text-brand-black !rounded-full',
                 day_disabled: 'text-brand-gray-dark line-through opacity-50',
             }}
             disabled={{ before: new Date() }}
