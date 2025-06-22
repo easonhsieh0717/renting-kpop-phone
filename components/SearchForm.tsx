@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { DateRange } from 'react-day-picker'
 import { DayPicker } from 'react-day-picker'
@@ -32,6 +32,15 @@ export default function SearchForm({ models, searchParams }: SearchFormProps) {
     to: parseDate(searchParams.to),
   })
   const [model, setModel] = useState<string>(searchParams.model || '')
+
+  // 新增的 useEffect hook，用來監聽 searchParams 的變化
+  useEffect(() => {
+    setRange({
+      from: parseDate(searchParams.from),
+      to: parseDate(searchParams.to),
+    });
+    setModel(searchParams.model || '');
+  }, [searchParams]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
