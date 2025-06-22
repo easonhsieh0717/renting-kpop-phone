@@ -46,8 +46,8 @@ export default function SearchForm({ models }: SearchFormProps) {
                 day: 'hover:bg-brand-yellow hover:text-brand-black rounded-full transition-colors h-10 w-10',
                 day_selected: 'bg-brand-yellow text-brand-black font-bold rounded-full',
                 day_range_middle: 'bg-brand-yellow/50 text-brand-white rounded-none',
-                day_range_start: 'rounded-l-full',
-                day_range_end: 'rounded-r-full',
+                day_range_start: 'bg-brand-yellow text-brand-black rounded-full !rounded-l-full',
+                day_range_end: 'bg-brand-yellow text-brand-black rounded-full !rounded-r-full',
                 day_disabled: 'text-brand-gray-dark line-through',
             }}
             disabled={{ before: new Date() }}
