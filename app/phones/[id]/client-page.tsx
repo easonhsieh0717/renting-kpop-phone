@@ -5,7 +5,8 @@ import PriceCalendar from '../../../components/PriceCalendar'
 import Link from 'next/link'
 import { Phone, Discount } from '../../../types'
 import { DateRange } from 'react-day-picker'
-import { differenceInDays } from 'date-fns'
+import { differenceInCalendarDays } from 'date-fns'
+import { formatDateInTaipei } from '../../../lib/utils'
 
 interface PhoneDetailClientProps {
   phone: Phone;
@@ -36,7 +37,7 @@ export default function PhoneDetailClient({ phone, vercelEnv, bookedDates }: Pho
 
   const rentalDays = useMemo(() => {
     if (reservation.range?.from && reservation.range?.to) {
-      return differenceInDays(startOfDay(reservation.range.to), startOfDay(reservation.range.from)) + 1;
+      return differenceInCalendarDays(reservation.range.to, reservation.range.from) + 1;
     }
     return 0;
   }, [reservation.range]);
@@ -132,8 +133,8 @@ export default function PhoneDetailClient({ phone, vercelEnv, bookedDates }: Pho
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           phone: phone,
-          startDate: reservation.range!.from!.toISOString().split('T')[0],
-          endDate: reservation.range!.to!.toISOString().split('T')[0],
+          startDate: formatDateInTaipei(reservation.range!.from),
+          endDate: formatDateInTaipei(reservation.range!.to),
           totalAmount: finalPrice,
           originalAmount: reservation.price,
           discountCode: appliedDiscount?.code,

@@ -36,4 +36,37 @@ export const safeParseBoolean = (value: any, defaultValue: boolean = false): boo
     }
   }
   return defaultValue;
+};
+
+/**
+ * 將 Date 物件或日期字串，以台北時區 (UTC+8) 格式化為 'YYYY-MM-DD' 字串。
+ * 這可以從根本上避免伺服器和客戶端之間因時區不同而產生的計算錯誤。
+ * @param date - 要格式化的日期，可以是 Date 物件、字串或 undefined。
+ * @param options - 格式化選項。
+ * @returns 格式化後的 'YYYY-MM-DD' 字串，或在輸入無效時返回空字串。
+ */
+export const formatDateInTaipei = (
+  date: Date | string | undefined,
+  options: Intl.DateTimeFormatOptions = {}
+): string => {
+  if (!date) {
+    return '';
+  }
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  
+  // 檢查日期是否有效
+  if (isNaN(dateObj.getTime())) {
+    return '';
+  }
+
+  const defaultOptions: Intl.DateTimeFormatOptions = {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    timeZone: 'Asia/Taipei',
+    ...options,
+  };
+
+  const formatter = new Intl.DateTimeFormat('en-CA', defaultOptions);
+  return formatter.format(dateObj);
 }; 

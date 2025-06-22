@@ -1,6 +1,7 @@
 import { getPhones } from './sheets/phones'
 import { getAllPaidReservations } from './sheets/reservations'
 import { Phone } from '../types'
+import { formatDateInTaipei } from './utils';
 
 interface SearchParams {
   from?: string | null;
@@ -26,8 +27,8 @@ export async function getPhonesWithAvailability({ from, to, model }: SearchParam
   }
 
   // 3. Determine availability for each phone based on the date range
-  const searchFrom = new Date(from);
-  const searchTo = new Date(to);
+  const searchFromStr = formatDateInTaipei(from);
+  const searchToStr = formatDateInTaipei(to);
 
   // Create a map for quick lookup of reservations by phoneId
   const reservationsByPhoneId = new Map<string, any[]>();
@@ -47,17 +48,11 @@ export async function getPhonesWithAvailability({ from, to, model }: SearchParam
     
     // Check for any overlapping reservation
     const isOverlapping = phoneReservations.some(reservation => {
-      const reservationFrom = new Date(reservation.from);
-      const reservationTo = new Date(reservation.to);
-
-      // It's crucial to set hours to 0 to compare dates only, ignoring time.
-      searchFrom.setHours(0, 0, 0, 0);
-      searchTo.setHours(0, 0, 0, 0);
-      reservationFrom.setHours(0, 0, 0, 0);
-      reservationTo.setHours(0, 0, 0, 0);
+      const reservationFromStr = formatDateInTaipei(reservation.from);
+      const reservationToStr = formatDateInTaipei(reservation.to);
 
       // Overlap condition: (StartA <= EndB) and (EndA >= StartB)
-      return searchFrom <= reservationTo && searchTo >= reservationFrom;
+      return searchFromStr <= reservationToStr && searchToStr >= reservationFromStr;
     });
 
     return { ...phone, isAvailable: !isOverlapping };

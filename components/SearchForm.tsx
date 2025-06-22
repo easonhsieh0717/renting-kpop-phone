@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { DateRange } from 'react-day-picker'
 import { DayPicker } from 'react-day-picker'
 import 'react-day-picker/dist/style.css'
+import { formatDateInTaipei } from '../lib/utils'
 
 interface SearchFormProps {
   models: string[];
@@ -18,18 +19,9 @@ interface SearchFormProps {
 // 輔助函式，確保日期字串被解析為當地時區的午夜，避免時區問題
 const parseDate = (dateStr: string | undefined | null) => {
   if (!dateStr) return undefined;
-  // 將 'YYYY-MM-DD' 轉換為本地時區的 Date 物件，並加上 T00:00:00 來確保時區
-  const date = new Date(`${dateStr}T00:00:00`);
-  return date;
+  // 直接使用 YYYY-MM-DD 格式建立 Date 物件，交由 formatDateInTaipei 處理時區
+  return new Date(dateStr);
 };
-
-// 輔助函式，將 Date 物件格式化為 YYYY-MM-DD 字串，不受時區影響
-const toYYYYMMDD = (date: Date) => {
-  const year = date.getFullYear();
-  const month = (date.getMonth() + 1).toString().padStart(2, '0');
-  const day = date.getDate().toString().padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
 
 const useMediaQuery = (query: string) => {
   const [matches, setMatches] = useState(false);
@@ -76,12 +68,12 @@ export default function SearchForm({ models, searchParams }: SearchFormProps) {
     // 從現有的 URL 參數開始建立，以保留其他可能的參數
     const params = new URLSearchParams(currentParams.toString())
     if (range?.from) {
-      params.set('from', toYYYYMMDD(range.from))
+      params.set('from', formatDateInTaipei(range.from))
     } else {
       params.delete('from')
     }
     if (range?.to) {
-      params.set('to', toYYYYMMDD(range.to))
+      params.set('to', formatDateInTaipei(range.to))
     } else {
       params.delete('to')
     }
