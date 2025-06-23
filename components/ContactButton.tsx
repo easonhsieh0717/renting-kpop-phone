@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 
 const ContactButton = () => {
   return (
@@ -6,17 +7,16 @@ const ContactButton = () => {
       href="https://line.me/ti/p/@563amdnh"
       target="_blank"
       rel="noopener noreferrer"
-      className="fixed bottom-6 right-6 z-50 flex h-16 w-16 items-center justify-center rounded-full bg-[#06C755] text-white shadow-lg transition-transform duration-300 ease-in-out hover:scale-110"
+      className="fixed bottom-6 right-6 z-50 flex h-16 w-16 items-center justify-center rounded-full bg-transparent text-white shadow-lg transition-transform duration-300 ease-in-out hover:scale-110"
       aria-label="Contact us on LINE"
     >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 256 256"
-        fill="white"
-        className="h-9 w-9"
-      >
-        <path d="M116.2,128.2h-12v-6.5c0-1.2-0.9-2.1-2.1-2.1s-2.1,0.9-2.1,2.1v8.6h-6.5c-1.2,0-2.1,0.9-2.1,2.1s0.9,2.1,2.1,2.1h8.6v12c0,1.2,0.9,2.1,2.1,2.1s2.1-0.9,2.1-2.1v-12h12c1.2,0,2.1-0.9,2.1-2.1S117.4,128.2,116.2,128.2z M168.4,121.7h-12c-1.2,0-2.1,0.9-2.1,2.1v19.1c0,1.2,0.9,2.1,2.1,2.1h12c1.2,0,2.1-0.9,2.1-2.1v-19.1C170.5,122.6,169.6,121.7,168.4,121.7z M158.4,140.8h8v-14.8h-8V140.8z M144.1,121.7h-18.1c-1.2,0-2.1,0.9-2.1,2.1v19.1c0,1.2,0.9,2.1,2.1,2.1h18.1c1.2,0,2.1-0.9,2.1-2.1v-19.1C146.2,122.6,145.3,121.7,144.1,121.7z M142,140.8h-14v-14.8h14V140.8z M214.5,99.1c-0.2-1.2-1.3-2-2.5-1.8l-15.6,2.2c-1.2,0.2-2,1.3-1.8,2.5c0.2,1.2,1.3,2,2.5,1.8l15.6-2.2C214,101.4,214.7,100.3,214.5,99.1zM224.2,69.5c-16.5-16.6-39.7-25.8-63.7-25.8c-23.3,0-45.9,8.8-62.8,25.7C79,87.8,70.5,109.9,70.5,132.8c0,20.4,8.1,39.8,22.2,53.8l-8.3,23.8c-0.4,1.1,0.5,2.3,1.6,2.3c0.4,0,0.8-0.1,1.2-0.4l28.4-17.7c5.5,1.6,11.3,2.4,17.2,2.4c0.2,0,0.3,0,0.5,0c23.2,0,45.8-8.8,62.7-25.7c18.3-18.4,26.5-43.4,24-68.8C248.1,108.8,239.5,85.1,224.2,69.5z M221.3,150c-2,22.5-17,42.4-38.6,50.8c-22.9,8.9-49.4,3.4-66.2-13.4c-16.1-16.1-21.4-39.2-13.2-61.4c8.1-22,27.3-37.5,50.1-39.4c23.5-2,47,9.3,60.6,28.8C224.9,127,226.2,139.7,221.3,150z" />
-      </svg>
+      <Image
+        src="/images/line_At.png"
+        alt="LINE Official Account"
+        width={64}
+        height={64}
+        className="rounded-full"
+      />
     </Link>
   );
 };
