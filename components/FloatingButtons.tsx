@@ -6,18 +6,18 @@ const FloatingButtons = () => {
     <div className="fixed bottom-6 right-6 z-50 flex items-center gap-4">
       {/* Google Maps Button */}
       <Link
-        href="#" // TODO: Replace with actual Google Maps URL
+        href="https://maps.app.goo.gl/cTCykHeBTw7YgWDJ9"
         target="_blank"
         rel="noopener noreferrer"
-        className="flex h-14 w-14 items-center justify-center rounded-full bg-white text-white shadow-lg transition-transform duration-300 ease-in-out hover:scale-110"
+        className="flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-lg transition-all duration-300 ease-in-out hover:scale-110 border-2 border-white/30 hover:border-white/60"
         aria-label="View on Google Maps"
       >
         <Image
           src="/images/googlemap.png"
           alt="Google Maps"
-          width={56}
-          height={56}
-          className="rounded-full"
+          width={64}
+          height={64}
+          className="rounded-full p-1"
         />
       </Link>
 
@@ -26,7 +26,7 @@ const FloatingButtons = () => {
         href="https://line.me/ti/p/@563amdnh"
         target="_blank"
         rel="noopener noreferrer"
-        className="flex h-16 w-16 items-center justify-center rounded-full bg-transparent text-white shadow-lg transition-transform duration-300 ease-in-out hover:scale-110"
+        className="flex h-16 w-16 items-center justify-center rounded-full bg-transparent shadow-lg transition-all duration-300 ease-in-out hover:scale-110 border-2 border-white/30 hover:border-white/60"
         aria-label="Contact us on LINE"
       >
         <Image
