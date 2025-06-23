@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { DateRange } from 'react-day-picker'
 import { DayPicker } from 'react-day-picker'
 import 'react-day-picker/dist/style.css'
@@ -27,9 +27,10 @@ const today = new Date();
 const fromDate = new Date(today.getFullYear(), today.getMonth(), 1);
 const toDate = new Date(today.getFullYear() + 1, 11, 31); // End of next year
 
-export default function SearchForm({ models, searchParams }: SearchFormProps) {
+const SearchForm = ({ models, searchParams }: SearchFormProps) => {
   const router = useRouter()
   const currentParams = useSearchParams();
+  const pathname = usePathname();
 
   const [range, setRange] = useState<DateRange | undefined>({
     from: parseDate(searchParams.from),
@@ -91,8 +92,6 @@ export default function SearchForm({ models, searchParams }: SearchFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="bg-brand-gray-dark p-8 rounded-xl shadow-2xl space-y-6">
-      <h2 className="text-3xl font-black text-brand-yellow text-center">尋找你的追星神器</h2>
-      
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2 flex justify-center">
           <div>
@@ -128,4 +127,6 @@ export default function SearchForm({ models, searchParams }: SearchFormProps) {
       </div>
     </form>
   )
-} 
+}
+
+export default SearchForm 
