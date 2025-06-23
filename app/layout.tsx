@@ -3,7 +3,7 @@ import { Inter, Noto_Sans_TC } from 'next/font/google'
 import './globals.css'
 import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/next'
-import ContactButton from '@/components/ContactButton'
+import FloatingButtons from '@/components/FloatingButtons'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 const notoSansTC = Noto_Sans_TC({
@@ -28,7 +28,7 @@ export default function RootLayout({
         {children}
         <Analytics />
         <SpeedInsights />
-        <ContactButton />
+        <FloatingButtons />
       </body>
     </html>
   )
