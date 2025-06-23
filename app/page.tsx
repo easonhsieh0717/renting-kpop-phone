@@ -29,10 +29,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center mb-16">
-        <div className="bg-brand-gray-dark/50 backdrop-blur-sm p-8 rounded-2xl shadow-2xl border border-brand-gray-dark">
-          <SearchForm models={models} searchParams={searchParams} />
-        </div>
+      <div className="max-w-4xl mx-auto space-y-12 mb-16">
         <div className="rounded-2xl overflow-hidden shadow-2xl">
           <Image
             src="/images/DEMO.jpg"
@@ -42,6 +39,12 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             className="object-cover w-full h-full"
             priority
           />
+        </div>
+        <div className="bg-brand-gray-dark/50 backdrop-blur-sm p-8 rounded-2xl shadow-2xl border border-brand-gray-dark">
+          <h2 className="text-3xl font-bold text-center mb-6 text-brand-yellow">
+            尋找你的追星神器
+          </h2>
+          <SearchForm models={models} searchParams={searchParams} />
         </div>
       </div>
 
