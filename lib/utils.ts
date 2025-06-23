@@ -69,4 +69,16 @@ export const formatDateInTaipei = (
 
   const formatter = new Intl.DateTimeFormat('en-CA', defaultOptions);
   return formatter.format(dateObj);
+};
+
+/**
+ * 將 Date 物件轉換為 'YYYY-MM-DD' 格式的字串，不受時區影響。
+ * @param date - 要轉換的 Date 物件。
+ * @returns 'YYYY-MM-DD' 格式的字串。
+ */
+export const toYYYYMMDD = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }; 

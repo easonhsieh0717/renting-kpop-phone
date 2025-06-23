@@ -5,8 +5,9 @@ import PriceCalendar from '../../../components/PriceCalendar'
 import Link from 'next/link'
 import { Phone, Discount } from '../../../types'
 import { DateRange } from 'react-day-picker'
-import { differenceInCalendarDays } from 'date-fns'
-import { formatDateInTaipei } from '../../../lib/utils'
+import { differenceInCalendarDays, addDays } from 'date-fns'
+import { formatDateInTaipei, toYYYYMMDD } from '../../../lib/utils'
+import { getBookedDates } from '../../../lib/sheets/reservations'
 
 interface PhoneDetailClientProps {
   phone: Phone;
@@ -25,7 +26,7 @@ export default function PhoneDetailClient({ phone, vercelEnv, bookedDates }: Pho
   const [reservation, setReservation] = useState<{range: DateRange | undefined, price: number}>({ range: undefined, price: 0 });
   const [customer, setCustomer] = useState({ name: '', email: '', phone: '' });
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<string | null>(null);
   const [calendarError, setCalendarError] = useState<string | undefined>('');
   
   // Discount States
@@ -41,6 +42,10 @@ export default function PhoneDetailClient({ phone, vercelEnv, bookedDates }: Pho
     }
     return 0;
   }, [reservation.range]);
+
+  const hasGraceDay = rentalDays >= 3;
+  const finalReturnDate =
+    hasGraceDay && reservation.range?.to ? addDays(reservation.range.to, 1) : reservation.range?.to;
 
   useEffect(() => {
     let newFinalPrice = reservation.price;
@@ -128,13 +133,20 @@ export default function PhoneDetailClient({ phone, vercelEnv, bookedDates }: Pho
     setIsLoading(true);
 
     try {
+      const adjustedToDate = finalReturnDate;
+
+      if (!reservation.range?.from || !adjustedToDate) {
+        console.error('Date range is not fully selected.');
+        return;
+      }
+
       const response = await fetch('/api/reservations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           phone: phone,
           startDate: formatDateInTaipei(reservation.range!.from),
-          endDate: formatDateInTaipei(reservation.range!.to),
+          endDate: formatDateInTaipei(adjustedToDate),
           totalAmount: finalPrice,
           originalAmount: reservation.price,
           discountCode: appliedDiscount?.code,
@@ -142,6 +154,8 @@ export default function PhoneDetailClient({ phone, vercelEnv, bookedDates }: Pho
           name: customer.name,
           email: customer.email,
           userPhone: customer.phone,
+          from: toYYYYMMDD(reservation.range!.from),
+          to: toYYYYMMDD(adjustedToDate),
         }),
       });
 
@@ -298,6 +312,22 @@ export default function PhoneDetailClient({ phone, vercelEnv, bookedDates }: Pho
                   <span>總計</span>
                   <span>NT$ {finalPrice.toLocaleString()}</span>
                 </div>
+              </div>
+
+              <div className="mt-6 text-center text-sm text-brand-gray-light">
+                {reservation.range?.from && (
+                  <p>{`起租日: ${toYYYYMMDD(reservation.range.from)}`}</p>
+                )}
+                {reservation.range?.to && (
+                  <p>{`歸還日: ${toYYYYMMDD(reservation.range.to)}`}</p>
+                )}
+                {hasGraceDay && finalReturnDate && (
+                  <p className="text-brand-yellow font-bold mt-2">
+                    恭喜！租借滿3天，自動延長一天還機緩衝日！
+                    <br />
+                    最終歸還日: {toYYYYMMDD(finalReturnDate)}
+                  </p>
+                )}
               </div>
 
               <button 

@@ -3,6 +3,7 @@ import SearchForm from '../components/SearchForm'
 import { getPhoneModels } from '../lib/sheets/phones'
 import { getPhonesWithAvailability } from '../lib/search'
 import { MapPin, Phone, Train } from 'lucide-react'
+import Image from 'next/image'
 
 interface HomePageProps {
   searchParams: {
@@ -18,24 +19,36 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   const phones = await getPhonesWithAvailability({ from, to, model });
 
   return (
-    <div className="container mx-auto px-4 py-12 md:py-20">
-      {/* Header */}
-      <header className="text-center mb-16">
-        <h1 className="text-5xl md:text-7xl font-black text-brand-yellow uppercase tracking-widest">
+    <main className="container mx-auto px-4 py-8">
+      <div className="text-center mb-12">
+        <h1 className="text-5xl font-bold text-brand-yellow drop-shadow-lg">
           追星神器
         </h1>
-        <p className="text-lg md:text-xl text-brand-gray-light mt-4 font-light">
+        <p className="text-xl text-brand-gray-light mt-2">
           演唱會、見面會專用手機租借
         </p>
-      </header>
-
-      {/* Search Form */}
-      <div className="mb-16 max-w-5xl mx-auto">
-        <SearchForm models={models} searchParams={searchParams} />
       </div>
 
-      {/* Search Results Title */}
-      <div className="mt-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start mb-12">
+        <div className="bg-brand-gray-dark p-8 rounded-lg shadow-2xl">
+          <h2 className="text-3xl font-bold text-center mb-6 text-brand-yellow">
+            尋找你的追星神器
+          </h2>
+          <SearchForm models={models} searchParams={searchParams} />
+        </div>
+        <div className="hidden lg:block rounded-lg overflow-hidden shadow-2xl">
+          <Image
+            src="/images/DEMO.jpg"
+            alt="Concert scene with phone"
+            width={1200}
+            height={1600}
+            className="object-cover w-full h-full"
+            priority
+          />
+        </div>
+      </div>
+
+      <div>
         <h2 className="text-2xl font-bold mb-6 text-brand-yellow text-center">
           {model ? `${model} - 搜尋結果` : '所有可租借手機'}
         </h2>
@@ -85,6 +98,6 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           <p>&copy; {new Date().getFullYear()} i時代維修中心. All Rights Reserved.</p>
         </div>
       </footer>
-    </div>
+    </main>
   )
 } 
