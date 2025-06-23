@@ -330,6 +330,23 @@ export default function PhoneDetailClient({ phone, vercelEnv, bookedDates }: Pho
                 )}
               </div>
 
+              <div className="mt-6 p-4 bg-black/20 rounded-lg border border-white/10">
+                <h3 className="text-lg font-bold text-brand-yellow mb-2">押金規則</h3>
+                <ul className="space-y-1 text-brand-gray-light">
+                  <li className="flex justify-between">
+                    <span>押金 (需抵押證件正本)</span>
+                    <span className="font-bold text-white">$3,000</span>
+                  </li>
+                  <li className="flex justify-between">
+                    <span>押金 (免抵押證件)</span>
+                    <span className="font-bold text-white">$30,000</span>
+                  </li>
+                </ul>
+                <p className="text-xs text-gray-400 mt-3">
+                  * 押金將於手機歸還檢查無誤後，於24小時內退還。
+                </p>
+              </div>
+
               <button 
                 type="submit" 
                 disabled={isLoading || reservation.price === 0 || !!calendarError}
