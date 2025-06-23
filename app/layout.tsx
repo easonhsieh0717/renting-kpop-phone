@@ -1,6 +1,9 @@
 import type { Metadata } from 'next'
 import { Inter, Noto_Sans_TC } from 'next/font/google'
 import './globals.css'
+import { Analytics } from '@vercel/analytics/react'
+import { SpeedInsights } from '@vercel/speed-insights/next'
+import ContactButton from '@/components/ContactButton'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 const notoSansTC = Noto_Sans_TC({
@@ -21,7 +24,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="zh-TW" className={`${inter.variable} ${notoSansTC.variable}`}>
-      <body className="bg-brand-gray-dark text-brand-gray-light">{children}</body>
+      <body className="bg-brand-gray-dark text-brand-gray-light">
+        {children}
+        <Analytics />
+        <SpeedInsights />
+        <ContactButton />
+      </body>
     </html>
   )
 } 

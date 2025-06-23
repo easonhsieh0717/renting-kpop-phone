@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@types/crypto-js": "^4.2.2",
+    "@vercel/analytics": "^1.5.0",
+    "@vercel/speed-insights": "^1.2.0",
     "clsx": "^2.0.0",
     "crypto-js": "^4.2.0",
     "date-fns": "^2.30.0",
