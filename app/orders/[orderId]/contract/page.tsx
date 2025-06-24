@@ -1,8 +1,10 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
+// @ts-ignore
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
+import '../../../../../public/NotoSansTC-normal.js';
 
 function SignatureModal({ open, onClose, onSign }: { open: boolean; onClose: () => void; onSign: (dataUrl: string) => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -133,11 +135,13 @@ export default function ContractPage() {
         if (contractNode) {
           try {
             const pdf = new jsPDF({ unit: 'px', format: 'a4' });
+            pdf.setFont('NotoSansTC');
             await pdf.html(contractNode, {
               margin: [20, 20, 20, 20],
               autoPaging: 'text',
               html2canvas: { scale: 2, useCORS: true },
-              callback: async (pdf) => {
+              font: 'NotoSansTC',
+              callback: async (pdf: any) => {
                 const pdfData = pdf.output('dataurlstring');
                 const maxSize = 3.5 * 1024 * 1024; // 3.5MB
                 const chunks = splitBase64(pdfData, maxSize);
