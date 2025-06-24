@@ -251,9 +251,9 @@ function renderAttachment2(order: any, depositMode: string | null, needCable: bo
       - 交付日期：{today.getFullYear()}年{today.getMonth() + 1}月{today.getDate()}日<br/>
       - 初始狀況：電池健康度95%，外觀無瑕疵，功能正常<br/>
       - 配件清單：
-        {needCable && '原廠USB-C充電線，'}
         {needCharger && '原廠充電頭，'}
-        原廠盒裝、原廠保護殼（若提供）<br/>
+        {needCable && '原廠USB-C充電線，'}
+        原廠保護殼（標配）<br/>
       - 押金模式：{depositMode === 'high' ? '高押金（免證件）' : depositMode === 'low' ? '低押金（需證件及預授權）' : '未選擇'}<br/>
       - 甲方簽章：____________________　乙方簽章：____________________<br/>
     </div>
