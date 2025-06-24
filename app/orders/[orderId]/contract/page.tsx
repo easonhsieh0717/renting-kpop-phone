@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 // import '../../../../../public/NotoSansTC-normal.js'; // 改為動態載入
+import FloatingButtons from '@/components/FloatingButtons';
 
 function SignatureModal({ open, onClose, onSign }: { open: boolean; onClose: () => void; onSign: (dataUrl: string) => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -302,6 +303,15 @@ export default function ContractPage() {
         setLoading(false);
       });
   }, [orderId]);
+
+  useEffect(() => {
+    // 進入合約頁即隱藏浮動按鈕，離開時恢復
+    if (typeof window !== 'undefined') {
+      const fb = document.querySelector('.fixed.bottom-6.right-6.z-50');
+      if (fb) (fb as HTMLElement).style.display = 'none';
+      return () => { if (fb) (fb as HTMLElement).style.display = ''; };
+    }
+  }, []);
 
   const handleSign = async (dataUrl: string) => {
     setModalOpen(false);
