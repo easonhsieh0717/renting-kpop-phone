@@ -135,17 +135,19 @@ export default function ContractPage() {
           const imgData = canvas.toDataURL('image/png');
           const pdf = new jsPDF({ unit: 'px', format: 'a4' });
           const pageWidth = pdf.internal.pageSize.getWidth();
-          const pageHeight = pdf.internal.pageSize.getHeight();
           const imgProps = pdf.getImageProperties(imgData);
           const pdfWidth = pageWidth;
           const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
           pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
           const pdfData = pdf.output('dataurlstring');
+          console.log('PDF upload triggered', pdfData.slice(0, 100));
           await fetch(`/api/orders/${orderId}/upload`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ file: pdfData, type: 'pdf' })
           });
+        } else {
+          console.log('PDF upload failed: contract-content not found');
         }
       }, 500);
       if (response.ok) {
