@@ -1,0 +1,42 @@
+ECPAY_API_URL
+https://payment-stage.ecpay.com.tw/Cashier/AioCheckOut/V5
+
+NEXT_PUBLIC_ECPAY_URL
+https://payment-stage.ecpay.com.tw/Cashier/AioCheckOut/V5
+
+APP_URL
+https://renting-kpop-phone.vercel.app
+
+ECPAY_MERCHANT_ID
+3383324
+
+ECPAY_HASH_KEY
+b6KZYy8VggwfnsNG
+
+ECPAY_HASH_IV
+s3S7kbze3rmOnwYR
+
+GOOGLE_SHEETS_CLIENT_EMAIL
+renting@renting-463612.iam.gserviceaccount.com
+
+GOOGLE_SHEETS_PRIVATE_KEY
+-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQC86fo267CKQbsr\nGgZ8DZI8S1pa5lTUFXiF5HfBCv2tQWApjO6/TxuIEAkvAL2SCeTqxiI4N/hKw/5O\nhMl2QpwGu7JVhpQH0uxR/6QD4vwhTiQe4ynbZppTgE2u3MRmMyhcAxgzhdB8Rdvw\nUjCwsuF5VtDAkTh+WGbhBntId+d5dEvtfjf/x3iOajS9NUC8mBtKJ369WEgVPzLy\nDGaT1ZENCvnilhYEKai4GeUbGwt/cbWmtsRpaeIiN/u9jkNOByw2Kul1HOhXOoOJ\nHvj0iG2hHN9twGdpqqrz5vau3VOkl7JexgOUa8DxXbmBMz4e3fzNQ6cy2Uf7lQJU\nKBTd2KllAgMBAAECggEABv91KQL9YicMg4yOQEV8bPFZon5fwWTI4c9/GXk1Fm2S\niKzTdztl81oCDRSuRlz0IYzqCEJtLHqAJBvKdAVZpEI1rpyymmuXch4nJDcMoes0\nGVTO4HViMsT7m7D1MYKkScGaQZEBEmlqu/HqIybX2q0lmcyHVt7Nc3klqJ87GtuX\nTcY4nEdcJwTNRFsn512XtSb0cKg/b/n2+fWwACVhW1Wy8po/DnAjIV7nCJ4iiiao\noUPYFGa8Hg0NKvFUY/5PXQm8xCcSP7mrvqqzntLJquCaN5W5rJlW4fqmYrBxIJRh\n1qj9/EBl5FIzkmfLvUah36jEDY/omJg/aK+NJcZzDQKBgQDv35BT1j2RyvZrROeF\nZfx4cuBwieCnELq0iPBTv8MfdN3qP0FqxxR8jq6Yey9ucMcD7vlUF+gerAC3B50+\nKHIWIyQ/Uawd2aH/cNGUWrCUzrwyVO9NYqiyDa0PTYlu2zuN1EslKFuPB9ZIYeYS\n51c9Nh+jS9tiM+kJi/rX9t02nwKBgQDJnVuOD73O5ECc8/QALZH/RzJcGZgrEIge\nh0TaJgCjyLZ4G7NCYhxagbaeeFvC/VEVe4M6gzGi5mXjzUOWmZwvIo1Go6+q8nGp\nEpiVnY+qq2cQRX+8h0UYAkpQ1KOZUQWO+MOz3U/6TICrTWpCDpt4qVD3vai2KyDq\nqJSq9W+1ewKBgEkBN8HsUGzQ4tKe8//LnF1kSR63N+Jg2xIbI1m54T7vqKKkgdpn\noLqQCl9qDnOEa22tC8EmTYUYQFd0P80tLhvCskN7LfEfzYga5A5M07VWfjyrUPGy\ndzlJpEQmCw/sNWHjHMPAVq1faz44XXefZRPCJzrh2XE371LygXO9NHJtAoGAJVy8\n58GxChMwiiWHVTUctjMKeRjhIzHoF8g3kTmzqqZ6ch2oBahK2tbo8csaLjNlgFao\nRgKkAy0xOpsCaHlFAVMk3S9eUY6mU4+3qRpO0nD7I3/NoTFsM3vRK9OMEdB6+DjP\ng5iCxr7ApX4uL9mnJCA0egSyrDen3PSqwFfFgNsCgYAS7x8s8rFSCeGpALUXshlp\nqQJ2wwi1eFYnkeWpE6k5eKbP7huRR2NxqBomMuzL5C3Sirr+qxUDq/x8tDnuy084\ncBOfxVqnAh++vgOVMC/6ASOmG844dmJn7/984GnNJwWHYy0i1/DeoVXT8r8vCMAu\nyaCEmXuTNc3z9e+NTytLbg==\n-----END PRIVATE KEY-----
+
+GOOGLE_SHEET_ID
+1qe4xnFyeIwnPOmYHDYFkqorXT4Axzy-jfL5Lrrj9Ht4
+
+0909592666
+陳小姐
+
+押金規則已新增並推送到 GitHub (0a22a41)。
+麻煩您到 Vercel 儀表板手動部署 main 分支。部署成功後，手機詳情頁面就會顯示清楚的押金規則了。
+AFL7qPkEv 分流
+E93AgbeeL 合約
+
+
+合約簽訂有四大步驟
+依照流程只是完成
+1. 拍攝手機外觀，最多6張照片，最少正反兩張
+2. 開啟相繼，有加上身分證框框，符合範圍框框會變色．拍照成功直接加上浮水印存檔 浮水印版本
+3. 選擇押金模式 （高押金，低押金)，是否需要傳輸線，是否需要充電頭
+4. 合約 簽名存成 pdf (已完成）

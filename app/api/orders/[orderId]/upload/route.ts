@@ -9,7 +9,7 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
     const url = new URL(req.url!);
     const part = url.searchParams.get('part');
     const total = url.searchParams.get('total');
-    const { file, type } = await req.json(); // file: base64, type: 'sign' | 'photo' | 'id' | 'pdf'
+    const { file, type, name } = await req.json(); // file: base64, type: 'sign' | 'photo' | 'id' | 'pdf', name: string
     if (!file || !type) return NextResponse.json({ message: '缺少檔案或類型' }, { status: 400 });
     // 解析 base64
     const matches = file.match(/^data:(.+);base64,(.+)$/);
@@ -18,8 +18,8 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
     const base64Data = matches[2];
     let fileName = `${orderId}`;
     if (type === 'sign') fileName += '_簽名.png';
-    else if (type === 'photo') fileName += '_外觀.jpg';
-    else if (type === 'id') fileName += '_證件.jpg';
+    else if (type === 'photo' && name) fileName += `_${name}.jpg`;
+    else if (type === 'id' && name) fileName += `_${name}.jpg`;
     else if (type === 'pdf') fileName += '_合約.pdf';
     else fileName += '_其他檔案';
     console.log('UPLOAD', { type, mimeType, fileName, part, total });

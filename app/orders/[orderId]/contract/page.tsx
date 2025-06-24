@@ -260,7 +260,8 @@ export default function ContractPage() {
   // 1. 手機外觀
   const [photos, setPhotos] = useState<string[]>([]);
   // 2. 證件
-  const [idPhoto, setIdPhoto] = useState<string | null>(null);
+  const [idFront, setIdFront] = useState<string | null>(null);
+  const [idBack, setIdBack] = useState<string | null>(null);
   // 3. 押金/配件
   const [depositMode, setDepositMode] = useState<'high' | 'low' | null>(null);
   const [needCable, setNeedCable] = useState(false);
@@ -369,27 +370,59 @@ export default function ContractPage() {
     }
   };
 
-  // 拍照/上傳手機外觀
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // 拍照/上傳手機外觀，並自動上傳到 Google Drive
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
     const files = Array.from(e.target.files);
     if (photos.length + files.length > 6) return alert('最多6張');
-    Promise.all(files.map(f => toBase64(f))).then(arr => setPhotos([...photos, ...arr]));
+    const arr = await Promise.all(files.map(f => toBase64(f)));
+    setPhotos([...photos, ...arr]);
+    // 自動上傳
+    for (let i = 0; i < files.length; i++) {
+      await fetch(`/api/orders/${orderId}/upload`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ file: arr[i], type: 'photo', name: `外觀${photos.length + i + 1}` })
+      });
+    }
   };
   const handlePhotoRemove = (idx: number) => setPhotos(photos.filter((_, i) => i !== idx));
-  // 身分證拍照（加浮水印）
-  const idInputRef = useRef<HTMLInputElement>(null);
-  const handleIdPhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // 證件拍照（正反面，皆需加浮水印並上傳）
+  const handleIdFront = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || !e.target.files[0]) return;
     const file = e.target.files[0];
     toBase64(file).then(base64 => {
-      // 加浮水印
-      addWatermark(base64, `RENT ${orderId}`).then(watermarked => setIdPhoto(watermarked));
+      addWatermark(base64, `僅限手機租賃使用 ${new Date().toLocaleString('zh-TW', { hour12: false })}`)
+        .then(watermarked => {
+          setIdFront(watermarked);
+          // 上傳
+          fetch(`/api/orders/${orderId}/upload`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ file: watermarked, type: 'id', name: '證件正面' })
+          });
+        });
+    });
+  };
+  const handleIdBack = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || !e.target.files[0]) return;
+    const file = e.target.files[0];
+    toBase64(file).then(base64 => {
+      addWatermark(base64, `僅限手機租賃使用 ${new Date().toLocaleString('zh-TW', { hour12: false })}`)
+        .then(watermarked => {
+          setIdBack(watermarked);
+          // 上傳
+          fetch(`/api/orders/${orderId}/upload`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ file: watermarked, type: 'id', name: '證件反面' })
+          });
+        });
     });
   };
   // 步驟切換
   const canNext1 = photos.length >= 2;
-  const canNext2 = !!idPhoto;
+  const canNext2 = !!idFront && !!idBack;
   const canNext3 = !!depositMode;
 
   if (loading) return <div className="p-8 text-center">載入中...</div>;
@@ -416,10 +449,18 @@ export default function ContractPage() {
       )}
       {step === 2 && (
         <div>
-          <h2 className="text-lg font-bold mb-2">2. 請拍攝身分證（自動加浮水印）</h2>
-          <input type="file" accept="image/*" capture="environment" ref={idInputRef} onChange={handleIdPhoto} className="mb-2" />
-          {idPhoto && <img src={idPhoto} alt="證件" className="w-64 h-40 object-contain border rounded mb-2" />}
-          <button onClick={() => setIdPhoto(null)} className="px-3 py-1 text-sm bg-gray-200 rounded mr-2">重拍</button>
+          <h2 className="text-lg font-bold mb-2">2. 請拍攝身分證（正面與反面，自動加浮水印）</h2>
+          <div className="mb-2">
+            <label className="block mb-1">上傳正面：</label>
+            <input type="file" accept="image/*" capture="environment" onChange={handleIdFront} className="mb-2" />
+            {idFront && <img src={idFront} alt="證件正面" className="w-64 h-40 object-contain border rounded mb-2" />}
+          </div>
+          <div className="mb-2">
+            <label className="block mb-1">上傳反面：</label>
+            <input type="file" accept="image/*" capture="environment" onChange={handleIdBack} className="mb-2" />
+            {idBack && <img src={idBack} alt="證件反面" className="w-64 h-40 object-contain border rounded mb-2" />}
+          </div>
+          <button onClick={() => { setIdFront(null); setIdBack(null); }} className="px-3 py-1 text-sm bg-gray-200 rounded mr-2">重拍</button>
           <button disabled={!canNext2} onClick={() => setStep(3)} className="px-4 py-2 bg-blue-600 text-white rounded disabled:bg-gray-300">下一步</button>
         </div>
       )}
