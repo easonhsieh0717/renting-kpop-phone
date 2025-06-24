@@ -116,6 +116,9 @@ export default function ContractPage() {
 
   const handleSign = async (dataUrl: string) => {
     setModalOpen(false);
+    setSigned(true);
+    setSignatureUrl(dataUrl);
+    await new Promise(r => setTimeout(r, 200)); // 等待 DOM 更新
     try {
       // 1. 先呼叫 /sign，寫入 Google Sheet
       const response = await fetch(`/api/orders/${orderId}/sign`, {
@@ -175,8 +178,6 @@ export default function ContractPage() {
               });
             }
             if (response.ok) {
-              setSigned(true);
-              setSignatureUrl(dataUrl);
               alert("合約簽署完成！");
             } else {
               alert("簽署失敗，請稍後再試");
