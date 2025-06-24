@@ -435,83 +435,156 @@ export default function ContractPage() {
     if (!e.target.files || !e.target.files[0]) return;
     const file = e.target.files[0];
     
-    // 檢查檔案大小（限制 5MB）
-    if (file.size > 5 * 1024 * 1024) {
-      alert('檔案太大，請選擇小於 5MB 的圖片');
+    // 檢查檔案大小（限制 3MB，降低限制）
+    if (file.size > 3 * 1024 * 1024) {
+      alert('檔案太大，請選擇小於 3MB 的圖片');
       return;
     }
     
     try {
-      console.log('開始處理證件正面...');
-      // 先轉換為 base64
-      const base64 = await toBase64(file);
-      console.log('證件正面轉換為 base64 完成');
+      console.log('開始處理證件正面...', `檔案大小: ${(file.size / 1024 / 1024).toFixed(2)}MB`);
       
-      // 先加浮水印
-      console.log('開始加浮水印...');
-      const watermarked = await addWatermark(base64, `僅限手機租賃使用 ${new Date().toLocaleString('zh-TW', { hour12: false })}`);
-      console.log('浮水印處理完成');
+      // 先轉換為 base64 並壓縮
+      let base64 = await toBase64(file);
+      console.log('原始 base64 長度:', base64.length);
       
-      // 上傳加浮水印的照片
-      const uploadResponse = await fetch(`/api/orders/${orderId}/upload`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ file: watermarked, type: 'id', name: '證件正面' })
-      });
+      // 壓縮圖片
+      base64 = await compressImage(base64, 0.7); // 壓縮到 70% 品質
+      console.log('壓縮後 base64 長度:', base64.length);
       
-      if (!uploadResponse.ok) {
-        throw new Error(`上傳失敗: ${uploadResponse.status}`);
+      let watermarked;
+      try {
+        // 嘗試加浮水印
+        console.log('開始加浮水印...');
+        watermarked = await addWatermark(base64, `僅限手機租賃使用 ${new Date().toLocaleString('zh-TW', { hour12: false })}`);
+        console.log('浮水印處理完成');
+      } catch (watermarkError) {
+        console.warn('浮水印處理失敗，使用原圖:', watermarkError);
+        watermarked = base64; // 降級：如果浮水印失敗就用原圖
       }
-      console.log('證件正面上傳完成（含浮水印）');
+      
+      // 重試上傳機制
+      let uploadSuccess = false;
+      let lastError;
+      
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+          console.log(`第 ${attempt} 次上傳嘗試...`);
+          
+          const uploadResponse = await fetch(`/api/orders/${orderId}/upload`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ file: watermarked, type: 'id', name: '證件正面' })
+          });
+          
+          if (!uploadResponse.ok) {
+            throw new Error(`上傳失敗: ${uploadResponse.status}`);
+          }
+          
+          console.log('證件正面上傳成功！');
+          uploadSuccess = true;
+          break;
+          
+        } catch (uploadError) {
+          console.warn(`第 ${attempt} 次上傳失敗:`, uploadError);
+          lastError = uploadError;
+          
+          if (attempt < 3) {
+            // 等待後重試
+            await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+          }
+        }
+      }
+      
+      if (!uploadSuccess) {
+        throw lastError;
+      }
       
       // 顯示加浮水印的圖片
       setIdFront(watermarked);
       
     } catch (err) {
-      console.error('證件正面上傳失敗:', err);
-      alert('證件正面上傳失敗，請重新嘗試');
+      console.error('證件正面處理失敗:', err);
+      alert('證件正面上傳失敗，請檢查網路連線後重新嘗試');
     }
   };
+  
   // 證件拍照（反面）
   const handleIdBack = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || !e.target.files[0]) return;
     const file = e.target.files[0];
     
-    // 檢查檔案大小（限制 5MB）
-    if (file.size > 5 * 1024 * 1024) {
-      alert('檔案太大，請選擇小於 5MB 的圖片');
+    // 檢查檔案大小（限制 3MB，降低限制）
+    if (file.size > 3 * 1024 * 1024) {
+      alert('檔案太大，請選擇小於 3MB 的圖片');
       return;
     }
     
     try {
-      console.log('開始處理證件反面...');
-      // 先轉換為 base64
-      const base64 = await toBase64(file);
-      console.log('證件反面轉換為 base64 完成');
+      console.log('開始處理證件反面...', `檔案大小: ${(file.size / 1024 / 1024).toFixed(2)}MB`);
       
-      // 先加浮水印
-      console.log('開始加浮水印...');
-      const watermarked = await addWatermark(base64, `僅限手機租賃使用 ${new Date().toLocaleString('zh-TW', { hour12: false })}`);
-      console.log('浮水印處理完成');
+      // 先轉換為 base64 並壓縮
+      let base64 = await toBase64(file);
+      console.log('原始 base64 長度:', base64.length);
       
-      // 上傳加浮水印的照片
-      const uploadResponse = await fetch(`/api/orders/${orderId}/upload`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ file: watermarked, type: 'id', name: '證件反面' })
-      });
+      // 壓縮圖片
+      base64 = await compressImage(base64, 0.7); // 壓縮到 70% 品質
+      console.log('壓縮後 base64 長度:', base64.length);
       
-      if (!uploadResponse.ok) {
-        throw new Error(`上傳失敗: ${uploadResponse.status}`);
+      let watermarked;
+      try {
+        // 嘗試加浮水印
+        console.log('開始加浮水印...');
+        watermarked = await addWatermark(base64, `僅限手機租賃使用 ${new Date().toLocaleString('zh-TW', { hour12: false })}`);
+        console.log('浮水印處理完成');
+      } catch (watermarkError) {
+        console.warn('浮水印處理失敗，使用原圖:', watermarkError);
+        watermarked = base64; // 降級：如果浮水印失敗就用原圖
       }
-      console.log('證件反面上傳完成（含浮水印）');
+      
+      // 重試上傳機制
+      let uploadSuccess = false;
+      let lastError;
+      
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+          console.log(`第 ${attempt} 次上傳嘗試...`);
+          
+          const uploadResponse = await fetch(`/api/orders/${orderId}/upload`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ file: watermarked, type: 'id', name: '證件反面' })
+          });
+          
+          if (!uploadResponse.ok) {
+            throw new Error(`上傳失敗: ${uploadResponse.status}`);
+          }
+          
+          console.log('證件反面上傳成功！');
+          uploadSuccess = true;
+          break;
+          
+        } catch (uploadError) {
+          console.warn(`第 ${attempt} 次上傳失敗:`, uploadError);
+          lastError = uploadError;
+          
+          if (attempt < 3) {
+            // 等待後重試
+            await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+          }
+        }
+      }
+      
+      if (!uploadSuccess) {
+        throw lastError;
+      }
       
       // 顯示加浮水印的圖片
       setIdBack(watermarked);
       
     } catch (err) {
-      console.error('證件反面上傳失敗:', err);
-      alert('證件反面上傳失敗，請重新嘗試');
+      console.error('證件反面處理失敗:', err);
+      alert('證件反面上傳失敗，請檢查網路連線後重新嘗試');
     }
   };
   // 步驟切換
@@ -665,8 +738,8 @@ async function addWatermark(base64: string, text: string): Promise<string> {
     
     img.onload = async () => {
       try {
-        // 增加延遲確保圖片完全載入
-        await new Promise(resolve => setTimeout(resolve, 100));
+        // 減少延遲，提高處理速度
+        await new Promise(resolve => setTimeout(resolve, 50));
         
         const canvas = document.createElement('canvas');
         canvas.width = img.width;
@@ -680,44 +753,81 @@ async function addWatermark(base64: string, text: string): Promise<string> {
         // 繪製原始圖片
         ctx.drawImage(img, 0, 0);
         
-        // 計算字體大小（根據圖片尺寸調整，最小20px）
-        const fontSize = Math.max(20, Math.min(60, img.width / 15));
-        ctx.font = `bold ${fontSize}px Arial, sans-serif`;
+        // 簡化字體大小計算
+        const fontSize = Math.max(18, Math.min(36, img.width / 20));
+        ctx.font = `bold ${fontSize}px Arial`;
         
         // 測量文字寬度
         const textMetrics = ctx.measureText(text);
         const textWidth = textMetrics.width;
         
-        // 計算位置（右下角，留更多邊距）
-        const padding = Math.max(30, fontSize);
+        // 簡化位置計算
+        const padding = 20;
         const x = Math.max(10, img.width - textWidth - padding);
         const y = img.height - padding;
         
-        // 繪製半透明背景矩形（更明顯）
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'; // 更不透明的白色背景
-        ctx.fillRect(x - 15, y - fontSize - 15, textWidth + 30, fontSize + 30);
+        // 簡化浮水印樣式，減少處理步驟
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'; // 白色背景
+        ctx.fillRect(x - 10, y - fontSize - 10, textWidth + 20, fontSize + 20);
         
-        // 繪製黑色邊框
-        ctx.strokeStyle = 'rgba(0, 0, 0, 1)'; // 完全不透明的黑色邊框
-        ctx.lineWidth = 3;
-        ctx.strokeRect(x - 15, y - fontSize - 15, textWidth + 30, fontSize + 30);
+        // 黑色邊框
+        ctx.strokeStyle = 'rgba(0, 0, 0, 1)';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x - 10, y - fontSize - 10, textWidth + 20, fontSize + 20);
         
-        // 繪製文字陰影
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-        ctx.fillText(text, x + 2, y + 2);
-        
-        // 繪製主要文字
-        ctx.fillStyle = 'rgba(0, 0, 0, 1)'; // 完全不透明的黑色文字
+        // 繪製文字（去掉陰影，減少處理）
+        ctx.fillStyle = 'rgba(0, 0, 0, 1)';
         ctx.fillText(text, x, y);
         
-        // 轉換為 base64，使用較高品質
-        const result = canvas.toDataURL('image/jpeg', 0.95);
-        console.log('浮水印處理成功，圖片大小:', result.length);
+        // 使用較低品質但更穩定的壓縮
+        const result = canvas.toDataURL('image/jpeg', 0.8);
+        console.log('浮水印處理成功');
         resolve(result);
         
       } catch (error) {
         console.error('浮水印處理失敗:', error);
         // 如果浮水印失敗，返回原始圖片
+        resolve(base64);
+      }
+    };
+    
+    img.onerror = (error) => {
+      console.error('圖片載入失敗:', error);
+      resolve(base64);
+    };
+    
+    // 設定圖片來源
+    img.src = base64;
+  });
+}
+
+// 浮水印工具
+async function compressImage(base64: string, quality: number): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new window.Image();
+    img.crossOrigin = 'anonymous'; // 防止跨域問題
+    
+    img.onload = async () => {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          console.error('無法取得 canvas context');
+          return resolve(base64);
+        }
+        
+        // 繪製原始圖片
+        ctx.drawImage(img, 0, 0);
+        
+        // 壓縮圖片
+        const compressedData = canvas.toDataURL('image/jpeg', quality);
+        console.log('圖片壓縮完成，大小:', compressedData.length);
+        resolve(compressedData);
+        
+      } catch (error) {
+        console.error('圖片壓縮失敗:', error);
         resolve(base64);
       }
     };
