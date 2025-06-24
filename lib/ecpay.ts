@@ -72,7 +72,7 @@ export function getECPayPaymentParams(params: {
     TradeDesc: `追星神器手機租借 - ${itemName}`,
     ItemName: `${itemName} 租借費用`,
     ReturnURL: `${appUrl}/api/ecpay/return`, // The URL ECPay sends the result to in the background
-    ChoosePayment: 'Credit',
+    ChoosePayment: 'ALL',
     EncryptType: 1,
     ClientBackURL: `${appUrl}/orders/${merchantTradeNo}`, // The URL to redirect the user to after payment
   };
