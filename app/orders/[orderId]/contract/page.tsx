@@ -131,25 +131,29 @@ export default function ContractPage() {
       setTimeout(async () => {
         const contractNode = document.getElementById('contract-content');
         if (contractNode) {
-          const canvas = await html2canvas(contractNode, { scale: 2 });
-          const imgData = canvas.toDataURL('image/png');
-          const pdf = new jsPDF({ unit: 'px', format: 'a4' });
-          const pageWidth = pdf.internal.pageSize.getWidth();
-          const imgProps = pdf.getImageProperties(imgData);
-          const pdfWidth = pageWidth;
-          const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-          pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-          const pdfData = pdf.output('dataurlstring');
-          console.log('PDF upload triggered', pdfData.slice(0, 100));
-          await fetch(`/api/orders/${orderId}/upload`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ file: pdfData, type: 'pdf' })
-          });
+          try {
+            const canvas = await html2canvas(contractNode, { scale: 2 });
+            const imgData = canvas.toDataURL('image/png');
+            const pdf = new jsPDF({ unit: 'px', format: 'a4' });
+            const pageWidth = pdf.internal.pageSize.getWidth();
+            const imgProps = pdf.getImageProperties(imgData);
+            const pdfWidth = pageWidth;
+            const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+            const pdfData = pdf.output('dataurlstring');
+            console.log('PDF upload triggered', pdfData.slice(0, 100));
+            await fetch(`/api/orders/${orderId}/upload`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ file: pdfData, type: 'pdf' })
+            });
+          } catch (err) {
+            console.error('PDF upload error', err);
+          }
         } else {
           console.log('PDF upload failed: contract-content not found');
         }
-      }, 500);
+      }, 1000);
       if (response.ok) {
         setSigned(true);
         setSignatureUrl(dataUrl);
