@@ -150,7 +150,6 @@ export default function ContractPage() {
               margin: [20, 20, 20, 20],
               autoPaging: 'text',
               html2canvas: { scale: 2, useCORS: true },
-              font: 'NotoSansTC',
               callback: async (pdf: any) => {
                 const pdfData = pdf.output('dataurlstring');
                 const maxSize = 3.5 * 1024 * 1024; // 3.5MB
