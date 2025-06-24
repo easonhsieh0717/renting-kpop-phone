@@ -9,33 +9,68 @@ import html2canvas from "html2canvas";
 function SignatureModal({ open, onClose, onSign }: { open: boolean; onClose: () => void; onSign: (dataUrl: string) => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
+  const lastPos = useRef<{ x: number; y: number } | null>(null);
 
+  // 滑鼠事件
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (!canvasRef.current) return;
     setIsDrawing(true);
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    const rect = canvas.getBoundingClientRect();
+    const rect = canvasRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-    ctx.strokeStyle = '#000';
-    ctx.lineWidth = 2;
+    lastPos.current = { x, y };
+    const ctx = canvasRef.current.getContext('2d');
+    if (ctx) {
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.strokeStyle = '#000';
+      ctx.lineWidth = 2;
+    }
   };
   const draw = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (!isDrawing || !canvasRef.current) return;
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    const rect = canvas.getBoundingClientRect();
+    const rect = canvasRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-    ctx.lineTo(x, y);
-    ctx.stroke();
+    const ctx = canvasRef.current.getContext('2d');
+    if (ctx && lastPos.current) {
+      ctx.lineTo(x, y);
+      ctx.stroke();
+      lastPos.current = { x, y };
+    }
   };
   const stopDrawing = () => setIsDrawing(false);
+  // 觸控事件
+  const startTouch = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    if (!canvasRef.current) return;
+    setIsDrawing(true);
+    const rect = canvasRef.current.getBoundingClientRect();
+    const touch = e.touches[0];
+    const x = touch.clientX - rect.left;
+    const y = touch.clientY - rect.top;
+    lastPos.current = { x, y };
+    const ctx = canvasRef.current.getContext('2d');
+    if (ctx) {
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.strokeStyle = '#000';
+      ctx.lineWidth = 2;
+    }
+  };
+  const drawTouch = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    if (!isDrawing || !canvasRef.current) return;
+    const rect = canvasRef.current.getBoundingClientRect();
+    const touch = e.touches[0];
+    const x = touch.clientX - rect.left;
+    const y = touch.clientY - rect.top;
+    const ctx = canvasRef.current.getContext('2d');
+    if (ctx && lastPos.current) {
+      ctx.lineTo(x, y);
+      ctx.stroke();
+      lastPos.current = { x, y };
+    }
+  };
+  const stopTouch = () => setIsDrawing(false);
   const clearSignature = () => {
     if (!canvasRef.current) return;
     const canvas = canvasRef.current;
@@ -56,8 +91,7 @@ function SignatureModal({ open, onClose, onSign }: { open: boolean; onClose: () 
     }
     onSign(canvas.toDataURL());
   };
-  if (!open) return null;
-  return (
+  return open ? (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
       <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-lg relative">
         <h2 className="text-lg font-bold mb-4">電子簽名</h2>
@@ -70,6 +104,9 @@ function SignatureModal({ open, onClose, onSign }: { open: boolean; onClose: () 
           onMouseMove={draw}
           onMouseUp={stopDrawing}
           onMouseLeave={stopDrawing}
+          onTouchStart={startTouch}
+          onTouchMove={drawTouch}
+          onTouchEnd={stopTouch}
         />
         <div className="mt-2 flex gap-2">
           <button onClick={clearSignature} className="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded hover:bg-gray-300">清除簽名</button>
@@ -78,7 +115,7 @@ function SignatureModal({ open, onClose, onSign }: { open: boolean; onClose: () 
         </div>
       </div>
     </div>
-  );
+  ) : null;
 }
 
 function Stepper({ step, setStep }: { step: number; setStep: (n: number) => void }) {
@@ -287,21 +324,32 @@ export default function ContractPage() {
         </div>
       )}
       {step === 4 && (
-        <div className="border-t pt-6">
-          <h3 className="text-lg font-semibold mb-4">電子簽署</h3>
-          {signed && signatureUrl ? (
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">乙方簽名（{order[5]}）</label>
-              <img src={signatureUrl} alt="簽名圖" className="border border-gray-300 rounded bg-white" style={{ width: 400, height: 200 }} />
-              <div className="text-green-600 text-sm mt-2">✅ 已完成簽署</div>
+        <div>
+          <div className="mb-8">
+            {/* 合約內容區塊（可抽成 renderContract(order, photos, idPhoto, depositMode, needCable, needCharger)） */}
+            <h1 className="text-2xl font-bold mb-4 text-center text-gray-900">手機租賃合約書</h1>
+            <div className="mb-4 text-sm text-gray-700 text-center">訂單編號：{order[0]}</div>
+            <div className="space-y-4 text-base leading-relaxed mb-8 text-gray-800">
+              {/* ...合約條款內容... 可帶入 photos, idPhoto, depositMode, needCable, needCharger 資訊 */}
+              {/* ...原本合約內容... */}
             </div>
-          ) : (
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">乙方簽名（{order[5]}）</label>
-              <div className="text-gray-400 text-sm mb-2">尚未簽署</div>
-              <button onClick={() => setModalOpen(true)} className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">我要簽名</button>
-            </div>
-          )}
+          </div>
+          <div className="border-t pt-6">
+            <h3 className="text-lg font-semibold mb-4">電子簽署</h3>
+            {signed && signatureUrl ? (
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">乙方簽名（{order[5]}）</label>
+                <img src={signatureUrl} alt="簽名圖" className="border border-gray-300 rounded bg-white" style={{ width: 400, height: 200 }} />
+                <div className="text-green-600 text-sm mt-2">✅ 已完成簽署</div>
+              </div>
+            ) : (
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">乙方簽名（{order[5]}）</label>
+                <div className="text-gray-400 text-sm mb-2">尚未簽署</div>
+                <button onClick={() => setModalOpen(true)} className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">我要簽名</button>
+              </div>
+            )}
+          </div>
         </div>
       )}
       <SignatureModal open={modalOpen} onClose={() => setModalOpen(false)} onSign={handleSign} />
