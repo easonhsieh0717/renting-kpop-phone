@@ -753,29 +753,29 @@ async function addWatermark(base64: string, text: string): Promise<string> {
         // 繪製原始圖片
         ctx.drawImage(img, 0, 0);
         
-        // 簡化字體大小計算
-        const fontSize = Math.max(18, Math.min(36, img.width / 20));
+        // 字體大小放大到兩倍：原來是 18-36，現在是 36-72
+        const fontSize = Math.max(36, Math.min(72, img.width / 10));
         ctx.font = `bold ${fontSize}px Arial`;
         
         // 測量文字寬度
         const textMetrics = ctx.measureText(text);
         const textWidth = textMetrics.width;
         
-        // 簡化位置計算
-        const padding = 20;
-        const x = Math.max(10, img.width - textWidth - padding);
+        // 調整位置計算，因為字體變大需要更多空間
+        const padding = 30;
+        const x = Math.max(15, img.width - textWidth - padding);
         const y = img.height - padding;
         
-        // 簡化浮水印樣式，減少處理步驟
+        // 調整背景框大小以配合更大的字體
         ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'; // 白色背景
-        ctx.fillRect(x - 10, y - fontSize - 10, textWidth + 20, fontSize + 20);
+        ctx.fillRect(x - 15, y - fontSize - 15, textWidth + 30, fontSize + 30);
         
         // 黑色邊框
         ctx.strokeStyle = 'rgba(0, 0, 0, 1)';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(x - 10, y - fontSize - 10, textWidth + 20, fontSize + 20);
+        ctx.lineWidth = 3; // 邊框也稍微加粗
+        ctx.strokeRect(x - 15, y - fontSize - 15, textWidth + 30, fontSize + 30);
         
-        // 繪製文字（去掉陰影，減少處理）
+        // 繪製文字
         ctx.fillStyle = 'rgba(0, 0, 0, 1)';
         ctx.fillText(text, x, y);
         
