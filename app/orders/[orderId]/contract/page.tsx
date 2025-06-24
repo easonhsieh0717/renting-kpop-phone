@@ -447,22 +447,24 @@ export default function ContractPage() {
       const base64 = await toBase64(file);
       console.log('證件正面轉換為 base64 完成');
       
-      // 先上傳原始照片（不加浮水印）
+      // 先加浮水印
+      console.log('開始加浮水印...');
+      const watermarked = await addWatermark(base64, `僅限手機租賃使用 ${new Date().toLocaleString('zh-TW', { hour12: false })}`);
+      console.log('浮水印處理完成');
+      
+      // 上傳加浮水印的照片
       const uploadResponse = await fetch(`/api/orders/${orderId}/upload`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ file: base64, type: 'id', name: '證件正面' })
+        body: JSON.stringify({ file: watermarked, type: 'id', name: '證件正面' })
       });
       
       if (!uploadResponse.ok) {
         throw new Error(`上傳失敗: ${uploadResponse.status}`);
       }
-      console.log('證件正面上傳完成');
+      console.log('證件正面上傳完成（含浮水印）');
       
-      // 上傳成功後，再加浮水印顯示
-      console.log('開始加浮水印...');
-      const watermarked = await addWatermark(base64, `僅限手機租賃使用 ${new Date().toLocaleString('zh-TW', { hour12: false })}`);
-      console.log('浮水印處理完成');
+      // 顯示加浮水印的圖片
       setIdFront(watermarked);
       
     } catch (err) {
@@ -487,22 +489,24 @@ export default function ContractPage() {
       const base64 = await toBase64(file);
       console.log('證件反面轉換為 base64 完成');
       
-      // 先上傳原始照片（不加浮水印）
+      // 先加浮水印
+      console.log('開始加浮水印...');
+      const watermarked = await addWatermark(base64, `僅限手機租賃使用 ${new Date().toLocaleString('zh-TW', { hour12: false })}`);
+      console.log('浮水印處理完成');
+      
+      // 上傳加浮水印的照片
       const uploadResponse = await fetch(`/api/orders/${orderId}/upload`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ file: base64, type: 'id', name: '證件反面' })
+        body: JSON.stringify({ file: watermarked, type: 'id', name: '證件反面' })
       });
       
       if (!uploadResponse.ok) {
         throw new Error(`上傳失敗: ${uploadResponse.status}`);
       }
-      console.log('證件反面上傳完成');
+      console.log('證件反面上傳完成（含浮水印）');
       
-      // 上傳成功後，再加浮水印顯示
-      console.log('開始加浮水印...');
-      const watermarked = await addWatermark(base64, `僅限手機租賃使用 ${new Date().toLocaleString('zh-TW', { hour12: false })}`);
-      console.log('浮水印處理完成');
+      // 顯示加浮水印的圖片
       setIdBack(watermarked);
       
     } catch (err) {
@@ -657,8 +661,13 @@ function toBase64(file: File): Promise<string> {
 async function addWatermark(base64: string, text: string): Promise<string> {
   return new Promise((resolve, reject) => {
     const img = new window.Image();
-    img.onload = () => {
+    img.crossOrigin = 'anonymous'; // 防止跨域問題
+    
+    img.onload = async () => {
       try {
+        // 增加延遲確保圖片完全載入
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
         const canvas = document.createElement('canvas');
         canvas.width = img.width;
         canvas.height = img.height;
@@ -671,36 +680,39 @@ async function addWatermark(base64: string, text: string): Promise<string> {
         // 繪製原始圖片
         ctx.drawImage(img, 0, 0);
         
-        // 計算字體大小（根據圖片尺寸調整）
-        const fontSize = Math.max(16, Math.min(48, img.width / 20));
+        // 計算字體大小（根據圖片尺寸調整，最小20px）
+        const fontSize = Math.max(20, Math.min(60, img.width / 15));
         ctx.font = `bold ${fontSize}px Arial, sans-serif`;
         
         // 測量文字寬度
         const textMetrics = ctx.measureText(text);
         const textWidth = textMetrics.width;
         
-        // 設定浮水印樣式
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)'; // 白色背景
-        ctx.strokeStyle = 'rgba(0, 0, 0, 0.8)'; // 黑色邊框
-        ctx.lineWidth = 2;
-        
-        // 計算位置（右下角）
-        const padding = 20;
-        const x = img.width - textWidth - padding;
+        // 計算位置（右下角，留更多邊距）
+        const padding = Math.max(30, fontSize);
+        const x = Math.max(10, img.width - textWidth - padding);
         const y = img.height - padding;
         
-        // 繪製背景矩形
-        ctx.fillRect(x - 10, y - fontSize - 10, textWidth + 20, fontSize + 20);
+        // 繪製半透明背景矩形（更明顯）
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'; // 更不透明的白色背景
+        ctx.fillRect(x - 15, y - fontSize - 15, textWidth + 30, fontSize + 30);
         
-        // 繪製文字邊框
-        ctx.strokeText(text, x, y);
+        // 繪製黑色邊框
+        ctx.strokeStyle = 'rgba(0, 0, 0, 1)'; // 完全不透明的黑色邊框
+        ctx.lineWidth = 3;
+        ctx.strokeRect(x - 15, y - fontSize - 15, textWidth + 30, fontSize + 30);
         
-        // 繪製文字
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
+        // 繪製文字陰影
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+        ctx.fillText(text, x + 2, y + 2);
+        
+        // 繪製主要文字
+        ctx.fillStyle = 'rgba(0, 0, 0, 1)'; // 完全不透明的黑色文字
         ctx.fillText(text, x, y);
         
-        // 轉換為 base64
-        const result = canvas.toDataURL('image/jpeg', 0.9);
+        // 轉換為 base64，使用較高品質
+        const result = canvas.toDataURL('image/jpeg', 0.95);
+        console.log('浮水印處理成功，圖片大小:', result.length);
         resolve(result);
         
       } catch (error) {
@@ -710,11 +722,12 @@ async function addWatermark(base64: string, text: string): Promise<string> {
       }
     };
     
-    img.onerror = () => {
-      console.error('圖片載入失敗');
+    img.onerror = (error) => {
+      console.error('圖片載入失敗:', error);
       resolve(base64);
     };
     
+    // 設定圖片來源
     img.src = base64;
   });
 } 
