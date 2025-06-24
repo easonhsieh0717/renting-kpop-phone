@@ -282,9 +282,11 @@ export default function ContractPage() {
   const [idFront, setIdFront] = useState<string | null>(null);
   const [idBack, setIdBack] = useState<string | null>(null);
   // 3. 押金/配件
-  const [depositMode, setDepositMode] = useState<'high' | 'low' | null>(null);
+  const [depositMode, setDepositMode] = useState<string | null>(null);
   const [needCable, setNeedCable] = useState(false);
   const [needCharger, setNeedCharger] = useState(false);
+  const [processingIdFront, setProcessingIdFront] = useState(false);
+  const [processingIdBack, setProcessingIdBack] = useState(false);
 
   useEffect(() => {
     if (!orderId) return;
@@ -441,6 +443,8 @@ export default function ContractPage() {
       return;
     }
     
+    setProcessingIdFront(true);
+    
     try {
       console.log('開始處理證件正面...', `檔案大小: ${(file.size / 1024 / 1024).toFixed(2)}MB`);
       
@@ -506,12 +510,21 @@ export default function ContractPage() {
     } catch (err) {
       console.error('證件正面處理失敗:', err);
       alert('證件正面上傳失敗，請檢查網路連線後重新嘗試');
+    } finally {
+      setProcessingIdFront(false);
     }
   };
   
   // 證件拍照（反面）
   const handleIdBack = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || !e.target.files[0]) return;
+    
+    // 檢查是否已完成正面拍照
+    if (!idFront) {
+      alert('請先完成證件正面拍照');
+      return;
+    }
+    
     const file = e.target.files[0];
     
     // 檢查檔案大小（限制 3MB，降低限制）
@@ -519,6 +532,8 @@ export default function ContractPage() {
       alert('檔案太大，請選擇小於 3MB 的圖片');
       return;
     }
+    
+    setProcessingIdBack(true);
     
     try {
       console.log('開始處理證件反面...', `檔案大小: ${(file.size / 1024 / 1024).toFixed(2)}MB`);
@@ -585,6 +600,8 @@ export default function ContractPage() {
     } catch (err) {
       console.error('證件反面處理失敗:', err);
       alert('證件反面上傳失敗，請檢查網路連線後重新嘗試');
+    } finally {
+      setProcessingIdBack(false);
     }
   };
   // 步驟切換
@@ -619,12 +636,47 @@ export default function ContractPage() {
           <h2 className="text-lg font-bold mb-2">2. 請拍攝身分證（正面與反面，自動加浮水印）</h2>
           <div className="mb-2">
             <label className="block mb-1">上傳正面：</label>
-            <input type="file" accept="image/*" capture="environment" onChange={handleIdFront} className="mb-2" />
+            <input 
+              type="file" 
+              accept="image/*" 
+              capture="environment" 
+              onChange={handleIdFront} 
+              className="mb-2" 
+              disabled={processingIdFront}
+            />
+            {processingIdFront && (
+              <div className="mb-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-center">
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600 mr-2"></div>
+                  <span className="text-blue-800 text-sm">正在處理證件正面，請稍候...</span>
+                </div>
+              </div>
+            )}
             {idFront && <img src={idFront} alt="證件正面" className="w-64 h-40 object-contain border rounded mb-2" />}
           </div>
           <div className="mb-2">
             <label className="block mb-1">上傳反面：</label>
-            <input type="file" accept="image/*" capture="environment" onChange={handleIdBack} className="mb-2" />
+            <input 
+              type="file" 
+              accept="image/*" 
+              capture="environment" 
+              onChange={handleIdBack} 
+              className="mb-2" 
+              disabled={processingIdBack || !idFront}
+            />
+            {processingIdBack && (
+              <div className="mb-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-center">
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600 mr-2"></div>
+                  <span className="text-blue-800 text-sm">正在處理證件反面，請稍候...</span>
+                </div>
+              </div>
+            )}
+            {!idFront && (
+              <div className="mb-2 p-2 bg-gray-100 border border-gray-300 rounded text-gray-500 text-sm">
+                請先完成證件正面拍照
+              </div>
+            )}
             {idBack && <img src={idBack} alt="證件反面" className="w-64 h-40 object-contain border rounded mb-2" />}
           </div>
           <button onClick={() => { setIdFront(null); setIdBack(null); }} className="px-3 py-1 text-sm bg-gray-200 rounded mr-2">重拍</button>
@@ -761,23 +813,40 @@ async function addWatermark(base64: string, text: string): Promise<string> {
         const textMetrics = ctx.measureText(text);
         const textWidth = textMetrics.width;
         
-        // 因為字體更大，需要更多空間和邊距
+        // === 右下角浮水印 ===
         const padding = 40;
-        const x = Math.max(20, img.width - textWidth - padding);
-        const y = img.height - padding;
+        const xBottomRight = Math.max(20, img.width - textWidth - padding);
+        const yBottomRight = img.height - padding;
         
-        // 調整背景框大小以配合更大的字體
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'; // 白色背景
-        ctx.fillRect(x - 20, y - fontSize - 20, textWidth + 40, fontSize + 40);
+        // 右下角背景框
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+        ctx.fillRect(xBottomRight - 20, yBottomRight - fontSize - 20, textWidth + 40, fontSize + 40);
         
-        // 黑色邊框，因為字體更大所以邊框也要更粗
+        // 右下角邊框
         ctx.strokeStyle = 'rgba(0, 0, 0, 1)';
-        ctx.lineWidth = 4; // 邊框加粗到 4px
-        ctx.strokeRect(x - 20, y - fontSize - 20, textWidth + 40, fontSize + 40);
+        ctx.lineWidth = 4;
+        ctx.strokeRect(xBottomRight - 20, yBottomRight - fontSize - 20, textWidth + 40, fontSize + 40);
         
-        // 繪製文字
+        // 右下角文字
         ctx.fillStyle = 'rgba(0, 0, 0, 1)';
-        ctx.fillText(text, x, y);
+        ctx.fillText(text, xBottomRight, yBottomRight);
+        
+        // === 左上角浮水印 ===
+        const xTopLeft = 20;
+        const yTopLeft = fontSize + 20;
+        
+        // 左上角背景框
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+        ctx.fillRect(xTopLeft - 20, yTopLeft - fontSize - 20, textWidth + 40, fontSize + 40);
+        
+        // 左上角邊框
+        ctx.strokeStyle = 'rgba(0, 0, 0, 1)';
+        ctx.lineWidth = 4;
+        ctx.strokeRect(xTopLeft - 20, yTopLeft - fontSize - 20, textWidth + 40, fontSize + 40);
+        
+        // 左上角文字
+        ctx.fillStyle = 'rgba(0, 0, 0, 1)';
+        ctx.fillText(text, xTopLeft, yTopLeft);
         
         // 使用較低品質但更穩定的壓縮
         const result = canvas.toDataURL('image/jpeg', 0.8);
