@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 function SignatureModal({ open, onClose, onSign }: { open: boolean; onClose: () => void; onSign: (dataUrl: string) => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -119,12 +121,33 @@ export default function ContractPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ signature: dataUrl })
       });
-      // 2. 再呼叫 /upload，寫入 Google Drive
+      // 2. 再呼叫 /upload，寫入 Google Drive（簽名圖）
       await fetch(`/api/orders/${orderId}/upload`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ file: dataUrl, type: 'sign' })
       });
+      // 3. 產生 PDF 並上傳
+      setTimeout(async () => {
+        const contractNode = document.getElementById('contract-content');
+        if (contractNode) {
+          const canvas = await html2canvas(contractNode, { scale: 2 });
+          const imgData = canvas.toDataURL('image/png');
+          const pdf = new jsPDF({ unit: 'px', format: 'a4' });
+          const pageWidth = pdf.internal.pageSize.getWidth();
+          const pageHeight = pdf.internal.pageSize.getHeight();
+          const imgProps = pdf.getImageProperties(imgData);
+          const pdfWidth = pageWidth;
+          const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+          pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+          const pdfData = pdf.output('dataurlstring');
+          await fetch(`/api/orders/${orderId}/upload`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ file: pdfData, type: 'pdf' })
+          });
+        }
+      }, 500);
       if (response.ok) {
         setSigned(true);
         setSignatureUrl(dataUrl);
@@ -142,10 +165,10 @@ export default function ContractPage() {
   if (!order) return null;
 
   return (
-    <div className="max-w-4xl mx-auto p-6 bg-white rounded shadow mt-8">
-      <h1 className="text-2xl font-bold mb-4 text-center">手機租賃合約書</h1>
-      <div className="mb-4 text-sm text-gray-500 text-center">訂單編號：{order[0]}</div>
-      <div className="space-y-4 text-base leading-relaxed mb-8">
+    <div id="contract-content" className="max-w-4xl mx-auto p-6 bg-white rounded shadow mt-8">
+      <h1 className="text-2xl font-bold mb-4 text-center text-gray-900">手機租賃合約書</h1>
+      <div className="mb-4 text-sm text-gray-700 text-center">訂單編號：{order[0]}</div>
+      <div className="space-y-4 text-base leading-relaxed mb-8 text-gray-800">
         <p>本合約由下列雙方簽訂：</p>
         <p>出租方（甲方）：伊森不累手機租借平台</p>
         <p>承租方（乙方）：{order[5]}（電話：{order[7]}，Email：{order[6]}）</p>
