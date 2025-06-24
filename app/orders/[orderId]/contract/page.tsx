@@ -134,24 +134,24 @@ export default function ContractPage() {
         const contractNode = document.getElementById('contract-content');
         if (contractNode) {
           try {
-            // 多頁截圖產生 PDF
+            // 多頁截圖產生 PDF（正確分頁，每頁用 marginTop 位移）
             const pageHeight = 1122; // px, 約等於 A4 @ 96dpi
             const totalHeight = contractNode.scrollHeight;
             const pdf = new jsPDF({ unit: 'px', format: 'a4' });
             let rendered = 0;
             let pageNum = 0;
             while (rendered < totalHeight) {
-              // 建立臨時 div，複製內容並裁切高度
-              const tempDiv = contractNode.cloneNode(true);
-              (tempDiv as HTMLElement).style.height = `${Math.min(pageHeight, totalHeight - rendered)}px`;
-              (tempDiv as HTMLElement).style.overflow = 'hidden';
-              (tempDiv as HTMLElement).scrollTop = rendered;
+              // 建立臨時 div，內容同 contractNode
+              const tempDiv = contractNode.cloneNode(true) as HTMLElement;
+              tempDiv.style.height = `${pageHeight}px`;
+              tempDiv.style.overflow = 'hidden';
+              tempDiv.style.marginTop = `-${rendered}px`;
+              tempDiv.style.background = '#fff';
               document.body.appendChild(tempDiv);
-              const canvas = await html2canvas(tempDiv as HTMLElement, {
+              const canvas = await html2canvas(tempDiv, {
                 scale: 2,
                 useCORS: true,
-                y: 0,
-                height: Math.min(pageHeight, totalHeight - rendered)
+                backgroundColor: '#fff'
               });
               document.body.removeChild(tempDiv);
               const imgData = canvas.toDataURL('image/png');
