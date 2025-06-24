@@ -335,11 +335,14 @@ export default function ContractPage() {
       setTimeout(async () => {
         const contractNode = document.getElementById('contract-content');
         if (contractNode) {
-          // 強制所有子元素字型
           contractNode.style.fontFamily = 'Noto Sans TC, Inter, system-ui, sans-serif';
           contractNode.querySelectorAll('*').forEach(el => {
             (el as HTMLElement).style.fontFamily = 'Noto Sans TC, Inter, system-ui, sans-serif';
           });
+          const computedFont = window.getComputedStyle(contractNode).fontFamily;
+          if (!computedFont.includes('Noto Sans TC')) {
+            alert('字型未正確套用，PDF 可能會醜，請重新整理頁面再存檔！');
+          }
           try {
             // 多頁正確分頁：每頁用 transform 位移內容
             const pageHeight = 1122; // px, A4
@@ -415,36 +418,65 @@ export default function ContractPage() {
     }
   };
   const handlePhotoRemove = (idx: number) => setPhotos(photos.filter((_, i) => i !== idx));
-  // 證件拍照（正反面，皆需加浮水印並上傳）
-  const handleIdFront = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // 證件拍照（正面）
+  const handleIdFront = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || !e.target.files[0]) return;
     const file = e.target.files[0];
     toBase64(file).then(base64 => {
       addWatermark(base64, `僅限手機租賃使用 ${new Date().toLocaleString('zh-TW', { hour12: false })}`)
-        .then(watermarked => {
+        .then(async watermarked => {
           setIdFront(watermarked);
           // 上傳
-          fetch(`/api/orders/${orderId}/upload`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ file: watermarked, type: 'id', name: '證件正面' })
-          });
+          try {
+            const res = await fetch(`/api/orders/${orderId}/upload`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ file: watermarked, type: 'id', name: '證件正面' })
+            });
+            if (!res.ok) throw new Error('上傳失敗');
+          } catch (err) {
+            // 自動重試一次
+            try {
+              await fetch(`/api/orders/${orderId}/upload`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ file: watermarked, type: 'id', name: '證件正面' })
+              });
+            } catch {
+              alert('證件正面上傳失敗，請重新嘗試');
+            }
+          }
         });
     });
   };
-  const handleIdBack = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // 證件拍照（反面）
+  const handleIdBack = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || !e.target.files[0]) return;
     const file = e.target.files[0];
     toBase64(file).then(base64 => {
       addWatermark(base64, `僅限手機租賃使用 ${new Date().toLocaleString('zh-TW', { hour12: false })}`)
-        .then(watermarked => {
+        .then(async watermarked => {
           setIdBack(watermarked);
           // 上傳
-          fetch(`/api/orders/${orderId}/upload`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ file: watermarked, type: 'id', name: '證件反面' })
-          });
+          try {
+            const res = await fetch(`/api/orders/${orderId}/upload`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ file: watermarked, type: 'id', name: '證件反面' })
+            });
+            if (!res.ok) throw new Error('上傳失敗');
+          } catch (err) {
+            // 自動重試一次
+            try {
+              await fetch(`/api/orders/${orderId}/upload`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ file: watermarked, type: 'id', name: '證件反面' })
+              });
+            } catch {
+              alert('證件反面上傳失敗，請重新嘗試');
+            }
+          }
         });
     });
   };
