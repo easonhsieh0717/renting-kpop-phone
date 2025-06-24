@@ -441,37 +441,48 @@ export default function ContractPage() {
       return;
     }
     
-    toBase64(file).then(base64 => {
-      addWatermark(base64, `僅限手機租賃使用 ${new Date().toLocaleString('zh-TW', { hour12: false })}`)
-        .then(async watermarked => {
-          setIdFront(watermarked);
-          // 上傳
-          try {
-            const res = await fetch(`/api/orders/${orderId}/upload`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ file: watermarked, type: 'id', name: '證件正面' })
-            });
-            if (!res.ok) {
-              const errorData = await res.json();
-              throw new Error(errorData.message || '上傳失敗');
-            }
-          } catch (err) {
-            console.error('證件正面上傳失敗:', err);
-            // 自動重試一次
-            try {
-              const retryRes = await fetch(`/api/orders/${orderId}/upload`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ file: watermarked, type: 'id', name: '證件正面' })
-              });
-              if (!retryRes.ok) throw new Error('重試失敗');
-            } catch {
-              alert('證件正面上傳失敗，請重新嘗試');
-            }
-          }
+    try {
+      // 先轉換為 base64
+      const base64 = await toBase64(file);
+      
+      // 先上傳原始照片（不加浮水印）
+      const uploadRes = await fetch(`/api/orders/${orderId}/upload`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ file: base64, type: 'id', name: '證件正面' })
+      });
+      
+      if (!uploadRes.ok) {
+        const errorData = await uploadRes.json();
+        throw new Error(errorData.message || '上傳失敗');
+      }
+      
+      // 上傳成功後，再加浮水印顯示
+      const watermarked = await addWatermark(base64, `僅限手機租賃使用 ${new Date().toLocaleString('zh-TW', { hour12: false })}`);
+      setIdFront(watermarked);
+      
+    } catch (err) {
+      console.error('證件正面上傳失敗:', err);
+      // 自動重試一次
+      try {
+        const base64 = await toBase64(file);
+        const retryRes = await fetch(`/api/orders/${orderId}/upload`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ file: base64, type: 'id', name: '證件正面' })
         });
-    });
+        
+        if (!retryRes.ok) throw new Error('重試失敗');
+        
+        // 重試成功後，再加浮水印顯示
+        const watermarked = await addWatermark(base64, `僅限手機租賃使用 ${new Date().toLocaleString('zh-TW', { hour12: false })}`);
+        setIdFront(watermarked);
+        
+      } catch (retryErr) {
+        console.error('證件正面上傳重試失敗:', retryErr);
+        alert('證件正面上傳失敗，請重新嘗試');
+      }
+    }
   };
   // 證件拍照（反面）
   const handleIdBack = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -484,37 +495,48 @@ export default function ContractPage() {
       return;
     }
     
-    toBase64(file).then(base64 => {
-      addWatermark(base64, `僅限手機租賃使用 ${new Date().toLocaleString('zh-TW', { hour12: false })}`)
-        .then(async watermarked => {
-          setIdBack(watermarked);
-          // 上傳
-          try {
-            const res = await fetch(`/api/orders/${orderId}/upload`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ file: watermarked, type: 'id', name: '證件反面' })
-            });
-            if (!res.ok) {
-              const errorData = await res.json();
-              throw new Error(errorData.message || '上傳失敗');
-            }
-          } catch (err) {
-            console.error('證件反面上傳失敗:', err);
-            // 自動重試一次
-            try {
-              const retryRes = await fetch(`/api/orders/${orderId}/upload`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ file: watermarked, type: 'id', name: '證件反面' })
-              });
-              if (!retryRes.ok) throw new Error('重試失敗');
-            } catch {
-              alert('證件反面上傳失敗，請重新嘗試');
-            }
-          }
+    try {
+      // 先轉換為 base64
+      const base64 = await toBase64(file);
+      
+      // 先上傳原始照片（不加浮水印）
+      const uploadRes = await fetch(`/api/orders/${orderId}/upload`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ file: base64, type: 'id', name: '證件反面' })
+      });
+      
+      if (!uploadRes.ok) {
+        const errorData = await uploadRes.json();
+        throw new Error(errorData.message || '上傳失敗');
+      }
+      
+      // 上傳成功後，再加浮水印顯示
+      const watermarked = await addWatermark(base64, `僅限手機租賃使用 ${new Date().toLocaleString('zh-TW', { hour12: false })}`);
+      setIdBack(watermarked);
+      
+    } catch (err) {
+      console.error('證件反面上傳失敗:', err);
+      // 自動重試一次
+      try {
+        const base64 = await toBase64(file);
+        const retryRes = await fetch(`/api/orders/${orderId}/upload`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ file: base64, type: 'id', name: '證件反面' })
         });
-    });
+        
+        if (!retryRes.ok) throw new Error('重試失敗');
+        
+        // 重試成功後，再加浮水印顯示
+        const watermarked = await addWatermark(base64, `僅限手機租賃使用 ${new Date().toLocaleString('zh-TW', { hour12: false })}`);
+        setIdBack(watermarked);
+        
+      } catch (retryErr) {
+        console.error('證件反面上傳重試失敗:', retryErr);
+        alert('證件反面上傳失敗，請重新嘗試');
+      }
+    }
   };
   // 步驟切換
   const canNext1 = photos.length >= 2;
