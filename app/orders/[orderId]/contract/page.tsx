@@ -145,7 +145,7 @@ export default function ContractPage() {
             const chunks = splitBase64(pdfData, maxSize);
             for (let i = 0; i < chunks.length; i++) {
               console.log('PDF upload part', i + 1, 'size', chunks[i].length);
-              await fetch(`/api/orders/${orderId}/upload?part=${i + 1}`, {
+              await fetch(`/api/orders/${orderId}/upload?part=${i + 1}&total=${chunks.length}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ file: chunks[i], type: 'pdf' })
