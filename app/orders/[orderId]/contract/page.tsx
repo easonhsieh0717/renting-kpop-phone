@@ -4,7 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 // @ts-ignore
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
-import '../../../../../public/NotoSansTC-normal.js';
+// import '../../../../../public/NotoSansTC-normal.js'; // 改為動態載入
 
 function SignatureModal({ open, onClose, onSign }: { open: boolean; onClose: () => void; onSign: (dataUrl: string) => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -135,7 +135,17 @@ export default function ContractPage() {
         if (contractNode) {
           try {
             const pdf = new jsPDF({ unit: 'px', format: 'a4' });
-            pdf.setFont('NotoSansTC');
+            // 動態載入字型
+            if (typeof window !== 'undefined') {
+              const fontScript = document.createElement('script');
+              fontScript.src = '/NotoSansTC-normal.js';
+              fontScript.onload = () => {
+                pdf.setFont('NotoSansTC');
+              };
+              document.body.appendChild(fontScript);
+            } else {
+              pdf.setFont('NotoSansTC');
+            }
             await pdf.html(contractNode, {
               margin: [20, 20, 20, 20],
               autoPaging: 'text',
