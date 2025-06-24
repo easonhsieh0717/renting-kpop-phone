@@ -753,27 +753,27 @@ async function addWatermark(base64: string, text: string): Promise<string> {
         // 繪製原始圖片
         ctx.drawImage(img, 0, 0);
         
-        // 字體大小放大到兩倍：原來是 18-36，現在是 36-72
-        const fontSize = Math.max(36, Math.min(72, img.width / 10));
+        // 字體大小再次放大一倍：從 36-72 增加到 72-144
+        const fontSize = Math.max(72, Math.min(144, img.width / 5));
         ctx.font = `bold ${fontSize}px Arial`;
         
         // 測量文字寬度
         const textMetrics = ctx.measureText(text);
         const textWidth = textMetrics.width;
         
-        // 調整位置計算，因為字體變大需要更多空間
-        const padding = 30;
-        const x = Math.max(15, img.width - textWidth - padding);
+        // 因為字體更大，需要更多空間和邊距
+        const padding = 40;
+        const x = Math.max(20, img.width - textWidth - padding);
         const y = img.height - padding;
         
         // 調整背景框大小以配合更大的字體
         ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'; // 白色背景
-        ctx.fillRect(x - 15, y - fontSize - 15, textWidth + 30, fontSize + 30);
+        ctx.fillRect(x - 20, y - fontSize - 20, textWidth + 40, fontSize + 40);
         
-        // 黑色邊框
+        // 黑色邊框，因為字體更大所以邊框也要更粗
         ctx.strokeStyle = 'rgba(0, 0, 0, 1)';
-        ctx.lineWidth = 3; // 邊框也稍微加粗
-        ctx.strokeRect(x - 15, y - fontSize - 15, textWidth + 30, fontSize + 30);
+        ctx.lineWidth = 4; // 邊框加粗到 4px
+        ctx.strokeRect(x - 20, y - fontSize - 20, textWidth + 40, fontSize + 40);
         
         // 繪製文字
         ctx.fillStyle = 'rgba(0, 0, 0, 1)';
@@ -781,7 +781,7 @@ async function addWatermark(base64: string, text: string): Promise<string> {
         
         // 使用較低品質但更穩定的壓縮
         const result = canvas.toDataURL('image/jpeg', 0.8);
-        console.log('浮水印處理成功');
+        console.log('浮水印處理成功，字體大小:', fontSize);
         resolve(result);
         
       } catch (error) {
