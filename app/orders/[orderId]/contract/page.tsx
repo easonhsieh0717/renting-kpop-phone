@@ -174,12 +174,16 @@ function renderContract(order: any, depositMode: string | null, needCable: boole
       <b>第三條 租金與押金</b><br/>
       1. <b>租金：</b> 每日租金NT$600，乙方應於設備交付時以現金或電子支付方式一次付清全額租金，或依雙方書面約定按日結算。<br/>
       2. <b>押金方案（擇一）：</b><br/>
-      {depositMode === 'high' ? (
-        <span>- <b>高押金模式（免證件）：</b> 乙方支付押金NT$30,000，於設備交付時以現金或電子支付方式繳納。<br/></span>
-      ) : depositMode === 'low' ? (
-        <span>- <b>低押金模式（需證件及預授權）：</b> 乙方提供中華民國身分證及第二證件（健保卡或駕照）正本供甲方驗證並留存影本。押金NT$3,000，於設備交付時以現金或電子支付方式繳納。信用卡預授權NT$30,000，於設備交付時完成授權，僅於設備損壞、遺失或違約時扣款。<br/></span>
-      ) : <span>（請選擇押金方案）<br/></span>}
-      3. <b>退還時限：</b> 租期結束且設備經甲方驗收無損壞或遺失後，押金及預授權將於3個工作日內全額退還或解除。<br/>
+      &nbsp;&nbsp;<b>方案一：高押金（免證件）</b><br/>
+      &nbsp;&nbsp;- 押金金額：NT$30,000（現金）<br/>
+      &nbsp;&nbsp;- 繳納方式：設備交付時以現金繳納<br/>
+      &nbsp;&nbsp;- 證件要求：無需提供身分證件<br/>
+      &nbsp;&nbsp;<b>方案二：低押金（需證件）</b><br/>
+      &nbsp;&nbsp;- 押金金額：NT$3,000（現金）+ 身分證正本<br/>
+      &nbsp;&nbsp;- 或信用卡預授權：NT$30,000<br/>
+      &nbsp;&nbsp;- 繳納方式：設備交付時繳納<br/>
+      &nbsp;&nbsp;- 證件要求：需提供身分證正本及第二證件影本<br/>
+      3. <b>押金退還：</b> 設備歸還且驗收無誤後，甲方於24小時內退還押金或解除預授權。<br/>
       <b>第四條 設備交付與歸還</b><br/>
       1. <b>交付程序：</b> 甲乙雙方於交付時共同檢查設備外觀、功能及配件，簽署《設備交付確認單》（附件二），並拍照存證（包含螢幕、機身、配件完整性）。<br/>
       2. <b>歸還驗收：</b> 乙方應於租期結束當日親自或委託快遞將設備歸還至甲方指定地點。甲方依《損害賠償參考表》（附件一）檢查設備並計算賠償（如適用）。<br/>
@@ -430,6 +434,13 @@ export default function ContractPage() {
   const handleIdFront = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || !e.target.files[0]) return;
     const file = e.target.files[0];
+    
+    // 檢查檔案大小（限制 5MB）
+    if (file.size > 5 * 1024 * 1024) {
+      alert('檔案太大，請選擇小於 5MB 的圖片');
+      return;
+    }
+    
     toBase64(file).then(base64 => {
       addWatermark(base64, `僅限手機租賃使用 ${new Date().toLocaleString('zh-TW', { hour12: false })}`)
         .then(async watermarked => {
@@ -441,15 +452,20 @@ export default function ContractPage() {
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ file: watermarked, type: 'id', name: '證件正面' })
             });
-            if (!res.ok) throw new Error('上傳失敗');
+            if (!res.ok) {
+              const errorData = await res.json();
+              throw new Error(errorData.message || '上傳失敗');
+            }
           } catch (err) {
+            console.error('證件正面上傳失敗:', err);
             // 自動重試一次
             try {
-              await fetch(`/api/orders/${orderId}/upload`, {
+              const retryRes = await fetch(`/api/orders/${orderId}/upload`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ file: watermarked, type: 'id', name: '證件正面' })
               });
+              if (!retryRes.ok) throw new Error('重試失敗');
             } catch {
               alert('證件正面上傳失敗，請重新嘗試');
             }
@@ -461,6 +477,13 @@ export default function ContractPage() {
   const handleIdBack = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || !e.target.files[0]) return;
     const file = e.target.files[0];
+    
+    // 檢查檔案大小（限制 5MB）
+    if (file.size > 5 * 1024 * 1024) {
+      alert('檔案太大，請選擇小於 5MB 的圖片');
+      return;
+    }
+    
     toBase64(file).then(base64 => {
       addWatermark(base64, `僅限手機租賃使用 ${new Date().toLocaleString('zh-TW', { hour12: false })}`)
         .then(async watermarked => {
@@ -472,15 +495,20 @@ export default function ContractPage() {
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ file: watermarked, type: 'id', name: '證件反面' })
             });
-            if (!res.ok) throw new Error('上傳失敗');
+            if (!res.ok) {
+              const errorData = await res.json();
+              throw new Error(errorData.message || '上傳失敗');
+            }
           } catch (err) {
+            console.error('證件反面上傳失敗:', err);
             // 自動重試一次
             try {
-              await fetch(`/api/orders/${orderId}/upload`, {
+              const retryRes = await fetch(`/api/orders/${orderId}/upload`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ file: watermarked, type: 'id', name: '證件反面' })
               });
+              if (!retryRes.ok) throw new Error('重試失敗');
             } catch {
               alert('證件反面上傳失敗，請重新嘗試');
             }
@@ -535,13 +563,39 @@ export default function ContractPage() {
       {step === 3 && (
         <div>
           <h2 className="text-lg font-bold mb-2">3. 選擇押金模式與配件</h2>
-          <div className="mb-2">
-            <label className="mr-4"><input type="radio" checked={depositMode==='high'} onChange={()=>setDepositMode('high')} /> 高押金（免證件）</label>
-            <label><input type="radio" checked={depositMode==='low'} onChange={()=>setDepositMode('low')} /> 低押金（需證件）</label>
+          <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+            <h3 className="font-semibold mb-2">押金模式說明：</h3>
+            <div className="space-y-2 text-sm">
+              <div className="flex items-start">
+                <input type="radio" id="high" checked={depositMode==='high'} onChange={()=>setDepositMode('high')} className="mt-1 mr-2" />
+                <label htmlFor="high" className="flex-1">
+                  <span className="font-medium">高押金（免證件）：</span>
+                  <br/>
+                  <span className="text-gray-600">現金 NT$30,000，無需提供身分證件</span>
+                </label>
+              </div>
+              <div className="flex items-start">
+                <input type="radio" id="low" checked={depositMode==='low'} onChange={()=>setDepositMode('low')} className="mt-1 mr-2" />
+                <label htmlFor="low" className="flex-1">
+                  <span className="font-medium">低押金（需證件）：</span>
+                  <br/>
+                  <span className="text-gray-600">身分證正本 + NT$3,000 現金，或信用卡預授權 NT$30,000</span>
+                </label>
+              </div>
+            </div>
           </div>
-          <div className="mb-2">
-            <label className="mr-4"><input type="checkbox" checked={needCable} onChange={e=>setNeedCable(e.target.checked)} /> 需要傳輸線</label>
-            <label><input type="checkbox" checked={needCharger} onChange={e=>setNeedCharger(e.target.checked)} /> 需要充電頭</label>
+          <div className="mb-4">
+            <h3 className="font-semibold mb-2">配件需求：</h3>
+            <div className="space-y-2">
+              <label className="flex items-center">
+                <input type="checkbox" checked={needCable} onChange={e=>setNeedCable(e.target.checked)} className="mr-2" />
+                <span>需要傳輸線（NT$800）</span>
+              </label>
+              <label className="flex items-center">
+                <input type="checkbox" checked={needCharger} onChange={e=>setNeedCharger(e.target.checked)} className="mr-2" />
+                <span>需要充電頭（NT$1,000）</span>
+              </label>
+            </div>
           </div>
           <button disabled={!canNext3} onClick={() => setStep(4)} className="px-4 py-2 bg-blue-600 text-white rounded disabled:bg-gray-300">下一步</button>
         </div>
