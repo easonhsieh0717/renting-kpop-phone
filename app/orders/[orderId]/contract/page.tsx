@@ -648,10 +648,8 @@ async function addWatermark(base64: string, text: string): Promise<string> {
       ctx.drawImage(img, 0, 0);
       ctx.font = 'bold 32px sans-serif';
       ctx.fillStyle = 'rgba(0,0,0,0.4)';
-      // 浮水印內容
-      const now = new Date();
-      const dateStr = now.toLocaleString('zh-TW', { hour12: false });
-      ctx.fillText(`僅限手機租賃使用 ${dateStr}`, 20, img.height - 40);
+      // 使用傳入的 text 參數
+      ctx.fillText(text, 20, img.height - 40);
       resolve(canvas.toDataURL());
     };
     img.src = base64;
