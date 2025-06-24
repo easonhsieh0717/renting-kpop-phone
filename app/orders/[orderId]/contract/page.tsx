@@ -134,43 +134,50 @@ export default function ContractPage() {
         const contractNode = document.getElementById('contract-content');
         if (contractNode) {
           try {
+            // 多頁截圖產生 PDF
+            const pageHeight = 1122; // px, 約等於 A4 @ 96dpi
+            const totalHeight = contractNode.scrollHeight;
             const pdf = new jsPDF({ unit: 'px', format: 'a4' });
-            // 動態載入字型
-            if (typeof window !== 'undefined') {
-              const fontScript = document.createElement('script');
-              fontScript.src = '/NotoSansTC-normal.js';
-              fontScript.onload = () => {
-                pdf.setFont('NotoSansTC');
-              };
-              document.body.appendChild(fontScript);
-            } else {
-              pdf.setFont('NotoSansTC');
+            let rendered = 0;
+            let pageNum = 0;
+            while (rendered < totalHeight) {
+              // 建立臨時 div，複製內容並裁切高度
+              const tempDiv = contractNode.cloneNode(true);
+              (tempDiv as HTMLElement).style.height = `${Math.min(pageHeight, totalHeight - rendered)}px`;
+              (tempDiv as HTMLElement).style.overflow = 'hidden';
+              (tempDiv as HTMLElement).scrollTop = rendered;
+              document.body.appendChild(tempDiv);
+              const canvas = await html2canvas(tempDiv as HTMLElement, {
+                scale: 2,
+                useCORS: true,
+                y: 0,
+                height: Math.min(pageHeight, totalHeight - rendered)
+              });
+              document.body.removeChild(tempDiv);
+              const imgData = canvas.toDataURL('image/png');
+              if (pageNum > 0) pdf.addPage();
+              pdf.addImage(imgData, 'PNG', 0, 0, pdf.internal.pageSize.getWidth(), pdf.internal.pageSize.getHeight());
+              rendered += pageHeight;
+              pageNum++;
             }
-            await pdf.html(contractNode, {
-              margin: [20, 20, 20, 20],
-              autoPaging: 'text',
-              html2canvas: { scale: 2, useCORS: true },
-              callback: async (pdf: any) => {
-                const pdfData = pdf.output('dataurlstring');
-                const maxSize = 3.5 * 1024 * 1024; // 3.5MB
-                const chunks = splitBase64(pdfData, maxSize);
-                for (let i = 0; i < chunks.length; i++) {
-                  console.log('PDF upload part', i + 1, 'size', chunks[i].length);
-                  await fetch(`/api/orders/${orderId}/upload?part=${i + 1}&total=${chunks.length}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ file: chunks[i], type: 'pdf' })
-                  });
-                }
-                if (response.ok) {
-                  setSigned(true);
-                  setSignatureUrl(dataUrl);
-                  alert("合約簽署完成！");
-                } else {
-                  alert("簽署失敗，請稍後再試");
-                }
-              }
-            });
+            const pdfData = pdf.output('dataurlstring');
+            const maxSize = 3.5 * 1024 * 1024; // 3.5MB
+            const chunks = splitBase64(pdfData, maxSize);
+            for (let i = 0; i < chunks.length; i++) {
+              console.log('PDF upload part', i + 1, 'size', chunks[i].length);
+              await fetch(`/api/orders/${orderId}/upload?part=${i + 1}&total=${chunks.length}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ file: chunks[i], type: 'pdf' })
+              });
+            }
+            if (response.ok) {
+              setSigned(true);
+              setSignatureUrl(dataUrl);
+              alert("合約簽署完成！");
+            } else {
+              alert("簽署失敗，請稍後再試");
+            }
           } catch (err) {
             console.error('PDF upload error', err);
           }
