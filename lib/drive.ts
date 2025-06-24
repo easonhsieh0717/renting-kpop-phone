@@ -1,4 +1,5 @@
 import { google } from 'googleapis';
+import { Readable } from 'stream';
 
 const FOLDER_ID = process.env.GOOGLE_DRIVE_FOLDER_ID || '';
 
@@ -50,7 +51,7 @@ export async function uploadOrderFile(orderId: string, fileName: string, mimeTyp
     },
     media: {
       mimeType,
-      body: Buffer.from(buffer),
+      body: Readable.from(buffer),
     },
     fields: 'id, webViewLink, webContentLink',
   });
