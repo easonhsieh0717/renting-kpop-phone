@@ -134,31 +134,40 @@ export default function ContractPage() {
         const contractNode = document.getElementById('contract-content');
         if (contractNode) {
           try {
-            // 多頁截圖產生 PDF（正確分頁，每頁用 marginTop 位移）
-            const pageHeight = 1122; // px, 約等於 A4 @ 96dpi
+            // 先將內容切分為多個 page div，每個高度等於 A4
+            const pageHeight = 1122; // px, A4
             const totalHeight = contractNode.scrollHeight;
             const pdf = new jsPDF({ unit: 'px', format: 'a4' });
             let rendered = 0;
             let pageNum = 0;
+            const pageDivs: HTMLElement[] = [];
             while (rendered < totalHeight) {
-              // 建立臨時 div，內容同 contractNode
-              const tempDiv = contractNode.cloneNode(true) as HTMLElement;
-              tempDiv.style.height = `${pageHeight}px`;
-              tempDiv.style.overflow = 'hidden';
-              tempDiv.style.marginTop = `-${rendered}px`;
-              tempDiv.style.background = '#fff';
-              document.body.appendChild(tempDiv);
-              const canvas = await html2canvas(tempDiv, {
+              const pageDiv = document.createElement('div');
+              pageDiv.style.width = contractNode.offsetWidth + 'px';
+              pageDiv.style.height = pageHeight + 'px';
+              pageDiv.style.overflow = 'hidden';
+              pageDiv.style.background = '#fff';
+              // 複製內容並只顯示本頁
+              pageDiv.innerHTML = contractNode.innerHTML;
+              pageDiv.scrollTop = rendered;
+              pageDivs.push(pageDiv);
+              rendered += pageHeight;
+            }
+            // 逐頁渲染
+            for (let i = 0; i < pageDivs.length; i++) {
+              document.body.appendChild(pageDivs[i]);
+              pageDivs[i].scrollTop = i * pageHeight;
+              const canvas = await html2canvas(pageDivs[i], {
                 scale: 2,
                 useCORS: true,
-                backgroundColor: '#fff'
+                backgroundColor: '#fff',
+                y: i * pageHeight,
+                height: pageHeight
               });
-              document.body.removeChild(tempDiv);
+              document.body.removeChild(pageDivs[i]);
               const imgData = canvas.toDataURL('image/png');
-              if (pageNum > 0) pdf.addPage();
+              if (i > 0) pdf.addPage();
               pdf.addImage(imgData, 'PNG', 0, 0, pdf.internal.pageSize.getWidth(), pdf.internal.pageSize.getHeight());
-              rendered += pageHeight;
-              pageNum++;
             }
             const pdfData = pdf.output('dataurlstring');
             const maxSize = 3.5 * 1024 * 1024; // 3.5MB
