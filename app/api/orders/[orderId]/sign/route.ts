@@ -46,7 +46,7 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
       range: updateRange,
       valueInputOption: 'RAW',
       requestBody: {
-        values: [['已簽署', signature]]
+        values: [['已簽署', '']]
       }
     });
 

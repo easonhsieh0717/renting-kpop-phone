@@ -223,7 +223,7 @@ function renderContract(order: any, depositMode: string | null, needCable: boole
       <b>第十二條 通知方式</b><br/>
       1. 所有通知（包括延租、違約、爭議）以書面（電子郵件或LINE）送達。<br/>
       2. 乙方聯繫方式變更，應立即通知甲方，否則視為有效送達。<br/>
-      3. <b>甲方聯繫方式：</b> 02-8252-7208，電子郵件：example@company.com，地址：台北市板橋區文化路二段385之3號<br/>
+      3. <b>甲方聯繫方式：</b> 02-8252-7208，電子郵件：a0970580318@gmail.com，地址：台北市板橋區文化路二段385之3號<br/>
       <b>簽署欄位</b><br/>
       甲方簽章：____________________　日期：{formatDate(today)}<br/>
       乙方簽章：____________________　日期：{formatDate(today)}<br/>
