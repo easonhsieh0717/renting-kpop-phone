@@ -442,18 +442,27 @@ export default function ContractPage() {
     }
     
     try {
+      console.log('開始處理證件正面...');
       // 先轉換為 base64
       const base64 = await toBase64(file);
+      console.log('證件正面轉換為 base64 完成');
       
       // 先上傳原始照片（不加浮水印）
-      await fetch(`/api/orders/${orderId}/upload`, {
+      const uploadResponse = await fetch(`/api/orders/${orderId}/upload`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ file: base64, type: 'id', name: '證件正面' })
       });
       
+      if (!uploadResponse.ok) {
+        throw new Error(`上傳失敗: ${uploadResponse.status}`);
+      }
+      console.log('證件正面上傳完成');
+      
       // 上傳成功後，再加浮水印顯示
+      console.log('開始加浮水印...');
       const watermarked = await addWatermark(base64, `僅限手機租賃使用 ${new Date().toLocaleString('zh-TW', { hour12: false })}`);
+      console.log('浮水印處理完成');
       setIdFront(watermarked);
       
     } catch (err) {
@@ -473,18 +482,27 @@ export default function ContractPage() {
     }
     
     try {
+      console.log('開始處理證件反面...');
       // 先轉換為 base64
       const base64 = await toBase64(file);
+      console.log('證件反面轉換為 base64 完成');
       
       // 先上傳原始照片（不加浮水印）
-      await fetch(`/api/orders/${orderId}/upload`, {
+      const uploadResponse = await fetch(`/api/orders/${orderId}/upload`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ file: base64, type: 'id', name: '證件反面' })
       });
       
+      if (!uploadResponse.ok) {
+        throw new Error(`上傳失敗: ${uploadResponse.status}`);
+      }
+      console.log('證件反面上傳完成');
+      
       // 上傳成功後，再加浮水印顯示
+      console.log('開始加浮水印...');
       const watermarked = await addWatermark(base64, `僅限手機租賃使用 ${new Date().toLocaleString('zh-TW', { hour12: false })}`);
+      console.log('浮水印處理完成');
       setIdBack(watermarked);
       
     } catch (err) {
@@ -637,21 +655,66 @@ function toBase64(file: File): Promise<string> {
 
 // 浮水印工具
 async function addWatermark(base64: string, text: string): Promise<string> {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const img = new window.Image();
     img.onload = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = img.width;
-      canvas.height = img.height;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return resolve(base64);
-      ctx.drawImage(img, 0, 0);
-      ctx.font = 'bold 32px sans-serif';
-      ctx.fillStyle = 'rgba(0,0,0,0.4)';
-      // 使用傳入的 text 參數
-      ctx.fillText(text, 20, img.height - 40);
-      resolve(canvas.toDataURL());
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          console.error('無法取得 canvas context');
+          return resolve(base64);
+        }
+        
+        // 繪製原始圖片
+        ctx.drawImage(img, 0, 0);
+        
+        // 計算字體大小（根據圖片尺寸調整）
+        const fontSize = Math.max(16, Math.min(48, img.width / 20));
+        ctx.font = `bold ${fontSize}px Arial, sans-serif`;
+        
+        // 測量文字寬度
+        const textMetrics = ctx.measureText(text);
+        const textWidth = textMetrics.width;
+        
+        // 設定浮水印樣式
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)'; // 白色背景
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.8)'; // 黑色邊框
+        ctx.lineWidth = 2;
+        
+        // 計算位置（右下角）
+        const padding = 20;
+        const x = img.width - textWidth - padding;
+        const y = img.height - padding;
+        
+        // 繪製背景矩形
+        ctx.fillRect(x - 10, y - fontSize - 10, textWidth + 20, fontSize + 20);
+        
+        // 繪製文字邊框
+        ctx.strokeText(text, x, y);
+        
+        // 繪製文字
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
+        ctx.fillText(text, x, y);
+        
+        // 轉換為 base64
+        const result = canvas.toDataURL('image/jpeg', 0.9);
+        resolve(result);
+        
+      } catch (error) {
+        console.error('浮水印處理失敗:', error);
+        // 如果浮水印失敗，返回原始圖片
+        resolve(base64);
+      }
     };
+    
+    img.onerror = () => {
+      console.error('圖片載入失敗');
+      resolve(base64);
+    };
+    
     img.src = base64;
   });
 } 
