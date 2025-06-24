@@ -445,14 +445,11 @@ export default function ContractPage() {
       // 先轉換為 base64
       const base64 = await toBase64(file);
       
-      // 先加浮水印
-      const watermarked = await addWatermark(base64, `僅限手機租賃使用 ${new Date().toLocaleString('zh-TW', { hour12: false })}`);
-      
-      // 上傳加浮水印的照片
+      // 先上傳原始照片（不加浮水印）
       const uploadRes = await fetch(`/api/orders/${orderId}/upload`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ file: watermarked, type: 'id', name: '證件正面' })
+        body: JSON.stringify({ file: base64, type: 'id', name: '證件正面' })
       });
       
       if (!uploadRes.ok) {
@@ -460,7 +457,8 @@ export default function ContractPage() {
         throw new Error(errorData.message || '上傳失敗');
       }
       
-      // 上傳成功後，顯示加浮水印的版本
+      // 上傳成功後，再加浮水印顯示
+      const watermarked = await addWatermark(base64, `僅限手機租賃使用 ${new Date().toLocaleString('zh-TW', { hour12: false })}`);
       setIdFront(watermarked);
       
     } catch (err) {
@@ -468,17 +466,17 @@ export default function ContractPage() {
       // 自動重試一次
       try {
         const base64 = await toBase64(file);
-        const watermarked = await addWatermark(base64, `僅限手機租賃使用 ${new Date().toLocaleString('zh-TW', { hour12: false })}`);
         
         const retryRes = await fetch(`/api/orders/${orderId}/upload`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ file: watermarked, type: 'id', name: '證件正面' })
+          body: JSON.stringify({ file: base64, type: 'id', name: '證件正面' })
         });
         
         if (!retryRes.ok) throw new Error('重試失敗');
         
-        // 重試成功後，顯示加浮水印的版本
+        // 重試成功後，再加浮水印顯示
+        const watermarked = await addWatermark(base64, `僅限手機租賃使用 ${new Date().toLocaleString('zh-TW', { hour12: false })}`);
         setIdFront(watermarked);
         
       } catch (retryErr) {
@@ -502,14 +500,11 @@ export default function ContractPage() {
       // 先轉換為 base64
       const base64 = await toBase64(file);
       
-      // 先加浮水印
-      const watermarked = await addWatermark(base64, `僅限手機租賃使用 ${new Date().toLocaleString('zh-TW', { hour12: false })}`);
-      
-      // 上傳加浮水印的照片
+      // 先上傳原始照片（不加浮水印）
       const uploadRes = await fetch(`/api/orders/${orderId}/upload`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ file: watermarked, type: 'id', name: '證件反面' })
+        body: JSON.stringify({ file: base64, type: 'id', name: '證件反面' })
       });
       
       if (!uploadRes.ok) {
@@ -517,7 +512,8 @@ export default function ContractPage() {
         throw new Error(errorData.message || '上傳失敗');
       }
       
-      // 上傳成功後，顯示加浮水印的版本
+      // 上傳成功後，再加浮水印顯示
+      const watermarked = await addWatermark(base64, `僅限手機租賃使用 ${new Date().toLocaleString('zh-TW', { hour12: false })}`);
       setIdBack(watermarked);
       
     } catch (err) {
@@ -525,17 +521,17 @@ export default function ContractPage() {
       // 自動重試一次
       try {
         const base64 = await toBase64(file);
-        const watermarked = await addWatermark(base64, `僅限手機租賃使用 ${new Date().toLocaleString('zh-TW', { hour12: false })}`);
         
         const retryRes = await fetch(`/api/orders/${orderId}/upload`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ file: watermarked, type: 'id', name: '證件反面' })
+          body: JSON.stringify({ file: base64, type: 'id', name: '證件反面' })
         });
         
         if (!retryRes.ok) throw new Error('重試失敗');
         
-        // 重試成功後，顯示加浮水印的版本
+        // 重試成功後，再加浮水印顯示
+        const watermarked = await addWatermark(base64, `僅限手機租賃使用 ${new Date().toLocaleString('zh-TW', { hour12: false })}`);
         setIdBack(watermarked);
         
       } catch (retryErr) {
