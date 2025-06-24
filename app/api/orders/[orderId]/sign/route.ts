@@ -39,14 +39,14 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
       return NextResponse.json({ message: '查無訂單' }, { status: 404 });
     }
 
-    // 更新合約簽署狀態（假設在 N 欄，索引 13）
-    const updateRange = `reservations!N${orderIndex + 1}`;
+    // 更新合約簽署狀態（假設在 N 欄，索引 13）與簽名圖（O欄，索引14）
+    const updateRange = `reservations!N${orderIndex + 1}:O${orderIndex + 1}`;
     await sheets.spreadsheets.values.update({
       spreadsheetId,
       range: updateRange,
       valueInputOption: 'RAW',
       requestBody: {
-        values: [['已簽署']]
+        values: [['已簽署', signature]]
       }
     });
 
