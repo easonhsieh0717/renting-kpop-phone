@@ -113,10 +113,17 @@ export default function ContractPage() {
   const handleSign = async (dataUrl: string) => {
     setModalOpen(false);
     try {
+      // 1. 先呼叫 /sign，寫入 Google Sheet
       const response = await fetch(`/api/orders/${orderId}/sign`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ signature: dataUrl })
+      });
+      // 2. 再呼叫 /upload，寫入 Google Drive
+      await fetch(`/api/orders/${orderId}/upload`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ file: dataUrl, type: 'sign' })
       });
       if (response.ok) {
         setSigned(true);
