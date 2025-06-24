@@ -133,6 +133,33 @@ function Stepper({ step, setStep }: { step: number; setStep: (n: number) => void
   );
 }
 
+// 合約條款渲染（可根據 props 帶入步驟資料）
+function renderContract(order: any, photos: string[], idPhoto: string | null, depositMode: string | null, needCable: boolean, needCharger: boolean) {
+  return (
+    <div className="space-y-4 text-base leading-relaxed mb-8 text-gray-800">
+      <h2 className="text-xl font-bold mb-2 text-gray-900">三星Galaxy S25 Ultra手機租借契約書</h2>
+      <b>第一條 租賃標的</b><br/>
+      1. <b>出租人（甲方）：</b> 伊森不累手機租借平台<br/>
+      2. <b>承租人（乙方）：</b> {order[5]}<br/>
+      3. <b>租賃設備：</b><br/>
+      &nbsp;&nbsp;- 手機品牌與型號：三星Galaxy S25 Ultra<br/>
+      &nbsp;&nbsp;- IMEI序號：{order[1]}<br/>
+      &nbsp;&nbsp;- 配件：原廠USB-C充電線、原廠盒裝、原廠保護殼（若提供）<br/>
+      &nbsp;&nbsp;- 初始狀況：電池健康度95%，外觀無刮痕、無凹陷、無裂痕，功能正常，經雙方確認無既有瑕疵<br/>
+      &nbsp;&nbsp;- 清潔要求：乙方應保持設備清潔，歸還時不得有污漬、異味或殞損，否則甲方將收取清潔費用NT$500，於押金或預授權中扣除。<br/>
+      <b>手機外觀照片：</b><br/>
+      <div className="flex flex-wrap gap-2 mb-2">
+        {photos.map((p, i) => <img key={i} src={p} alt="外觀" className="w-32 h-32 object-cover border rounded" />)}
+      </div>
+      <b>證件照片：</b><br/>
+      {idPhoto && <img src={idPhoto} alt="證件" className="w-64 h-40 object-contain border rounded mb-2" />}
+      <b>押金模式：</b> {depositMode === 'high' ? '高押金（免證件）' : depositMode === 'low' ? '低押金（需證件）' : ''}<br/>
+      <b>配件需求：</b> {needCable ? '需要傳輸線 ' : ''}{needCharger ? '需要充電頭' : ''}<br/>
+      {/* ...其餘合約條款... */}
+    </div>
+  );
+}
+
 export default function ContractPage() {
   const { orderId } = useParams();
   const router = useRouter();
@@ -326,13 +353,7 @@ export default function ContractPage() {
       {step === 4 && (
         <div>
           <div className="mb-8">
-            {/* 合約內容區塊（可抽成 renderContract(order, photos, idPhoto, depositMode, needCable, needCharger)） */}
-            <h1 className="text-2xl font-bold mb-4 text-center text-gray-900">手機租賃合約書</h1>
-            <div className="mb-4 text-sm text-gray-700 text-center">訂單編號：{order[0]}</div>
-            <div className="space-y-4 text-base leading-relaxed mb-8 text-gray-800">
-              {/* ...合約條款內容... 可帶入 photos, idPhoto, depositMode, needCable, needCharger 資訊 */}
-              {/* ...原本合約內容... */}
-            </div>
+            {renderContract(order, photos, idPhoto, depositMode, needCable, needCharger)}
           </div>
           <div className="border-t pt-6">
             <h3 className="text-lg font-semibold mb-4">電子簽署</h3>
@@ -390,7 +411,10 @@ async function addWatermark(base64: string, text: string): Promise<string> {
       ctx.drawImage(img, 0, 0);
       ctx.font = 'bold 32px sans-serif';
       ctx.fillStyle = 'rgba(0,0,0,0.4)';
-      ctx.fillText(text, 20, img.height - 40);
+      // 浮水印內容
+      const now = new Date();
+      const dateStr = now.toLocaleString('zh-TW', { hour12: false });
+      ctx.fillText(`僅限手機租賃使用 ${dateStr}`, 20, img.height - 40);
       resolve(canvas.toDataURL());
     };
     img.src = base64;
