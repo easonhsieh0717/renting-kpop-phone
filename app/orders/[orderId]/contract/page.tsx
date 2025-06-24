@@ -271,6 +271,7 @@ export default function ContractPage() {
   const [signatureUrl, setSignatureUrl] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [step, setStep] = useState(1);
+  const [isUploading, setIsUploading] = useState(false);
   // 1. 手機外觀
   const [photos, setPhotos] = useState<string[]>([]);
   // 2. 證件
@@ -317,6 +318,7 @@ export default function ContractPage() {
     setModalOpen(false);
     setSigned(true);
     setSignatureUrl(dataUrl);
+    setIsUploading(true);
     await new Promise(r => setTimeout(r, 200)); // 等待 DOM 更新
     try {
       // 1. 先呼叫 /sign，寫入 Google Sheet
@@ -385,18 +387,24 @@ export default function ContractPage() {
               });
             }
             if (response.ok) {
+              setIsUploading(false);
               alert("合約簽署完成！");
             } else {
+              setIsUploading(false);
               alert("簽署失敗，請稍後再試");
             }
           } catch (err) {
             console.error('PDF upload error', err);
+            setIsUploading(false);
+            alert("PDF 產生失敗，請稍後再試");
           }
         } else {
           console.log('PDF upload failed: contract-content not found');
+          setIsUploading(false);
         }
       }, 1000);
     } catch {
+      setIsUploading(false);
       alert("簽署失敗，請稍後再試");
     }
   };
@@ -545,6 +553,17 @@ export default function ContractPage() {
           </div>
           <div className="border-t pt-6">
             <h3 className="text-lg font-semibold mb-4">電子簽署</h3>
+            {isUploading && (
+              <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-center">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mr-3"></div>
+                  <div>
+                    <div className="text-blue-800 font-medium">上傳作業中...</div>
+                    <div className="text-blue-600 text-sm">請稍候，不要離開畫面</div>
+                  </div>
+                </div>
+              </div>
+            )}
             {signed && signatureUrl ? (
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">乙方簽名（{order[5]}）</label>
