@@ -132,32 +132,32 @@ export default function ContractPage() {
         const contractNode = document.getElementById('contract-content');
         if (contractNode) {
           try {
-            const canvas = await html2canvas(contractNode, { scale: 1 });
-            const imgData = canvas.toDataURL('image/png');
             const pdf = new jsPDF({ unit: 'px', format: 'a4' });
-            const pageWidth = pdf.internal.pageSize.getWidth();
-            const imgProps = pdf.getImageProperties(imgData);
-            const pdfWidth = pageWidth;
-            const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-            const pdfData = pdf.output('dataurlstring');
-            const maxSize = 3.5 * 1024 * 1024; // 3.5MB
-            const chunks = splitBase64(pdfData, maxSize);
-            for (let i = 0; i < chunks.length; i++) {
-              console.log('PDF upload part', i + 1, 'size', chunks[i].length);
-              await fetch(`/api/orders/${orderId}/upload?part=${i + 1}&total=${chunks.length}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ file: chunks[i], type: 'pdf' })
-              });
-            }
-            if (response.ok) {
-              setSigned(true);
-              setSignatureUrl(dataUrl);
-              alert("合約簽署完成！");
-            } else {
-              alert("簽署失敗，請稍後再試");
-            }
+            await pdf.html(contractNode, {
+              margin: [20, 20, 20, 20],
+              autoPaging: 'text',
+              html2canvas: { scale: 2, useCORS: true },
+              callback: async (pdf) => {
+                const pdfData = pdf.output('dataurlstring');
+                const maxSize = 3.5 * 1024 * 1024; // 3.5MB
+                const chunks = splitBase64(pdfData, maxSize);
+                for (let i = 0; i < chunks.length; i++) {
+                  console.log('PDF upload part', i + 1, 'size', chunks[i].length);
+                  await fetch(`/api/orders/${orderId}/upload?part=${i + 1}&total=${chunks.length}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ file: chunks[i], type: 'pdf' })
+                  });
+                }
+                if (response.ok) {
+                  setSigned(true);
+                  setSignatureUrl(dataUrl);
+                  alert("合約簽署完成！");
+                } else {
+                  alert("簽署失敗，請稍後再試");
+                }
+              }
+            });
           } catch (err) {
             console.error('PDF upload error', err);
           }
