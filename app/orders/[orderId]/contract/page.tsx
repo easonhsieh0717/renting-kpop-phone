@@ -134,40 +134,34 @@ export default function ContractPage() {
         const contractNode = document.getElementById('contract-content');
         if (contractNode) {
           try {
-            // 先將內容切分為多個 page div，每個高度等於 A4
+            // 多頁正確分頁：每頁用 transform 位移內容
             const pageHeight = 1122; // px, A4
             const totalHeight = contractNode.scrollHeight;
             const pdf = new jsPDF({ unit: 'px', format: 'a4' });
             let rendered = 0;
             let pageNum = 0;
-            const pageDivs: HTMLElement[] = [];
             while (rendered < totalHeight) {
               const pageDiv = document.createElement('div');
               pageDiv.style.width = contractNode.offsetWidth + 'px';
               pageDiv.style.height = pageHeight + 'px';
               pageDiv.style.overflow = 'hidden';
               pageDiv.style.background = '#fff';
-              // 複製內容並只顯示本頁
-              pageDiv.innerHTML = contractNode.innerHTML;
-              pageDiv.scrollTop = rendered;
-              pageDivs.push(pageDiv);
-              rendered += pageHeight;
-            }
-            // 逐頁渲染
-            for (let i = 0; i < pageDivs.length; i++) {
-              document.body.appendChild(pageDivs[i]);
-              pageDivs[i].scrollTop = i * pageHeight;
-              const canvas = await html2canvas(pageDivs[i], {
+              // 只顯示本頁內容
+              const inner = contractNode.cloneNode(true) as HTMLElement;
+              inner.style.transform = `translateY(-${rendered}px)`;
+              pageDiv.appendChild(inner);
+              document.body.appendChild(pageDiv);
+              const canvas = await html2canvas(pageDiv, {
                 scale: 2,
                 useCORS: true,
-                backgroundColor: '#fff',
-                y: i * pageHeight,
-                height: pageHeight
+                backgroundColor: '#fff'
               });
-              document.body.removeChild(pageDivs[i]);
+              document.body.removeChild(pageDiv);
               const imgData = canvas.toDataURL('image/png');
-              if (i > 0) pdf.addPage();
+              if (pageNum > 0) pdf.addPage();
               pdf.addImage(imgData, 'PNG', 0, 0, pdf.internal.pageSize.getWidth(), pdf.internal.pageSize.getHeight());
+              rendered += pageHeight;
+              pageNum++;
             }
             const pdfData = pdf.output('dataurlstring');
             const maxSize = 3.5 * 1024 * 1024; // 3.5MB
