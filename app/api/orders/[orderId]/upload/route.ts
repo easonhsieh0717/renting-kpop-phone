@@ -17,6 +17,7 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
     else if (type === 'id') fileName += '_證件.jpg';
     else if (type === 'pdf') fileName += '_合約.pdf';
     else fileName += '_其他檔案';
+    console.log('UPLOAD', { type, mimeType, fileName });
     const result = await uploadOrderFile(orderId, fileName, mimeType, buffer);
     return NextResponse.json({ message: '上傳成功', ...result });
   } catch (e) {
