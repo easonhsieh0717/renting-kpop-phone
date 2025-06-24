@@ -124,7 +124,7 @@ export async function POST(req: NextRequest) {
     
     const { 
       phone, startDate, endDate, name, userPhone, email, 
-      totalAmount, originalAmount, discountCode, discountAmount 
+      totalAmount, originalAmount, discountCode, discountAmount, isTest 
     } = body;
 
     if (!phone || !startDate || !endDate || !name || !userPhone || !email || totalAmount === undefined) {
@@ -145,7 +145,9 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const isProduction = process.env.VERCEL_ENV === 'production';
+    // 判斷是否為測試模式
+    const useTest = isTest === true;
+    const isProduction = process.env.VERCEL_ENV === 'production' && !useTest;
 
     const merchantID = isProduction ? process.env.ECPAY_MERCHANT_ID : '3002607';
     const hashKey = isProduction ? process.env.ECPAY_HASH_KEY : 'pwFHCqoQZGmho4w6';

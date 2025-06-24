@@ -28,25 +28,28 @@ export default function TestModePage() {
   const [ecpayParams, setEcpayParams] = useState<Record<string, any> | null>(null);
   const [log, setLog] = useState<string>("");
 
-  const createOrder = () => {
+  const createOrder = async () => {
     const now = new Date();
     const merchantTradeDate = `${now.getFullYear()}/${(now.getMonth()+1).toString().padStart(2,"0")}/${now.getDate().toString().padStart(2,"0")} ${now.getHours().toString().padStart(2,"0")}:${now.getMinutes().toString().padStart(2,"0")}:${now.getSeconds().toString().padStart(2,"0")}`;
     const oid = `TEST${Date.now()}`;
     setOrderId(oid);
-    const params: any = {
-      MerchantID: TEST_MERCHANT_ID,
-      MerchantTradeNo: oid,
-      MerchantTradeDate: merchantTradeDate,
-      PaymentType: "aio",
-      TotalAmount: 50,
-      TradeDesc: "測試訂單",
-      ItemName: "測試商品1#測試商品2",
-      ReturnURL: `${window.location.origin}/api/ecpay/return`,
-      ChoosePayment: "ALL",
-      EncryptType: 1,
-      ClientBackURL: `${window.location.origin}/testMode?oid=${oid}`,
-    };
-    params.CheckMacValue = generateCheckMacValue(params, TEST_HASH_KEY, TEST_HASH_IV);
+    // 呼叫後端 API 寫入 Google Sheet 並取得金流參數
+    const res = await fetch("/api/reservations", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        phone: { id: "TEST_PHONE", name: "測試手機", spec: "測試規格" },
+        startDate: "2025-07-01",
+        endDate: "2025-07-02",
+        name: "測試用戶",
+        userPhone: "0912345678",
+        email: "test@example.com",
+        totalAmount: 50,
+        originalAmount: 50,
+        isTest: true
+      }),
+    });
+    const params = await res.json();
     setEcpayParams(params);
     setLog("已產生測試訂單與金流參數");
   };
