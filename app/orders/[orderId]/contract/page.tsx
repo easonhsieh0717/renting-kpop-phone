@@ -10,6 +10,20 @@ function SignatureModal({ open, onClose, onSign }: { open: boolean; onClose: () 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const lastPos = useRef<{ x: number; y: number } | null>(null);
+  // 新增：根據裝置自動調整 canvas 尺寸
+  const [canvasSize, setCanvasSize] = useState({ width: 400, height: 200 });
+  useEffect(() => {
+    if (!open) return;
+    const isMobile = window.innerWidth < 600;
+    if (isMobile) {
+      // 強制橫式，盡可能全螢幕
+      const w = Math.min(window.innerWidth, window.innerHeight * 1.8, 600);
+      const h = Math.min(window.innerHeight * 0.5, 320);
+      setCanvasSize({ width: w, height: h });
+    } else {
+      setCanvasSize({ width: 400, height: 200 });
+    }
+  }, [open]);
 
   // 滑鼠事件
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -93,21 +107,24 @@ function SignatureModal({ open, onClose, onSign }: { open: boolean; onClose: () 
   };
   return open ? (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-      <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-lg relative">
+      <div className="bg-white rounded-lg shadow-lg p-2 w-full max-w-2xl relative flex flex-col items-center">
         <h2 className="text-lg font-bold mb-4">電子簽名</h2>
-        <canvas
-          ref={canvasRef}
-          width={400}
-          height={200}
-          className="border border-gray-200 rounded cursor-crosshair bg-white"
-          onMouseDown={startDrawing}
-          onMouseMove={draw}
-          onMouseUp={stopDrawing}
-          onMouseLeave={stopDrawing}
-          onTouchStart={startTouch}
-          onTouchMove={drawTouch}
-          onTouchEnd={stopTouch}
-        />
+        <div style={{ width: canvasSize.width, height: canvasSize.height, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <canvas
+            ref={canvasRef}
+            width={canvasSize.width}
+            height={canvasSize.height}
+            className="border border-gray-200 rounded bg-white touch-none"
+            style={{ touchAction: 'none', width: canvasSize.width, height: canvasSize.height, display: 'block' }}
+            onMouseDown={startDrawing}
+            onMouseMove={draw}
+            onMouseUp={stopDrawing}
+            onMouseLeave={stopDrawing}
+            onTouchStart={startTouch}
+            onTouchMove={drawTouch}
+            onTouchEnd={stopTouch}
+          />
+        </div>
         <div className="mt-2 flex gap-2">
           <button onClick={clearSignature} className="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded hover:bg-gray-300">清除簽名</button>
           <button onClick={handleSign} className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">確認簽署</button>
