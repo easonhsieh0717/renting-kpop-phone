@@ -132,7 +132,7 @@ export default function ContractPage() {
         const contractNode = document.getElementById('contract-content');
         if (contractNode) {
           try {
-            const canvas = await html2canvas(contractNode, { scale: 2 });
+            const canvas = await html2canvas(contractNode, { scale: 1 });
             const imgData = canvas.toDataURL('image/png');
             const pdf = new jsPDF({ unit: 'px', format: 'a4' });
             const pageWidth = pdf.internal.pageSize.getWidth();
