@@ -335,6 +335,11 @@ export default function ContractPage() {
       setTimeout(async () => {
         const contractNode = document.getElementById('contract-content');
         if (contractNode) {
+          // 強制所有子元素字型
+          contractNode.style.fontFamily = 'Noto Sans TC, Inter, system-ui, sans-serif';
+          contractNode.querySelectorAll('*').forEach(el => {
+            (el as HTMLElement).style.fontFamily = 'Noto Sans TC, Inter, system-ui, sans-serif';
+          });
           try {
             // 多頁正確分頁：每頁用 transform 位移內容
             const pageHeight = 1122; // px, A4
