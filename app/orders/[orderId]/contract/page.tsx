@@ -236,12 +236,25 @@ function renderContract(order: any, depositMode: string | null, needCable: boole
       &nbsp;&nbsp;- 原廠保護殼：NT$1,000<br/>
       &nbsp;&nbsp;- 原廠盒裝：NT$500<br/>
       - 其他損壞：依三星原廠授權維修中心報價單計算。<br/>
+      {renderAttachment2(order, depositMode, needCable, needCharger)}
+    </div>
+  );
+}
+
+function renderAttachment2(order: any, depositMode: string | null, needCable: boolean, needCharger: boolean) {
+  const today = new Date();
+  return (
+    <div className="mt-4 p-4 border border-gray-300 rounded bg-white text-gray-900">
       <b>附件二：設備交付確認單</b><br/>
       - 設備型號：三星Galaxy S25 Ultra<br/>
       - IMEI序號：{order[1]}<br/>
-      - 交付日期：{formatDate(today)}<br/>
+      - 交付日期：{today.getFullYear()}年{today.getMonth() + 1}月{today.getDate()}日<br/>
       - 初始狀況：電池健康度95%，外觀無瑕疵，功能正常<br/>
-      - 配件清單：原廠USB-C充電線、原廠盒裝、原廠保護殼（若提供）<br/>
+      - 配件清單：
+        {needCable && '原廠USB-C充電線，'}
+        {needCharger && '原廠充電頭，'}
+        原廠盒裝、原廠保護殼（若提供）<br/>
+      - 押金模式：{depositMode === 'high' ? '高押金（免證件）' : depositMode === 'low' ? '低押金（需證件及預授權）' : '未選擇'}<br/>
       - 甲方簽章：____________________　乙方簽章：____________________<br/>
     </div>
   );

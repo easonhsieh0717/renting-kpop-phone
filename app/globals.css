@@ -2,9 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: 'Noto Sans TC';
+  src: url('/NotoSansTC-Regular.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 @layer base {
   html {
-    font-family: 'Noto Sans TC', 'Inter', system-ui, sans-serif;
+    font-family: 'Noto Sans TC', 'Inter', system-ui, sans-serif !important;
   }
   h1, h2, h3, h4, h5, h6 {
     @apply font-bold;
