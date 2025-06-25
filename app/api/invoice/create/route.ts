@@ -76,7 +76,7 @@ async function getOrderData(orderId: string) {
     customerEmail: orderRow[6],
     customerPhone: orderRow[7],
     paymentStatus: orderRow[8],
-    finalAmount: orderRow[11], // L欄（索引11）是最終付款金額
+    finalAmount: orderRow[12], // M欄（索引12）是最終付款金額
     carrierNumber: orderRow[14] || '' // O欄是手機載具號碼
   };
 }
