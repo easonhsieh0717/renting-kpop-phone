@@ -1,10 +1,10 @@
 {
   "functions": {
     "app/api/webhooks/sheet-update/route.ts": {
-      "maxDuration": 300
+      "maxDuration": 30
     },
     "app/api/invoice/create/route.ts": {
-      "maxDuration": 60
+      "maxDuration": 30
     }
   }
 } 
