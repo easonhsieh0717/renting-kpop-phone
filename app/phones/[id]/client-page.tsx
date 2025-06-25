@@ -24,7 +24,12 @@ const startOfDay = (date: Date): Date => {
 
 export default function PhoneDetailClient({ phone, vercelEnv, bookedDates }: PhoneDetailClientProps) {
   const [reservation, setReservation] = useState<{range: DateRange | undefined, price: number}>({ range: undefined, price: 0 });
-  const [customer, setCustomer] = useState({ name: '', email: '', phone: '' });
+  const [customer, setCustomer] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    carrierNumber: ''
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [calendarError, setCalendarError] = useState<string | undefined>('');
@@ -129,6 +134,10 @@ export default function PhoneDetailClient({ phone, vercelEnv, bookedDates }: Pho
       setError('請填寫所有聯絡資訊');
       return;
     }
+    if (customer.carrierNumber && !/^\/[A-Z0-9+-.]{7}$/.test(customer.carrierNumber)) {
+      setError('手機載具號碼格式錯誤，請輸入正確的8碼格式（如：/A1B2C3D4）');
+      return;
+    }
 
     setIsLoading(true);
 
@@ -154,6 +163,7 @@ export default function PhoneDetailClient({ phone, vercelEnv, bookedDates }: Pho
           name: customer.name,
           email: customer.email,
           userPhone: customer.phone,
+          carrierNumber: customer.carrierNumber,
           from: toYYYYMMDD(reservation.range!.from),
           to: toYYYYMMDD(adjustedToDate),
         }),
@@ -291,6 +301,22 @@ export default function PhoneDetailClient({ phone, vercelEnv, bookedDates }: Pho
                 <div>
                   <label htmlFor="phone" className="block text-sm font-medium text-brand-gray-light mb-1">聯絡電話</label>
                   <input type="tel" name="phone" id="phone" value={customer.phone} onChange={handleInputChange} className="w-full bg-brand-gray-dark border-brand-gray rounded-md p-2 text-brand-white focus:ring-brand-yellow focus:border-brand-yellow" required />
+                </div>
+                <div>
+                  <label htmlFor="carrierNumber" className="block text-sm font-medium text-brand-gray-light mb-1">手機載具號碼 (選填)</label>
+                  <input 
+                    type="text" 
+                    name="carrierNumber" 
+                    id="carrierNumber" 
+                    value={customer.carrierNumber} 
+                    onChange={handleInputChange} 
+                    className="w-full bg-brand-gray-dark border-brand-gray rounded-md p-2 text-brand-white focus:ring-brand-yellow focus:border-brand-yellow" 
+                    placeholder="例：/A1B2C3D4"
+                    maxLength={8}
+                  />
+                  <p className="text-xs text-brand-gray-light mt-1">
+                    8碼載具號碼，用於電子發票開立，若不提供將開立雲端發票
+                  </p>
                 </div>
               </div>
 

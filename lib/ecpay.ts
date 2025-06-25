@@ -1,4 +1,4 @@
-import crypto from 'crypto-js';
+import crypto from 'crypto';
 
 interface ECPayPaymentData {
   MerchantID: string;
@@ -35,52 +35,134 @@ function generateCheckMacValue(data: Omit<ECPayPaymentData, 'CheckMacValue'>, ha
   
   const encodedString = ecpayUrlEncode(hashString).toLowerCase();
 
-  const hash = crypto.SHA256(encodedString).toString();
+  const hash = crypto.createHash('sha256').update(encodedString).digest('hex');
   
   return hash.toUpperCase();
 }
 
-export function getECPayPaymentParams(params: {
+export function getECPayPaymentParams({ 
+  merchantTradeNo, 
+  totalAmount, 
+  itemName, 
+  merchantID, 
+  hashKey, 
+  hashIV 
+}: {
   merchantTradeNo: string;
   totalAmount: number;
   itemName: string;
   merchantID: string;
   hashKey: string;
   hashIV: string;
-}): ECPayPaymentData {
-  const { merchantTradeNo, totalAmount, itemName, merchantID, hashKey, hashIV } = params;
-  const appUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : (process.env.APP_URL || 'http://localhost:3000');
+}) {
+  const tradeDate = new Date();
+  const formattedDate = `${tradeDate.getFullYear()}/${String(tradeDate.getMonth() + 1).padStart(2, '0')}/${String(tradeDate.getDate()).padStart(2, '0')} ${String(tradeDate.getHours()).padStart(2, '0')}:${String(tradeDate.getMinutes()).padStart(2, '0')}:${String(tradeDate.getSeconds()).padStart(2, '0')}`;
 
-  // Convert current time to Taiwan Time (UTC+8)
-  const now = new Date();
-  const taiwanTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Taipei"}));
-  
-  const year = taiwanTime.getFullYear();
-  const month = (taiwanTime.getMonth() + 1).toString().padStart(2, '0');
-  const day = taiwanTime.getDate().toString().padStart(2, '0');
-  const hours = taiwanTime.getHours().toString().padStart(2, '0');
-  const minutes = taiwanTime.getMinutes().toString().padStart(2, '0');
-  const seconds = taiwanTime.getSeconds().toString().padStart(2, '0');
-  const merchantTradeDate = `${year}/${month}/${day} ${hours}:${minutes}:${seconds}`;
-
-  const baseParams: Omit<ECPayPaymentData, 'CheckMacValue'> = {
+  const params = {
     MerchantID: merchantID,
     MerchantTradeNo: merchantTradeNo,
-    MerchantTradeDate: merchantTradeDate,
+    MerchantTradeDate: formattedDate,
     PaymentType: 'aio',
     TotalAmount: totalAmount,
-    TradeDesc: `追星神器手機租借 - ${itemName}`,
-    ItemName: `${itemName} 租借費用`,
-    ReturnURL: `${appUrl}/api/ecpay/return`, // The URL ECPay sends the result to in the background
-    ChoosePayment: 'ALL',
+    TradeDesc: '手機租借服務',
+    ItemName: itemName,
+    ReturnURL: `${process.env.NEXT_PUBLIC_SITE_URL}/api/ecpay/return`,
+    ChoosePayment: 'Credit',
     EncryptType: 1,
-    ClientBackURL: `${appUrl}/orders/${merchantTradeNo}`, // The URL to redirect the user to after payment
   };
 
-  const checkMacValue = generateCheckMacValue(baseParams, hashKey, hashIV);
+  const sortedParams = Object.keys(params)
+    .sort()
+    .reduce((result: any, key) => {
+      result[key] = (params as any)[key];
+      return result;
+    }, {});
+
+  const queryString = Object.entries(sortedParams)
+    .map(([key, value]) => `${key}=${value}`)
+    .join('&');
+
+  const stringToHash = `HashKey=${hashKey}&${queryString}&HashIV=${hashIV}`;
+  const urlEncodedString = encodeURIComponent(stringToHash).toLowerCase();
+  const checkMacValue = crypto.createHash('sha256').update(urlEncodedString).digest('hex').toUpperCase();
 
   return {
-    ...baseParams,
+    ...sortedParams,
+    CheckMacValue: checkMacValue,
+  };
+}
+
+export function getECPayInvoiceParams({
+  merchantID,
+  hashKey,
+  hashIV,
+  relateNumber,
+  customerName,
+  customerPhone,
+  customerEmail,
+  carrierNumber,
+  itemName,
+  itemPrice,
+  itemCount = 1
+}: {
+  merchantID: string;
+  hashKey: string;
+  hashIV: string;
+  relateNumber: string;
+  customerName: string;
+  customerPhone: string;
+  customerEmail?: string;
+  carrierNumber?: string;
+  itemName: string;
+  itemPrice: number;
+  itemCount?: number;
+}) {
+  const timeStamp = Math.floor(Date.now() / 1000);
+  
+  const params = {
+    MerchantID: merchantID,
+    RelateNumber: relateNumber,
+    CustomerName: customerName,
+    CustomerAddr: '',
+    CustomerPhone: customerPhone,
+    CustomerEmail: customerEmail || '',
+    ClearanceMark: '',
+    Print: '0',
+    Donation: '0',
+    LoveCode: '',
+    CarrierType: carrierNumber ? '3' : '0', // 3=手機載具, 0=雲端發票
+    CarrierNum: carrierNumber || '',
+    TaxType: '1',
+    SalesAmount: itemPrice,
+    InvoiceRemark: '',
+    ItemName: itemName,
+    ItemCount: itemCount,
+    ItemWord: '式',
+    ItemPrice: itemPrice,
+    ItemTaxType: '1',
+    ItemAmount: itemPrice * itemCount,
+    InvType: '07',
+    TimeStamp: timeStamp
+  };
+
+  // 建立檢查碼
+  const sortedParams = Object.keys(params)
+    .sort()
+    .reduce((result: any, key) => {
+      result[key] = (params as any)[key];
+      return result;
+    }, {});
+
+  const queryString = Object.entries(sortedParams)
+    .map(([key, value]) => `${key}=${value}`)
+    .join('&');
+
+  const stringToHash = `HashKey=${hashKey}&${queryString}&HashIV=${hashIV}`;
+  const urlEncodedString = encodeURIComponent(stringToHash).toLowerCase();
+  const checkMacValue = crypto.createHash('sha256').update(urlEncodedString).digest('hex').toUpperCase();
+
+  return {
+    ...sortedParams,
     CheckMacValue: checkMacValue,
   };
 } 

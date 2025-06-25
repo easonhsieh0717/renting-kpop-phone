@@ -46,12 +46,13 @@ async function ensureReservationsWorksheet(sheets: any, spreadsheetId: string) {
     const headers = [
       '訂單編號', '手機ID', '開始日期', '結束日期', 
       '原始總金額', '客戶姓名', '客戶Email', '客戶電話', 
-      '付款狀態', '建立時間', '折扣碼', '折扣金額', '最終金額'
+      '付款狀態', '建立時間', '折扣碼', '折扣金額', '最終金額', 
+      '手機載具號碼', '發票號碼', '發票狀態', '發票開立時間'
     ];
 
     await sheets.spreadsheets.values.update({
       spreadsheetId,
-      range: 'reservations!A1:M1',
+      range: 'reservations!A1:Q1',
       valueInputOption: 'RAW',
       requestBody: {
         values: [headers],
@@ -72,7 +73,8 @@ async function appendToSheet(values: {
   totalAmount: number, 
   originalAmount: number, 
   discountCode?: string, 
-  discountAmount?: number 
+  discountAmount?: number,
+  carrierNumber?: string 
 }): Promise<string> {
   const sheets = await getGoogleSheetsClient();
   const spreadsheetId = process.env.GOOGLE_SHEET_ID;
@@ -100,7 +102,11 @@ async function appendToSheet(values: {
     createdAt,
     values.discountCode || '',
     values.discountAmount || 0,
-    values.totalAmount
+    values.totalAmount,
+    values.carrierNumber || '',
+    '',
+    '',
+    ''
   ];
 
   console.log('Writing to Google Sheets:', newRow);
@@ -124,7 +130,7 @@ export async function POST(req: NextRequest) {
     
     const { 
       phone, startDate, endDate, name, userPhone, email, 
-      totalAmount, originalAmount, discountCode, discountAmount, isTest 
+      totalAmount, originalAmount, discountCode, discountAmount, carrierNumber, isTest 
     } = body;
 
     if (!phone || !startDate || !endDate || !name || !userPhone || !email || totalAmount === undefined) {
@@ -134,7 +140,7 @@ export async function POST(req: NextRequest) {
 
     const orderId = await appendToSheet({
       phone, startDate, endDate, name, userPhone, email,
-      totalAmount, originalAmount, discountCode, discountAmount
+      totalAmount, originalAmount, discountCode, discountAmount, carrierNumber
     });
     
     // Deactivate discount if it's a unique one

@@ -16,7 +16,14 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const phone = searchParams.get('phone');
+    const status = searchParams.get('status');
     
+    // 如果是狀態查詢（管理界面）
+    if (status) {
+      return await getOrdersByStatus(status);
+    }
+    
+    // 原有的手機號碼查詢
     if (!phone) {
       return NextResponse.json({ message: '請提供手機號碼' }, { status: 400 });
     }
@@ -25,7 +32,7 @@ export async function GET(req: NextRequest) {
     const spreadsheetId = process.env.GOOGLE_SHEET_ID;
     if (!spreadsheetId) throw new Error('GOOGLE_SHEET_ID is not configured');
     
-    const range = 'reservations!A:M';
+    const range = 'reservations!A:R'; // 擴展到R欄包含發票資訊
     const response = await sheets.spreadsheets.values.get({ spreadsheetId, range });
     const rows = response.data.values;
     
@@ -43,6 +50,48 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ order });
   } catch (e) {
     console.error('Search order error:', e);
+    return NextResponse.json({ message: '查詢失敗' }, { status: 500 });
+  }
+}
+
+async function getOrdersByStatus(status: string) {
+  try {
+    const sheets = await getGoogleSheetsClient();
+    const spreadsheetId = process.env.GOOGLE_SHEET_ID;
+    if (!spreadsheetId) throw new Error('GOOGLE_SHEET_ID is not configured');
+    
+    const range = 'reservations!A:R'; // 包含發票資訊
+    const response = await sheets.spreadsheets.values.get({ spreadsheetId, range });
+    const rows = response.data.values;
+    
+    if (!rows || rows.length < 2) {
+      return NextResponse.json({ orders: [] });
+    }
+
+    // 篩選已付款的訂單
+    const filteredOrders = rows.slice(1).filter(row => {
+      if (status === 'paid') {
+        return row[12] === '已付款'; // 第13欄（索引12）是付款狀態
+      }
+      return false;
+    }).map(row => ({
+      id: row[0] || '',
+      customerName: row[6] || '',
+      customerPhone: row[7] || '',
+      customerEmail: row[8] || '',
+      phoneModel: row[1] || '',
+      orderAmount: parseInt(row[11]) || 0,
+      paymentStatus: row[12] || '',
+      documentStatus: row[13] || '', // 文件簽署狀態(N欄)
+      carrierNumber: row[14] || '', // 手機載具號碼(O欄)
+      invoiceNumber: row[15] || '', // 發票號碼(P欄)
+      invoiceStatus: row[16] || '', // 發票狀態(Q欄)
+      invoiceCreateTime: row[17] || '' // 發票開立時間(R欄)
+    }));
+
+    return NextResponse.json({ orders: filteredOrders });
+  } catch (e) {
+    console.error('Get orders by status error:', e);
     return NextResponse.json({ message: '查詢失敗' }, { status: 500 });
   }
 } 
