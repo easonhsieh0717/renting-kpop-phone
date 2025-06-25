@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { google } from 'googleapis';
 
+// 添加運行時配置
+export const dynamic = 'force-dynamic';
+
 async function getGoogleSheetsClient() {
   const auth = new google.auth.GoogleAuth({
     credentials: {
