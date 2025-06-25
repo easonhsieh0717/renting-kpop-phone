@@ -157,8 +157,8 @@ export async function POST(req: NextRequest) {
     // 準備發票資料（根據ECPay B2C發票規範）
     const timestamp = Math.floor(Date.now() / 1000);
     
-    // 載具設定：空字串表示不使用載具，符合ECPay規範
-    const carrierType = orderData.carrierNumber ? '1' : '';
+    // 載具設定：根據ECPay規範，空格字元' '表示不使用載具，'1'表示手機條碼載具
+    const carrierType = orderData.carrierNumber ? '1' : ' ';
     const carrierNum = orderData.carrierNumber || '';
     
     const invoiceData = {
