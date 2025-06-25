@@ -154,8 +154,13 @@ export async function POST(req: NextRequest) {
       throw new Error('ECPay credentials not configured');
     }
 
-    // 準備發票資料（使用之前成功的格式）
+    // 準備發票資料（根據ECPay B2C發票規範）
     const timestamp = Math.floor(Date.now() / 1000);
+    
+    // 載具設定：空字串表示不使用載具，符合ECPay規範
+    const carrierType = orderData.carrierNumber ? '1' : '';
+    const carrierNum = orderData.carrierNumber || '';
+    
     const invoiceData = {
       MerchantID: merchantID,
       RelateNumber: orderId,
@@ -167,8 +172,8 @@ export async function POST(req: NextRequest) {
       Print: '0',
       Donation: '0',
       LoveCode: '',
-      CarrierType: orderData.carrierNumber ? '3' : '0',
-      CarrierNum: orderData.carrierNumber || '',
+      CarrierType: carrierType,
+      CarrierNum: carrierNum,
       TaxType: '1',
       SpecialTaxType: 0,
       SalesAmount: parseInt(orderData.finalAmount),
