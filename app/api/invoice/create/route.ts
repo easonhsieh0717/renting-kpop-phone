@@ -76,7 +76,7 @@ async function getOrderData(orderId: string) {
     customerEmail: orderRow[6],
     customerPhone: orderRow[7],
     paymentStatus: orderRow[8],
-    finalAmount: orderRow[12],
+    finalAmount: orderRow[11], // L欄（索引11）是最終付款金額
     carrierNumber: orderRow[14] || '' // O欄是手機載具號碼
   };
 }
@@ -184,8 +184,8 @@ export async function POST(req: NextRequest) {
     // 準備發票資料（根據ECPay B2C發票規範）
     const timestamp = Math.floor(Date.now() / 1000);
     
-    // 載具設定：根據ECPay規範，空格字元' '表示不使用載具，'1'表示手機條碼載具
-    const carrierType = orderData.carrierNumber ? '1' : ' ';
+    // 載具設定：根據ECPay規範，'3'表示手機條碼載具，' '表示不使用載具（雲端發票）
+    const carrierType = orderData.carrierNumber ? '3' : ' ';
     const carrierNum = orderData.carrierNumber || '';
     
     const invoiceData = {
