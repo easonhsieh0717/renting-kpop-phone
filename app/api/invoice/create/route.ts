@@ -134,24 +134,44 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Order not paid yet', message: 'Order not paid yet' }, { status: 400 });
     }
 
-    // 使用您的正式ECPay憑證
-    const merchantID = process.env.ECPAY_MERCHANT_ID || '3383324';
-    const hashKey = process.env.ECPAY_HASH_KEY;
-    const hashIV = process.env.ECPAY_HASH_IV;
+    // 判斷環境：localhost使用測試憑證，Vercel使用正式憑證
+    const isLocalhost = req.url.includes('localhost') || req.headers.get('host')?.includes('localhost');
+    
+    let merchantID: string;
+    let hashKey: string;
+    let hashIV: string;
+    let isProduction: boolean;
 
-    // 根據商店代號判斷環境：3383324是正式環境，3085340是測試環境
-    const isProduction = merchantID === '3383324';
+    if (isLocalhost) {
+      // 本地環境強制使用ECPay官方測試憑證
+      merchantID = '3085340';
+      hashKey = 'HwiqPsywG1hLQNuN';
+      hashIV = 'YqITWD4TyKacYXpn';
+      isProduction = false;
+      console.log('Using ECPay official test credentials:', {
+        merchantID,
+        hashKey,
+        hashIV,
+        isProduction
+      });
+    } else {
+      // 生產環境使用您的正式憑證
+      merchantID = process.env.ECPAY_MERCHANT_ID || '3383324';
+      hashKey = process.env.ECPAY_HASH_KEY!;
+      hashIV = process.env.ECPAY_HASH_IV!;
+      isProduction = merchantID === '3383324';
+      
+      console.log('Using production ECPay credentials:', {
+        merchantID,
+        hashKeyExists: !!hashKey,
+        hashIVExists: !!hashIV,
+        isProduction,
+        hashKeyPrefix: hashKey?.substring(0, 8) + '...'
+      });
 
-    console.log('Using ECPay credentials:', {
-      merchantID,
-      hashKeyExists: !!hashKey,
-      hashIVExists: !!hashIV,
-      environment: isProduction ? 'Production' : 'Staging',
-      hashKeyPrefix: hashKey?.substring(0, 8) + '...'
-    });
-
-    if (!hashKey || !hashIV) {
-      throw new Error('ECPay credentials not configured');
+      if (!hashKey || !hashIV) {
+        throw new Error('ECPay credentials not configured');
+      }
     }
 
     // 準備發票資料（根據ECPay B2C發票規範）
