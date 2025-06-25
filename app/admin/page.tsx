@@ -78,7 +78,23 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">訂單管理 - 發票補開</h1>
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">訂單管理 - 發票補開</h1>
+          <div className="flex gap-4">
+            <a
+              href="/admin/invoice-push"
+              className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+            >
+              批次發票管理
+            </a>
+            <button
+              onClick={fetchOrders}
+              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+            >
+              重新載入
+            </button>
+          </div>
+        </div>
         
         <div className="bg-white shadow rounded-lg overflow-hidden">
           <div className="overflow-x-auto">
