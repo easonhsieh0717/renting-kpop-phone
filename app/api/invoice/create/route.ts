@@ -72,11 +72,11 @@ async function getOrderData(orderId: string) {
     startDate: orderRow[2],
     endDate: orderRow[3],
     originalAmount: orderRow[4],
-    customerName: orderRow[6],
+    customerName: orderRow[5],
+    customerEmail: orderRow[6],
     customerPhone: orderRow[7],
-    customerEmail: orderRow[8],
-    paymentStatus: orderRow[12],
-    finalAmount: orderRow[11],
+    paymentStatus: orderRow[8],
+    finalAmount: orderRow[12],
     carrierNumber: orderRow[14] || '' // O欄是手機載具號碼
   };
 }

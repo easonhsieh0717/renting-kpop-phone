@@ -45,14 +45,14 @@ async function ensureReservationsWorksheet(sheets: any, spreadsheetId: string) {
     // 設定標題行
     const headers = [
       '訂單編號', '手機ID', '開始日期', '結束日期', 
-      '原始總金額', '客戶姓名', '客戶Email', '客戶電話', 
-      '付款狀態', '建立時間', '折扣碼', '折扣金額', '最終金額', 
-      '手機載具號碼', '發票號碼', '發票狀態', '發票開立時間'
+      '總金額', '客戶姓名', '客戶Email', '客戶電話', 
+      '付款狀態', '建立時間', '折扣碼', '總共折扣', '最終付款',
+      '租賃文件簽署', '手機載具號碼', '發票號碼', '發票狀態', '發票開立時間'
     ];
 
     await sheets.spreadsheets.values.update({
       spreadsheetId,
-      range: 'reservations!A1:Q1',
+      range: 'reservations!A1:R1',
       valueInputOption: 'RAW',
       requestBody: {
         values: [headers],
@@ -90,23 +90,24 @@ async function appendToSheet(values: {
   const paymentStatus = 'PENDING';
 
   const newRow = [
-    orderId,
-    values.phone.id,
-    values.startDate,
-    values.endDate,
-    values.originalAmount,
-    values.name,
-    values.email,
-    values.userPhone,
-    paymentStatus,
-    createdAt,
-    values.discountCode || '',
-    values.discountAmount || 0,
-    values.totalAmount,
-    values.carrierNumber || '',
-    '',
-    '',
-    ''
+    orderId,                        // A: 訂單編號
+    values.phone.id,               // B: 手機ID
+    values.startDate,              // C: 開始日期
+    values.endDate,                // D: 結束日期
+    values.originalAmount,         // E: 總金額
+    values.name,                   // F: 客戶姓名
+    values.email,                  // G: 客戶Email
+    values.userPhone,              // H: 客戶電話
+    paymentStatus,                 // I: 付款狀態
+    createdAt,                     // J: 建立時間
+    values.discountCode || '',     // K: 折扣碼
+    values.discountAmount || 0,    // L: 總共折扣
+    values.totalAmount,            // M: 最終付款
+    '',                           // N: 租賃文件簽署（暫空）
+    values.carrierNumber || '',   // O: 手機載具號碼
+    '',                           // P: 發票號碼（暫空）
+    '',                           // Q: 發票狀態（暫空）
+    ''                            // R: 發票開立時間（暫空）
   ];
 
   console.log('Writing to Google Sheets:', newRow);

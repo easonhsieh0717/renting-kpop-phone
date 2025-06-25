@@ -40,7 +40,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ message: '查無訂單' }, { status: 404 });
     }
 
-    // 搜尋手機號碼（第8欄，索引7）
+    // 搜尋手機號碼（H欄，索引7）
     const order = rows.find(row => row[7] === phone);
     
     if (!order) {
@@ -71,18 +71,18 @@ async function getOrdersByStatus(status: string) {
     // 篩選已付款的訂單
     const filteredOrders = rows.slice(1).filter(row => {
       if (status === 'paid') {
-        return row[12] === '已付款'; // 第13欄（索引12）是付款狀態
+        return row[8] === 'PAID'; // I欄（索引8）是付款狀態
       }
       return false;
     }).map(row => ({
       id: row[0] || '',
-      customerName: row[6] || '',
+      customerName: row[5] || '',
       customerPhone: row[7] || '',
-      customerEmail: row[8] || '',
+      customerEmail: row[6] || '',
       phoneModel: row[1] || '',
-      orderAmount: parseInt(row[11]) || 0,
-      paymentStatus: row[12] || '',
-      documentStatus: row[13] || '', // 文件簽署狀態(N欄)
+      orderAmount: parseInt(row[12]) || 0,
+      paymentStatus: row[8] || '',
+      documentStatus: row[13] || '', // 租賃文件簽署(N欄)
       carrierNumber: row[14] || '', // 手機載具號碼(O欄)
       invoiceNumber: row[15] || '', // 發票號碼(P欄)
       invoiceStatus: row[16] || '', // 發票狀態(Q欄)
