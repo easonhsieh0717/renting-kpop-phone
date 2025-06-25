@@ -21,6 +21,12 @@ export default function LoginPage() {
         case 'callback_failed':
           setError('登入過程發生錯誤，請重試。');
           break;
+        case 'config_error':
+          setError('系統設定錯誤，請聯繫技術支援。');
+          break;
+        case 'token_expired':
+          setError('登入已過期，請重新登入。');
+          break;
         default:
           setError('登入失敗，請重試。');
       }

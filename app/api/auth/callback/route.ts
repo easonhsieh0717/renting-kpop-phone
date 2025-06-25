@@ -29,6 +29,15 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(`${baseUrl}/login?error=callback_failed`);
     }
 
+    // 檢查環境變數
+    if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+      console.error('Missing Google OAuth credentials');
+      const baseUrl = request.headers.get('host')?.includes('localhost') 
+        ? 'http://localhost:3000' 
+        : `https://${request.headers.get('host')}`;
+      return NextResponse.redirect(`${baseUrl}/login?error=config_error`);
+    }
+
     // 交換授權碼獲取access token
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
@@ -36,8 +45,8 @@ export async function GET(request: NextRequest) {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       body: new URLSearchParams({
-        client_id: process.env.GOOGLE_CLIENT_ID!,
-        client_secret: process.env.GOOGLE_CLIENT_SECRET!,
+        client_id: process.env.GOOGLE_CLIENT_ID,
+        client_secret: process.env.GOOGLE_CLIENT_SECRET,
         code,
         grant_type: 'authorization_code',
         redirect_uri: request.headers.get('host')?.includes('localhost') 
@@ -84,16 +93,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(`${baseUrl}/login?error=unauthorized`);
     }
 
-    // 創建JWT token
-    const jwt = require('jsonwebtoken');
-    const token = jwt.sign(
-      { 
-        email: userData.email,
-        name: userData.name,
-        exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60) // 24小時
-      },
-      process.env.JWT_SECRET!
-    );
+    // 創建簡單的認證token（base64編碼的用戶信息）
+    const tokenPayload = {
+      email: userData.email,
+      name: userData.name,
+      exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60) // 24小時
+    };
+    
+    const token = Buffer.from(JSON.stringify(tokenPayload)).toString('base64');
 
     // 設置cookie並重定向到管理頁面
     const baseUrl = request.headers.get('host')?.includes('localhost') 
