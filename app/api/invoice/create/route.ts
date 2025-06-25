@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { google } from 'googleapis';
-import { getECPayInvoiceParams } from '../../../../lib/ecpay';
+import crypto from 'crypto';
 
 async function getGoogleSheetsClient() {
   const auth = new google.auth.GoogleAuth({
@@ -81,6 +81,40 @@ async function getOrderData(orderId: string) {
   };
 }
 
+// 使用之前成功的AES加密方式
+function aesEncrypt(plainText: string, key: string, iv: string): string {
+  const keyBuffer = Buffer.alloc(16);
+  keyBuffer.write(key.substring(0, 16), 0, 'utf8');
+  
+  const ivBuffer = Buffer.alloc(16);
+  ivBuffer.write(iv.substring(0, 16), 0, 'utf8');
+  
+  const cipher = crypto.createCipheriv('aes-128-cbc', keyBuffer, ivBuffer);
+  cipher.setAutoPadding(true);
+  
+  let encrypted = cipher.update(plainText, 'utf8', 'base64');
+  encrypted += cipher.final('base64');
+  
+  return encrypted;
+}
+
+// 使用之前成功的AES解密方式
+function aesDecrypt(encryptedData: string, key: string, iv: string): string {
+  const keyBuffer = Buffer.alloc(16);
+  keyBuffer.write(key.substring(0, 16), 0, 'utf8');
+  
+  const ivBuffer = Buffer.alloc(16);
+  ivBuffer.write(iv.substring(0, 16), 0, 'utf8');
+  
+  const decipher = crypto.createDecipheriv('aes-128-cbc', keyBuffer, ivBuffer);
+  decipher.setAutoPadding(true);
+  
+  let decrypted = decipher.update(encryptedData, 'base64', 'utf8');
+  decrypted += decipher.final('utf8');
+  
+  return decrypted;
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { orderId } = await req.json();
@@ -100,72 +134,138 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: 'Order not paid yet' }, { status: 400 });
     }
 
-    // 準備發票參數
-    const isProduction = process.env.VERCEL_ENV === 'production';
-    const merchantID = process.env.ECPAY_INVOICE_MERCHANT_ID || '3383324';
-    const hashKey = process.env.ECPAY_INVOICE_HASH_KEY;
-    const hashIV = process.env.ECPAY_INVOICE_HASH_IV;
+    // 使用您的正式ECPay憑證
+    const merchantID = process.env.ECPAY_MERCHANT_ID || '3383324';
+    const hashKey = process.env.ECPAY_HASH_KEY;
+    const hashIV = process.env.ECPAY_HASH_IV;
+
+    // 根據商店代號判斷環境：3383324是正式環境，3085340是測試環境
+    const isProduction = merchantID === '3383324';
+
+    console.log('Using ECPay credentials:', {
+      merchantID,
+      hashKeyExists: !!hashKey,
+      hashIVExists: !!hashIV,
+      environment: isProduction ? 'Production' : 'Staging',
+      hashKeyPrefix: hashKey?.substring(0, 8) + '...'
+    });
 
     if (!hashKey || !hashIV) {
-      throw new Error('ECPay invoice credentials not configured');
+      throw new Error('ECPay credentials not configured');
     }
 
-    const invoiceParams = getECPayInvoiceParams({
-      merchantID,
-      hashKey,
-      hashIV,
-      relateNumber: orderId,
-      customerName: orderData.customerName,
-      customerPhone: orderData.customerPhone,
-      customerEmail: orderData.customerEmail,
-      carrierNumber: orderData.carrierNumber,
-      itemName: '手機租賃服務',
-      itemPrice: parseInt(orderData.finalAmount)
-    });
+    // 準備發票資料（使用之前成功的格式）
+    const timestamp = Math.floor(Date.now() / 1000);
+    const invoiceData = {
+      MerchantID: merchantID,
+      RelateNumber: orderId,
+      CustomerName: orderData.customerName,
+      CustomerAddr: '',
+      CustomerPhone: orderData.customerPhone,
+      CustomerEmail: orderData.customerEmail || '',
+      ClearanceMark: '',
+      Print: '0',
+      Donation: '0',
+      LoveCode: '',
+      CarrierType: orderData.carrierNumber ? '3' : '0',
+      CarrierNum: orderData.carrierNumber || '',
+      TaxType: '1',
+      SpecialTaxType: 0,
+      SalesAmount: parseInt(orderData.finalAmount),
+      InvoiceRemark: '手機租賃服務',
+      InvType: '07',
+      vat: '1',
+      Items: [{
+        ItemName: '手機租賃服務',
+        ItemCount: 1,
+        ItemWord: 'pcs',
+        ItemPrice: parseInt(orderData.finalAmount),
+        ItemTaxType: '1',
+        ItemAmount: parseInt(orderData.finalAmount)
+      }]
+    };
 
-    // 呼叫綠界發票API
-    const ecpayInvoiceUrl = isProduction 
+    console.log('Invoice data:', invoiceData);
+
+    // 將資料轉為JSON並進行URL編碼（使用之前成功的方式）
+    const jsonString = JSON.stringify(invoiceData);
+    console.log('JSON string:', jsonString);
+    const urlEncodedData = encodeURIComponent(jsonString);
+    console.log('URL encoded data:', urlEncodedData);
+
+    // AES加密
+    const encryptedData = aesEncrypt(urlEncodedData, hashKey, hashIV);
+    console.log('Encrypted data:', encryptedData);
+
+    // 準備請求參數
+    const requestPayload = {
+      MerchantID: merchantID,
+      RqHeader: {
+        Timestamp: timestamp
+      },
+      Data: encryptedData
+    };
+
+    console.log('Request payload:', requestPayload);
+
+    // 呼叫ECPay B2C發票API
+    const apiUrl = isProduction 
       ? 'https://einvoice.ecpay.com.tw/B2CInvoice/Issue'
       : 'https://einvoice-stage.ecpay.com.tw/B2CInvoice/Issue';
+    
+    console.log('Calling API:', apiUrl, isProduction ? '(Production)' : '(Staging)');
 
-    const formData = new URLSearchParams();
-    Object.entries(invoiceParams).forEach(([key, value]) => {
-      formData.append(key, String(value));
-    });
-
-    const response = await fetch(ecpayInvoiceUrl, {
+    const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
+        'Content-Type': 'application/json',
       },
-      body: formData,
+      body: JSON.stringify(requestPayload),
     });
 
-    const result = await response.text();
-    console.log('ECPay Invoice Response:', result);
+    console.log('Response status:', response.status);
+    console.log('Response headers:', Object.fromEntries(response.headers.entries()));
 
-    // 解析回應
-    const resultParams = new URLSearchParams(result);
-    const rtnCode = resultParams.get('RtnCode');
-    const rtnMsg = resultParams.get('RtnMsg');
-    const invoiceNumber = resultParams.get('InvoiceNumber') || '';
+    const rawResponse = await response.text();
+    console.log('Raw response:', rawResponse);
 
-    if (rtnCode === '1') {
-      // 發票開立成功
-      await updateInvoiceStatus(orderId, invoiceNumber, '已開立');
+    const parsedResponse = JSON.parse(rawResponse);
+    console.log('Parsed response:', parsedResponse);
+
+    if (parsedResponse.TransCode === 1 && parsedResponse.Data) {
+      // 解密回應資料
+      const decryptedData = aesDecrypt(parsedResponse.Data, hashKey, hashIV);
+      console.log('Decrypted response:', decryptedData);
       
-      return NextResponse.json({
-        success: true,
-        invoiceNumber,
-        message: '發票開立成功'
-      });
+      const decodedData = decodeURIComponent(decryptedData);
+      const invoiceResult = JSON.parse(decodedData);
+      console.log('Final invoice result:', invoiceResult);
+
+      if (invoiceResult.RtnCode === 1) {
+        // 發票開立成功
+        await updateInvoiceStatus(orderId, invoiceResult.InvoiceNo, '已開立');
+        
+        return NextResponse.json({
+          success: true,
+          invoiceNumber: invoiceResult.InvoiceNo,
+          invoiceDate: invoiceResult.InvoiceDate,
+          randomNumber: invoiceResult.RandomNumber,
+          message: '發票開立成功'
+        });
+      } else {
+        // 發票開立失敗
+        await updateInvoiceStatus(orderId, '', `失敗: ${invoiceResult.RtnMsg}`);
+        
+        return NextResponse.json({
+          success: false,
+          message: `發票開立失敗: ${invoiceResult.RtnMsg}`
+        }, { status: 400 });
+      }
     } else {
-      // 發票開立失敗
-      await updateInvoiceStatus(orderId, '', `失敗: ${rtnMsg}`);
-      
+      // API呼叫失敗
       return NextResponse.json({
         success: false,
-        message: `發票開立失敗: ${rtnMsg}`
+        message: `ECPay API錯誤: ${parsedResponse.TransMsg}`
       }, { status: 400 });
     }
 
