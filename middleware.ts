@@ -12,9 +12,14 @@ export function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL('/login', request.url));
       }
 
-      // 驗證JWT token
-      const jwt = require('jsonwebtoken');
-      const decoded = jwt.verify(token, process.env.JWT_SECRET!);
+      // 解碼base64 token
+      const decoded = JSON.parse(Buffer.from(token, 'base64').toString());
+      
+      // 檢查token是否過期
+      if (decoded.exp && decoded.exp < Math.floor(Date.now() / 1000)) {
+        console.log('Token expired, redirecting to login');
+        return NextResponse.redirect(new URL('/login?error=token_expired', request.url));
+      }
       
       if (!decoded || decoded.email !== 'eason0717@gmail.com') {
         console.log('Invalid token or unauthorized email, redirecting to login');
