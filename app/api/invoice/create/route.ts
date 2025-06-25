@@ -120,18 +120,18 @@ export async function POST(req: NextRequest) {
     const { orderId } = await req.json();
     
     if (!orderId) {
-      return NextResponse.json({ message: 'Missing orderId' }, { status: 400 });
+      return NextResponse.json({ error: 'Missing orderId', message: 'Missing orderId' }, { status: 400 });
     }
 
     // 取得訂單資料
     const orderData = await getOrderData(orderId);
     if (!orderData) {
-      return NextResponse.json({ message: 'Order not found' }, { status: 404 });
+      return NextResponse.json({ error: 'Order not found', message: 'Order not found' }, { status: 404 });
     }
 
     // 檢查付款狀態
     if (orderData.paymentStatus !== 'PAID') {
-      return NextResponse.json({ message: 'Order not paid yet' }, { status: 400 });
+      return NextResponse.json({ error: 'Order not paid yet', message: 'Order not paid yet' }, { status: 400 });
     }
 
     // 使用您的正式ECPay憑證
@@ -258,6 +258,7 @@ export async function POST(req: NextRequest) {
         
         return NextResponse.json({
           success: false,
+          error: `發票開立失敗: ${invoiceResult.RtnMsg}`,
           message: `發票開立失敗: ${invoiceResult.RtnMsg}`
         }, { status: 400 });
       }
@@ -265,6 +266,7 @@ export async function POST(req: NextRequest) {
       // API呼叫失敗
       return NextResponse.json({
         success: false,
+        error: `ECPay API錯誤: ${parsedResponse.TransMsg}`,
         message: `ECPay API錯誤: ${parsedResponse.TransMsg}`
       }, { status: 400 });
     }
@@ -272,7 +274,8 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     console.error('Invoice creation error:', error);
     return NextResponse.json({ 
-      success: false, 
+      success: false,
+      error: error.message || '發票開立失敗',
       message: error.message || '發票開立失敗' 
     }, { status: 500 });
   }

@@ -53,11 +53,12 @@ export default function AdminPage() {
 
       if (response.ok) {
         const result = await response.json();
-        alert(`發票開立成功！發票號碼：${result.invoiceNumber}`);
+        alert(`發票開立成功！發票號碼：${result.invoiceNumber || result.invoiceNo || '未知'}`);
         fetchOrders(); // 重新獲取訂單列表
       } else {
-        const error = await response.json();
-        alert(`發票開立失敗：${error.error}`);
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.error || errorData.message || errorData.TransMsg || `HTTP ${response.status}`;
+        alert(`發票開立失敗：${errorMessage}`);
       }
     } catch (error) {
       console.error('發票開立失敗:', error);
