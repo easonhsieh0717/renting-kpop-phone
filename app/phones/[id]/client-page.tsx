@@ -360,11 +360,11 @@ export default function PhoneDetailClient({ phone, vercelEnv, bookedDates }: Pho
                 <h3 className="text-lg font-bold text-brand-yellow mb-2">押金規則</h3>
                 <ul className="space-y-1 text-brand-gray-light">
                   <li className="flex justify-between">
-                    <span>押金 (需抵押證件正本)</span>
+                    <span>低押金 (需抵押證件正本) 或 信用卡預授權</span>
                     <span className="font-bold text-white">$3,000</span>
                   </li>
                   <li className="flex justify-between">
-                    <span>押金 (免抵押證件)</span>
+                    <span>高押金 (免抵押證件)</span>
                     <span className="font-bold text-white">$30,000</span>
                   </li>
                 </ul>

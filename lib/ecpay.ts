@@ -25,6 +25,15 @@ function ecpayUrlEncode(data: string): string {
     .replace(/\*/g, '%2a');
 }
 
+// 修正中文字符編碼問題的輔助函數
+function sanitizeForECPay(str: string): string {
+  // 移除或替換可能造成編碼問題的字符
+  return str
+    .replace(/[^\x00-\x7F]/g, '') // 移除非ASCII字符
+    .replace(/[&=]/g, '_') // 替換可能影響參數解析的字符
+    .substring(0, 200); // 限制長度
+}
+
 function generateCheckMacValue(data: Omit<ECPayPaymentData, 'CheckMacValue'>, hashKey: string, hashIV: string): string {
   const sortedData = Object.entries(data)
     .sort((a, b) => a[0].toLowerCase().localeCompare(b[0].toLowerCase()))
@@ -64,30 +73,19 @@ export function getECPayPaymentParams({
     MerchantTradeDate: formattedDate,
     PaymentType: 'aio',
     TotalAmount: totalAmount,
-    TradeDesc: '手機租借服務',
-    ItemName: itemName,
+    TradeDesc: sanitizeForECPay('Mobile Rental Service'),
+    ItemName: sanitizeForECPay(itemName),
     ReturnURL: `${process.env.NEXT_PUBLIC_SITE_URL}/api/ecpay/return`,
     ChoosePayment: 'Credit',
     EncryptType: 1,
+    ClientBackURL: `${process.env.NEXT_PUBLIC_SITE_URL}`,
   };
 
-  const sortedParams = Object.keys(params)
-    .sort()
-    .reduce((result: any, key) => {
-      result[key] = (params as any)[key];
-      return result;
-    }, {});
-
-  const queryString = Object.entries(sortedParams)
-    .map(([key, value]) => `${key}=${value}`)
-    .join('&');
-
-  const stringToHash = `HashKey=${hashKey}&${queryString}&HashIV=${hashIV}`;
-  const urlEncodedString = encodeURIComponent(stringToHash).toLowerCase();
-  const checkMacValue = crypto.createHash('sha256').update(urlEncodedString).digest('hex').toUpperCase();
+  // 使用統一的CheckMacValue生成方法
+  const checkMacValue = generateCheckMacValue(params as Omit<ECPayPaymentData, 'CheckMacValue'>, hashKey, hashIV);
 
   return {
-    ...sortedParams,
+    ...params,
     CheckMacValue: checkMacValue,
   };
 }

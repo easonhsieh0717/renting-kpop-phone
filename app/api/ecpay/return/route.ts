@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { updateReservationStatus } from '../../../../lib/sheets/reservations';
-import crypto from 'crypto-js';
+import crypto from 'crypto';
 
 // This function is copied from lib/ecpay.ts, ensure it's in sync or refactor to a shared utility
 function ecpayUrlEncode(data: string): string {
@@ -25,7 +25,7 @@ function verifyCheckMacValue(data: Record<string, any>, hashKey: string, hashIV:
 
   const hashString = `HashKey=${hashKey}&${sortedData}&HashIV=${hashIV}`;
   const encodedString = ecpayUrlEncode(hashString).toLowerCase();
-  const calculatedHash = crypto.SHA256(encodedString).toString().toUpperCase();
+  const calculatedHash = crypto.createHash('sha256').update(encodedString).digest('hex').toUpperCase();
   
   return calculatedHash === CheckMacValue;
 }
