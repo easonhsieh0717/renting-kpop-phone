@@ -12,6 +12,11 @@ export async function GET(request: NextRequest) {
     const error = searchParams.get('error');
 
     console.log('OAuth callback - code:', !!code, 'state:', state, 'error:', error);
+    console.log('Request headers:', {
+      host: request.headers.get('host'),
+      'user-agent': request.headers.get('user-agent'),
+      origin: request.headers.get('origin')
+    });
 
     if (error) {
       console.error('OAuth error:', error);
@@ -31,33 +36,55 @@ export async function GET(request: NextRequest) {
 
     // 檢查環境變數
     if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
-      console.error('Missing Google OAuth credentials');
+      console.error('Missing Google OAuth credentials:', {
+        hasClientId: !!process.env.GOOGLE_CLIENT_ID,
+        hasClientSecret: !!process.env.GOOGLE_CLIENT_SECRET
+      });
       const baseUrl = request.headers.get('host')?.includes('localhost') 
         ? 'http://localhost:3000' 
         : `https://${request.headers.get('host')}`;
       return NextResponse.redirect(`${baseUrl}/login?error=config_error`);
     }
 
+    // 構建重定向URI
+    const redirectUri = request.headers.get('host')?.includes('localhost') 
+      ? 'http://localhost:3000/api/auth/callback'
+      : `https://${request.headers.get('host')}/api/auth/callback`;
+    
+    console.log('Using redirect URI:', redirectUri);
+
     // 交換授權碼獲取access token
+    const tokenRequestBody = new URLSearchParams({
+      client_id: process.env.GOOGLE_CLIENT_ID,
+      client_secret: process.env.GOOGLE_CLIENT_SECRET,
+      code,
+      grant_type: 'authorization_code',
+      redirect_uri: redirectUri,
+    });
+
+    console.log('Token request body:', {
+      client_id: process.env.GOOGLE_CLIENT_ID.substring(0, 10) + '...',
+      redirect_uri: redirectUri,
+      code: code.substring(0, 10) + '...'
+    });
+
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
-      body: new URLSearchParams({
-        client_id: process.env.GOOGLE_CLIENT_ID,
-        client_secret: process.env.GOOGLE_CLIENT_SECRET,
-        code,
-        grant_type: 'authorization_code',
-        redirect_uri: request.headers.get('host')?.includes('localhost') 
-          ? 'http://localhost:3000/api/auth/callback'
-          : `https://${request.headers.get('host')}/api/auth/callback`,
-      }),
+      body: tokenRequestBody,
     });
+
+    console.log('Token response status:', tokenResponse.status);
 
     if (!tokenResponse.ok) {
       const errorData = await tokenResponse.text();
-      console.error('Token exchange failed:', errorData);
+      console.error('Token exchange failed:', {
+        status: tokenResponse.status,
+        statusText: tokenResponse.statusText,
+        error: errorData
+      });
       const baseUrl = request.headers.get('host')?.includes('localhost') 
         ? 'http://localhost:3000' 
         : `https://${request.headers.get('host')}`;
@@ -65,6 +92,10 @@ export async function GET(request: NextRequest) {
     }
 
     const tokenData = await tokenResponse.json();
+    console.log('Token data received:', {
+      hasAccessToken: !!tokenData.access_token,
+      tokenType: tokenData.token_type
+    });
     
     // 獲取用戶信息
     const userResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
@@ -73,8 +104,13 @@ export async function GET(request: NextRequest) {
       },
     });
 
+    console.log('User info response status:', userResponse.status);
+
     if (!userResponse.ok) {
-      console.error('Failed to fetch user info');
+      console.error('Failed to fetch user info:', {
+        status: userResponse.status,
+        statusText: userResponse.statusText
+      });
       const baseUrl = request.headers.get('host')?.includes('localhost') 
         ? 'http://localhost:3000' 
         : `https://${request.headers.get('host')}`;
@@ -82,7 +118,11 @@ export async function GET(request: NextRequest) {
     }
 
     const userData = await userResponse.json();
-    console.log('User data:', { email: userData.email });
+    console.log('User data:', { 
+      email: userData.email,
+      name: userData.name,
+      verified_email: userData.verified_email
+    });
 
     // 檢查是否為授權用戶
     if (userData.email !== 'eason0717@gmail.com') {
@@ -101,6 +141,7 @@ export async function GET(request: NextRequest) {
     };
     
     const token = Buffer.from(JSON.stringify(tokenPayload)).toString('base64');
+    console.log('Created auth token for:', userData.email);
 
     // 設置cookie並重定向到管理頁面
     const baseUrl = request.headers.get('host')?.includes('localhost') 
@@ -116,6 +157,7 @@ export async function GET(request: NextRequest) {
       path: '/'
     });
 
+    console.log('Redirecting to admin with auth cookie set');
     return response;
   } catch (error) {
     console.error('OAuth callback error:', error);
