@@ -1,6 +1,6 @@
 {
   "name": "phone-rental-website",
-  "version": "0.1.0",
+  "version": "1.0.1",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -16,14 +16,15 @@
     "clsx": "^2.0.0",
     "crypto-js": "^4.2.0",
     "date-fns": "^2.30.0",
-    "googleapis": "^150.0.1",
+    "googleapis": "^144.0.0",
     "html2canvas": "^1.4.1",
     "lucide-react": "^0.294.0",
     "next": "14.0.4",
     "react": "^18",
     "react-day-picker": "^8.9.1",
     "react-dom": "^18",
-    "tailwind-merge": "^2.0.0"
+    "tailwind-merge": "^2.0.0",
+    "crypto": "^1.0.1"
   },
   "devDependencies": {
     "@types/node": "^20",

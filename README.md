@@ -251,5 +251,16 @@
 
 ---
 
-> ✅ 若後續有擴充需求，也可以將 Google Sheet 替換為 Firebase、Supabase 等無需架設的資料庫。 # 觸發Vercel重新部署 - Wed Jun 25 21:21:05 CST 2025
-# Force Deploy - Wed Jun 25 21:30:39 CST 2025
+> ✅ 若後續有擴充需求，也可以將 Google Sheet 替換為 Firebase、Supabase 等無需架設的資料庫。
+
+# 最新更新 (v1.0.1)
+
+✅ **電子發票功能已完成** (2025-06-25)
+- ECPay B2C電子發票API整合完成
+- 支援載具功能 (手機條碼、雲端發票)
+- 修正發票金額欄位映射問題
+- 本地環境使用測試憑證，生產環境使用正式憑證
+- 批次發票補開功能完成
+
+# 觸發Vercel重新部署 - Wed Jun 25 21:41:29 CST 2025
+# Force Deploy - Wed Jun 25 21:45:20 CST 2025
