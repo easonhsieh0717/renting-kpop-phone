@@ -135,7 +135,14 @@ export async function POST(req: NextRequest) {
     }
 
     // 判斷環境：localhost使用測試憑證，Vercel使用正式憑證
-    const isLocalhost = req.url.includes('localhost') || req.headers.get('host')?.includes('localhost');
+    const host = req.headers.get('host');
+    const isLocalhost = host?.includes('localhost') || host?.includes('127.0.0.1');
+    
+    console.log('Environment check:', {
+      host,
+      isLocalhost,
+      url: req.url
+    });
     
     let merchantID: string;
     let hashKey: string;
