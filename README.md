@@ -252,3 +252,4 @@
 ---
 
 > ✅ 若後續有擴充需求，也可以將 Google Sheet 替換為 Firebase、Supabase 等無需架設的資料庫。 # 觸發Vercel重新部署 - Wed Jun 25 21:21:05 CST 2025
+# Force Deploy - Wed Jun 25 21:30:39 CST 2025
