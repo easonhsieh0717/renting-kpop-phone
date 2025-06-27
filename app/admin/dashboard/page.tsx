@@ -387,8 +387,8 @@ export default function DashboardPage() {
                         className="w-16 h-16 object-cover rounded-lg mr-4"
                       />
                       <div className="flex-1">
-                        <h3 className="text-lg font-medium text-gray-900">{phone.name}</h3>
-                        <p className="text-sm text-gray-500">{phone.model}</p>
+                                              <h3 className="text-lg font-medium text-gray-900">{phone.name}</h3>
+                      <p className="text-sm text-gray-500">ID: {phone.id}</p>
                         <div className="mt-1">
                           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                             phone.isRented 
@@ -472,7 +472,7 @@ export default function DashboardPage() {
                   <RentalTimeline
                     key={phone.id}
                     phoneId={phone.id}
-                    phoneName={`${phone.name} (${phone.model})`}
+                    phoneName={`${phone.name} (ID: ${phone.id})`}
                     rentals={allRentals}
                   />
                 );
