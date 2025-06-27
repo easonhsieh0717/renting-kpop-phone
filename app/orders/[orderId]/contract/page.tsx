@@ -137,7 +137,7 @@ function SignatureModal({ open, onClose, onSign }: { open: boolean; onClose: () 
 }
 
 function Stepper({ step, setStep }: { step: number; setStep: (n: number) => void }) {
-  const steps = ["手機外觀", "證件拍照", "押金/配件", "合約簽署"];
+  const steps = ["手機外觀", "證件拍照", "個人資料/押金", "合約簽署"];
   return (
     <div className="flex items-center mb-6">
       {steps.map((s, i) => (
@@ -152,7 +152,7 @@ function Stepper({ step, setStep }: { step: number; setStep: (n: number) => void
 }
 
 // 合約條款渲染（正式版，動態帶入步驟三資訊）
-function renderContract(order: any, depositMode: string | null, needCable: boolean, needCharger: boolean) {
+function renderContract(order: any, depositMode: string | null, needCable: boolean, needCharger: boolean, idNumber: string, phoneNumber: string) {
   const today = new Date();
   const formatDate = (d: Date) => `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
   return (
@@ -161,6 +161,8 @@ function renderContract(order: any, depositMode: string | null, needCable: boole
       <b>第一條 租賃標的</b><br/>
       1. <b>出租人（甲方）：</b> 伊森不累手機租借平台<br/>
       2. <b>承租人（乙方）：</b> {order[5]}<br/>
+      &nbsp;&nbsp;- <b>身分證字號：</b> {idNumber || '尚未填寫'}<br/>
+      &nbsp;&nbsp;- <b>聯絡電話：</b> {phoneNumber || '尚未填寫'}<br/>
       3. <b>租賃設備：</b><br/>
       &nbsp;&nbsp;- 手機品牌與型號：三星Galaxy S25 Ultra<br/>
       &nbsp;&nbsp;- IMEI序號：{order[1]}<br/>
@@ -241,16 +243,19 @@ function renderContract(order: any, depositMode: string | null, needCable: boole
       &nbsp;&nbsp;- 原廠保護殼：NT$1,000<br/>
       &nbsp;&nbsp;- 原廠盒裝：NT$500<br/>
       - 其他損壞：依三星原廠授權維修中心報價單計算。<br/>
-      {renderAttachment2(order, depositMode, needCable, needCharger)}
+      {renderAttachment2(order, depositMode, needCable, needCharger, idNumber, phoneNumber)}
     </div>
   );
 }
 
-function renderAttachment2(order: any, depositMode: string | null, needCable: boolean, needCharger: boolean) {
+function renderAttachment2(order: any, depositMode: string | null, needCable: boolean, needCharger: boolean, idNumber: string, phoneNumber: string) {
   const today = new Date();
   return (
     <div className="mt-4 p-4 border border-gray-300 rounded bg-white text-gray-900">
       <b>附件二：設備交付確認單</b><br/>
+      - 承租人：{order[5]}<br/>
+      - 身分證字號：{idNumber || '尚未填寫'}<br/>
+      - 聯絡電話：{phoneNumber || '尚未填寫'}<br/>
       - 設備型號：三星Galaxy S25 Ultra<br/>
       - IMEI序號：{order[1]}<br/>
       - 交付日期：{today.getFullYear()}年{today.getMonth() + 1}月{today.getDate()}日<br/>
@@ -281,12 +286,24 @@ export default function ContractPage() {
   // 2. 證件
   const [idFront, setIdFront] = useState<string | null>(null);
   const [idBack, setIdBack] = useState<string | null>(null);
-  // 3. 押金/配件
+  // 3. 押金/配件 + 個人資料
   const [depositMode, setDepositMode] = useState<string | null>(null);
   const [needCable, setNeedCable] = useState(false);
   const [needCharger, setNeedCharger] = useState(false);
+  const [idNumber, setIdNumber] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [processingIdFront, setProcessingIdFront] = useState(false);
   const [processingIdBack, setProcessingIdBack] = useState(false);
+
+  // 身分證格式驗證
+  const validateIdNumber = (id: string) => {
+    return /^[A-Z][12][0-9]{8}$/.test(id);
+  };
+  
+  // 手機號碼格式驗證
+  const validatePhoneNumber = (phone: string) => {
+    return /^09[0-9]{8}$/.test(phone);
+  };
 
   useEffect(() => {
     if (!orderId) return;
@@ -604,10 +621,11 @@ export default function ContractPage() {
       setProcessingIdBack(false);
     }
   };
+
   // 步驟切換
   const canNext1 = photos.length >= 2;
   const canNext2 = !!idFront && !!idBack;
-  const canNext3 = !!depositMode;
+  const canNext3 = !!depositMode && validateIdNumber(idNumber) && validatePhoneNumber(phoneNumber);
 
   if (loading) return <div className="p-8 text-center">載入中...</div>;
   if (error) return <div className="p-8 text-center text-red-500">{error}</div>;
@@ -685,7 +703,45 @@ export default function ContractPage() {
       )}
       {step === 3 && (
         <div>
-          <h2 className="text-lg font-bold mb-2">3. 選擇押金模式與配件</h2>
+          <h2 className="text-lg font-bold mb-2">3. 填寫個人資料、選擇押金模式與配件</h2>
+          
+          <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <h3 className="font-semibold mb-3 text-blue-800">請填寫個人資料</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="idNumber" className="block text-sm font-medium text-gray-700 mb-1">身分證字號 *</label>
+                <input 
+                  type="text" 
+                  id="idNumber"
+                  value={idNumber}
+                  onChange={(e) => setIdNumber(e.target.value.toUpperCase())}
+                  placeholder="例：A123456789"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  maxLength={10}
+                  pattern="[A-Z][12][0-9]{8}"
+                  required
+                />
+              </div>
+              <div>
+                <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-1">手機號碼 *</label>
+                <input 
+                  type="tel" 
+                  id="phoneNumber"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
+                  placeholder="例：0912345678"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  maxLength={10}
+                  pattern="09[0-9]{8}"
+                  required
+                />
+              </div>
+            </div>
+            <p className="text-xs text-gray-600 mt-2">
+              * 此資料將記錄於合約中，作為身分識別使用
+            </p>
+          </div>
+
           <div className="mb-4 p-4 bg-gray-50 rounded-lg">
             <h3 className="font-semibold mb-2">押金模式說明：</h3>
             <div className="space-y-2 text-sm">
@@ -726,7 +782,7 @@ export default function ContractPage() {
       {step === 4 && (
         <div>
           <div className="mb-8">
-            {renderContract(order, depositMode, needCable, needCharger)}
+            {renderContract(order, depositMode, needCable, needCharger, idNumber, phoneNumber)}
           </div>
           <div className="border-t pt-6">
             <h3 className="text-lg font-semibold mb-4">電子簽署</h3>
