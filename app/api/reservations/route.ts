@@ -181,4 +181,69 @@ export async function POST(req: NextRequest) {
     }
     return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
   }
+}
+
+export async function GET(req: NextRequest) {
+  try {
+    const sheets = await getGoogleSheetsClient();
+    const spreadsheetId = process.env.GOOGLE_SHEET_ID;
+
+    if (!spreadsheetId) {
+      throw new Error('GOOGLE_SHEET_ID is not configured');
+    }
+
+    try {
+      const range = 'reservations!A:R';
+      const response = await sheets.spreadsheets.values.get({
+        spreadsheetId,
+        range,
+      });
+
+      const rows = response.data.values;
+      if (!rows || rows.length < 2) {
+        return NextResponse.json({ reservations: [] });
+      }
+
+      // Skip header row and process data
+      const reservations = rows.slice(1).map(row => {
+        if (!row || row.length < 9) return null; // Ensure minimum required columns
+        
+        return {
+          orderId: row[0] || '',
+          phoneId: row[1] || '',
+          startDate: row[2] || '',
+          endDate: row[3] || '',
+          originalAmount: parseFloat(row[4]) || 0,
+          customerName: row[5] || '',
+          customerEmail: row[6] || '',
+          customerPhone: row[7] || '',
+          status: row[8] || 'PENDING',
+          createdAt: row[9] || '',
+          discountCode: row[10] || '',
+          discountAmount: parseFloat(row[11]) || 0,
+          totalAmount: parseFloat(row[12]) || 0,
+          documentStatus: row[13] || '',
+          carrierNumber: row[14] || '',
+          invoiceNumber: row[15] || '',
+          invoiceStatus: row[16] || '',
+          invoiceCreateTime: row[17] || ''
+        };
+      }).filter(reservation => reservation !== null);
+
+      return NextResponse.json({ reservations });
+    } catch (error: any) {
+      // If reservations sheet doesn't exist yet
+      if (error.message && error.message.includes('Unable to parse range')) {
+        console.log("Reservations sheet doesn't exist yet. Returning empty array.");
+        return NextResponse.json({ reservations: [] });
+      }
+      throw error;
+    }
+  } catch (error) {
+    console.error('Error fetching reservations:', error);
+    if (error instanceof Error) {
+      return NextResponse.json({ message: error.message }, { status: 500 });
+    }
+    return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
+  }
 } 
