@@ -67,7 +67,8 @@ export default function DashboardPage() {
       const rentalsData = await rentalsResponse.json();
       
       if (phonesResponse.ok && rentalsResponse.ok) {
-        const phoneStatuses = processDashboardData(phonesData.phones, rentalsData.reservations || []);
+        // 修正：search API直接返回手機數組，不是包含phones屬性的對象
+        const phoneStatuses = processDashboardData(phonesData, rentalsData.reservations || []);
         setPhoneStatuses(phoneStatuses);
       }
     } catch (error) {
