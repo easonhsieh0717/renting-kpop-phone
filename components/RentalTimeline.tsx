@@ -17,13 +17,13 @@ interface RentalTimelineProps {
 export default function RentalTimeline({ phoneId, phoneName, rentals }: RentalTimelineProps) {
   const [selectedRental, setSelectedRental] = useState<TimelineRental | null>(null);
 
-  // 计算时间线的范围（当前时间前后30天）
+  // 計算時間線的範圍（當前時間前後30天）
   const now = new Date();
   const startRange = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
   const endRange = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
   const totalDays = Math.ceil((endRange.getTime() - startRange.getTime()) / (1000 * 60 * 60 * 24));
 
-  // 计算位置和宽度的函数
+  // 計算位置和寬度的函數
   const getPosition = (date: string) => {
     const targetDate = new Date(date);
     const daysFromStart = Math.ceil((targetDate.getTime() - startRange.getTime()) / (1000 * 60 * 60 * 24));
@@ -45,7 +45,7 @@ export default function RentalTimeline({ phoneId, phoneName, rentals }: RentalTi
     });
   };
 
-  // 获取当前时间在时间线上的位置
+  // 獲取當前時間在時間線上的位置
   const currentPosition = getPosition(now.toISOString());
 
   return (
@@ -55,7 +55,7 @@ export default function RentalTimeline({ phoneId, phoneName, rentals }: RentalTi
         <p className="text-sm text-gray-500">租賃時間線 (ID: {phoneId})</p>
       </div>
 
-      {/* 时间轴刻度 */}
+      {/* 時間軸刻度 */}
       <div className="mb-4">
         <div className="flex justify-between text-xs text-gray-500 mb-2">
           <span>{formatDate(startRange.toISOString())}</span>
@@ -63,9 +63,9 @@ export default function RentalTimeline({ phoneId, phoneName, rentals }: RentalTi
           <span>{formatDate(endRange.toISOString())}</span>
         </div>
         
-        {/* 时间线背景 */}
+        {/* 時間線背景 */}
         <div className="relative h-12 bg-gray-100 rounded-md">
-          {/* 当前时间指示线 */}
+          {/* 當前時間指示線 */}
           <div
             className="absolute top-0 bottom-0 w-0.5 bg-red-500 z-20"
             style={{ left: `${currentPosition}%` }}
@@ -73,7 +73,7 @@ export default function RentalTimeline({ phoneId, phoneName, rentals }: RentalTi
             <div className="absolute -top-2 -left-2 w-4 h-4 bg-red-500 rounded-full border-2 border-white"></div>
           </div>
 
-          {/* 租赁时段 */}
+          {/* 租賃時段 */}
           {rentals.map((rental, index) => {
             const left = getPosition(rental.startDate);
             const width = getWidth(rental.startDate, rental.endDate);
@@ -103,7 +103,7 @@ export default function RentalTimeline({ phoneId, phoneName, rentals }: RentalTi
             );
           })}
 
-          {/* 网格线 */}
+          {/* 網格線 */}
           {Array.from({ length: 7 }, (_, i) => (
             <div
               key={i}
@@ -114,7 +114,7 @@ export default function RentalTimeline({ phoneId, phoneName, rentals }: RentalTi
         </div>
       </div>
 
-      {/* 图例 */}
+      {/* 圖例 */}
       <div className="flex items-center space-x-4 text-sm">
         <div className="flex items-center space-x-2">
           <div className="w-3 h-3 bg-red-500 rounded"></div>
@@ -130,7 +130,7 @@ export default function RentalTimeline({ phoneId, phoneName, rentals }: RentalTi
         </div>
       </div>
 
-      {/* 租赁详情弹窗 */}
+      {/* 租賃詳情彈窗 */}
       {selectedRental && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full mx-4">

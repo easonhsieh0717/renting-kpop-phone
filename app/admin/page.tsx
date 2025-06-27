@@ -118,7 +118,7 @@ export default function AdminPage() {
         <div className="px-4 py-6 sm:px-0">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             
-            {/* 租賃仪表板卡片 */}
+            {/* 租賃儀表板卡片 */}
             <div className="bg-white overflow-hidden shadow rounded-lg">
               <div className="p-6">
                 <div className="flex items-center">
@@ -130,7 +130,7 @@ export default function AdminPage() {
                   <div className="ml-5 w-0 flex-1">
                     <dl>
                       <dt className="text-sm font-medium text-gray-500 truncate">
-                        租賃仪表板
+                        租賃儀表板
                       </dt>
                       <dd className="text-lg font-medium text-gray-900">
                         手機租賃狀態
@@ -143,7 +143,7 @@ export default function AdminPage() {
                     onClick={() => router.push('/admin/dashboard')}
                     className="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
                   >
-                    查看仪表板
+                    查看儀表板
                   </button>
                 </div>
               </div>

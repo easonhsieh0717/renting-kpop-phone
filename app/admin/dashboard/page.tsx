@@ -58,11 +58,11 @@ export default function DashboardPage() {
     try {
       setLoading(true);
       
-      // 获取所有手机数据
+      // 獲取所有手機數據
       const phonesResponse = await fetch('/api/search');
       const phonesData = await phonesResponse.json();
       
-      // 获取所有租赁数据
+      // 獲取所有租賃數據
       const rentalsResponse = await fetch('/api/reservations');
       const rentalsData = await rentalsResponse.json();
       
@@ -72,14 +72,14 @@ export default function DashboardPage() {
         setPhoneStatuses(phoneStatuses);
       }
     } catch (error) {
-      console.error('获取仪表板数据失败:', error);
+      console.error('獲取儀表板數據失敗:', error);
     } finally {
       setLoading(false);
     }
   };
 
   const processDashboardData = (phones: any[], rentals: Rental[]): PhoneStatus[] => {
-    // 使用测试日期或当前日期
+    // 使用測試日期或當前日期
     const now = testDate ? new Date(testDate) : new Date();
     console.log('Processing dashboard data:', { 
       phonesCount: phones.length, 
@@ -89,14 +89,14 @@ export default function DashboardPage() {
     });
     
     return phones.map(phone => {
-      // 找到该手机的所有租赁记录
+      // 找到該手機的所有租賃記錄
       const phoneRentals = rentals.filter(rental => 
         rental.phoneId === phone.id && rental.status === 'PAID'
       );
       
       console.log(`Phone ${phone.id} rentals:`, phoneRentals.length);
       
-      // 当前租赁 - 修正日期比较逻辑
+      // 當前租賃 - 修正日期比較邏輯
       const currentRental = phoneRentals.find(rental => {
         const startDate = new Date(rental.startDate + 'T00:00:00.000Z');
         const endDate = new Date(rental.endDate + 'T23:59:59.999Z');
@@ -112,14 +112,14 @@ export default function DashboardPage() {
         return isCurrentlyRented;
       });
       
-      // 未来租赁
+      // 未來租賃
       const upcomingRentals = phoneRentals
         .filter(rental => {
           const startDate = new Date(rental.startDate + 'T00:00:00.000Z');
           return startDate > now;
         })
         .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
-        .slice(0, 3); // 只显示最近3个
+        .slice(0, 3); // 只顯示最近3個
       
       let currentRentalInfo;
       if (currentRental) {
@@ -198,7 +198,7 @@ export default function DashboardPage() {
                 </svg>
               </button>
                              <div>
-                <h1 className="text-xl font-semibold text-gray-900">租賃仪表板</h1>
+                <h1 className="text-xl font-semibold text-gray-900">租賃儀表板</h1>
                 <p className="text-sm text-gray-500">
                   手機租賃狀態總覽
                   {testDate && (
@@ -305,7 +305,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* 過濾器和视图切换 */}
+          {/* 過濾器和視圖切換 */}
           <div className="mb-6">
             <div className="flex justify-between items-center">
               <div className="flex space-x-4">
@@ -341,7 +341,7 @@ export default function DashboardPage() {
                 </button>
               </div>
 
-              {/* 视图切换 */}
+              {/* 視圖切換 */}
               <div className="flex space-x-2">
                 <button
                   onClick={() => setViewMode('cards')}
