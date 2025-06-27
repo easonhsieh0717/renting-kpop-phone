@@ -40,10 +40,19 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'rented' | 'available'>('all');
   const [viewMode, setViewMode] = useState<'cards' | 'timeline'>('cards');
+  const [testDate, setTestDate] = useState<string>('');
 
   useEffect(() => {
     fetchDashboardData();
   }, []);
+
+  // 當測試日期改變時重新處理數據
+  useEffect(() => {
+    if (phoneStatuses.length > 0) {
+      // 重新從現有數據計算
+      fetchDashboardData();
+    }
+  }, [testDate]);
 
   const fetchDashboardData = async () => {
     try {
@@ -69,7 +78,14 @@ export default function DashboardPage() {
   };
 
   const processDashboardData = (phones: any[], rentals: Rental[]): PhoneStatus[] => {
-    const now = new Date();
+    // 使用测试日期或当前日期
+    const now = testDate ? new Date(testDate) : new Date();
+    console.log('Processing dashboard data:', { 
+      phonesCount: phones.length, 
+      rentalsCount: rentals.length,
+      currentDate: now.toISOString(),
+      isTestMode: !!testDate
+    });
     
     return phones.map(phone => {
       // 找到该手机的所有租赁记录
@@ -77,16 +93,30 @@ export default function DashboardPage() {
         rental.phoneId === phone.id && rental.status === 'PAID'
       );
       
-      // 当前租赁
+      console.log(`Phone ${phone.id} rentals:`, phoneRentals.length);
+      
+      // 当前租赁 - 修正日期比较逻辑
       const currentRental = phoneRentals.find(rental => {
-        const startDate = new Date(rental.startDate);
-        const endDate = new Date(rental.endDate);
-        return startDate <= now && endDate >= now;
+        const startDate = new Date(rental.startDate + 'T00:00:00.000Z');
+        const endDate = new Date(rental.endDate + 'T23:59:59.999Z');
+        const isCurrentlyRented = startDate <= now && endDate >= now;
+        
+        console.log(`Checking rental ${rental.orderId}:`, {
+          startDate: startDate.toISOString(),
+          endDate: endDate.toISOString(),
+          now: now.toISOString(),
+          isCurrentlyRented
+        });
+        
+        return isCurrentlyRented;
       });
       
       // 未来租赁
       const upcomingRentals = phoneRentals
-        .filter(rental => new Date(rental.startDate) > now)
+        .filter(rental => {
+          const startDate = new Date(rental.startDate + 'T00:00:00.000Z');
+          return startDate > now;
+        })
         .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
         .slice(0, 3); // 只显示最近3个
       
@@ -166,17 +196,45 @@ export default function DashboardPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
               </button>
-              <div>
+                             <div>
                 <h1 className="text-xl font-semibold text-gray-900">租賃仪表板</h1>
-                <p className="text-sm text-gray-500">手機租賃狀態總覽</p>
+                <p className="text-sm text-gray-500">
+                  手機租賃狀態總覽
+                  {testDate && (
+                    <span className="ml-2 text-blue-600 font-medium">
+                      (測試模式: {new Date(testDate).toLocaleDateString('zh-TW')})
+                    </span>
+                  )}
+                </p>
               </div>
             </div>
-            <button
-              onClick={fetchDashboardData}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-            >
-              重新載入
-            </button>
+            <div className="flex items-center space-x-4">
+              {/* 測試日期選擇器 */}
+              <div className="flex items-center space-x-2">
+                <label className="text-sm text-gray-600">測試日期:</label>
+                <input
+                  type="date"
+                  value={testDate}
+                  onChange={(e) => setTestDate(e.target.value)}
+                  className="px-3 py-1 border border-gray-300 rounded-md text-sm"
+                />
+                {testDate && (
+                  <button
+                    onClick={() => setTestDate('')}
+                    className="text-sm text-gray-500 hover:text-gray-700"
+                  >
+                    清除
+                  </button>
+                )}
+              </div>
+              
+              <button
+                onClick={fetchDashboardData}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+              >
+                重新載入
+              </button>
+            </div>
           </div>
         </div>
       </header>
