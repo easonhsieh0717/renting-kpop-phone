@@ -181,11 +181,13 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
       }, { status: 400 });
     }
 
-    // 準備ECPay取消預授權參數
-    const isProduction = process.env.VERCEL_ENV === 'production';
-    const merchantID = isProduction ? process.env.ECPAY_MERCHANT_ID! : '3002607';
-    const hashKey = isProduction ? process.env.ECPAY_HASH_KEY! : 'pwFHCqoQZGmho4w6';
-    const hashIV = isProduction ? process.env.ECPAY_HASH_IV! : 'EkRm7iFT261dpevs';
+    // 準備ECPay取消預授權參數 - 使用與預授權建立時相同的憑證
+    const isProduction = true; // 強制使用正式環境，因為預授權是用正式環境建立的
+    const merchantID = process.env.ECPAY_MERCHANT_ID!; // 3383324
+    const hashKey = process.env.ECPAY_HASH_KEY!;
+    const hashIV = process.env.ECPAY_HASH_IV!;
+    
+    console.log(`[VOID_PREAUTH_DEBUG] 使用商店代號: ${merchantID}, 正式環境: ${isProduction}`);
 
     if (!hashKey || !hashIV) {
       throw new Error('ECPay credentials not configured');
