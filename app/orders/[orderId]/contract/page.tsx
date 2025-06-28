@@ -167,7 +167,7 @@ function renderContract(order: any, depositMode: string | null, needCable: boole
       &nbsp;&nbsp;- 手機品牌與型號：三星Galaxy S25 Ultra<br/>
       &nbsp;&nbsp;- IMEI序號：{order[1]}<br/>
       &nbsp;&nbsp;- 配件：原廠USB-C充電線、專用保護殼（若提供）<br/>
-      &nbsp;&nbsp;- 初始狀況：電池健康度95%，外觀無刮痕、無凹陷、無裂痕，功能正常，經雙方確認無既有瑕疵<br/>
+      &nbsp;&nbsp;- 初始狀況：外觀無明顯刮痕、無凹陷、無裂痕，功能正常，有特別狀態已照片拍攝為準<br/>
       &nbsp;&nbsp;- 清潔要求：乙方應保持設備清潔，歸還時不得有污漬、異味或損壞，否則甲方將收取清潔費用NT$500，於押金或預授權中扣除。<br/>
       <b>第二條 租賃期間</b><br/>
       1. <b>租期：</b> 自{order[2]}起至{order[3]}止。<br/>
@@ -258,7 +258,7 @@ function renderAttachment2(order: any, depositMode: string | null, needCable: bo
       - 設備型號：三星Galaxy S25 Ultra<br/>
       - IMEI序號：{order[1]}<br/>
       - 交付日期：{today.getFullYear()}年{today.getMonth() + 1}月{today.getDate()}日<br/>
-      - 初始狀況：電池健康度95%，外觀無瑕疵，功能正常<br/>
+      - 初始狀況：外觀無明顯刮痕、無凹陷、無裂痕，功能正常，有特別狀態已照片拍攝為準<br/>
       - 配件清單：
         {needCharger && '原廠充電頭，'}
         {needCable && '原廠USB-C充電線，'}
