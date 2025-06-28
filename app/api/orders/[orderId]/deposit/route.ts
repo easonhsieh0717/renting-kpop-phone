@@ -187,7 +187,7 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
         platformID = process.env.ECPAY_MERCHANT_ID!; // 使用 MERCHANT_ID 作為 PLATFORM_ID
         hashKey = process.env.ECPAY_HASH_KEY!;
         hashIV = process.env.ECPAY_HASH_IV!;
-        merchantName = 'LoveTime'; // 修正：使用較短的英文名稱
+        merchantName = '伊森不累'; // 使用綠界後台實際註冊的商店名稱
         isProductionEnv = true;
       } else {
         // 開發或 Vercel 預覽環境
