@@ -108,7 +108,7 @@ async function updateDepositStatus(transactionNo: string, status: 'PAID' | 'FAIL
 }
 
 // 更新預授權狀態
-async function updatePreAuthStatus(transactionNo: string, status: 'PREAUTH' | 'PREAUTH_FAILED', ecpayTradeNo?: string) {
+async function updatePreAuthStatus(transactionNo: string, status: 'HELD' | 'PREAUTH_FAILED', ecpayTradeNo?: string) {
   try {
     const sheets = await getGoogleSheetsClient();
       const spreadsheetId = process.env.GOOGLE_SHEET_ID;
@@ -120,7 +120,7 @@ async function updatePreAuthStatus(transactionNo: string, status: 'PREAUTH' | 'P
     // 獲取所有資料來查找預授權交易號
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId,
-      range: 'A:BB',
+      range: 'reservations!A:BB',
     });
 
     const rows = response.data.values;
@@ -205,8 +205,8 @@ export async function POST(req: NextRequest) {
           await updateDepositStatus(orderId, 'PAID', ecpayTradeNo);
           console.log(`Deposit payment successful for transaction ${orderId}, ECPay TradeNo: ${ecpayTradeNo}, status updated.`);
         } else if (isPreAuthTransaction) {
-          // 預授權交易成功，儲存ECPay交易編號並設定為PREAUTH狀態
-          await updatePreAuthStatus(orderId, 'PREAUTH', ecpayTradeNo);
+          // 預授權交易成功，儲存ECPay交易編號並設定為HELD狀態
+          await updatePreAuthStatus(orderId, 'HELD', ecpayTradeNo);
           console.log(`Pre-authorization successful for transaction ${orderId}, ECPay TradeNo: ${ecpayTradeNo}, status updated.`);
         } else {
           // 一般租金交易成功
