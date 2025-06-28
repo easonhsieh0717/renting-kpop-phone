@@ -124,6 +124,7 @@ export async function POST(req: NextRequest) {
 
     // 验证 CheckMacValue
     const isProduction = process.env.VERCEL_ENV === 'production';
+    const merchantID = isProduction ? process.env.ECPAY_MERCHANT_ID! : '3002607';
     const hashKey = isProduction ? process.env.ECPAY_HASH_KEY! : 'pwFHCqoQZGmho4w6';
     const hashIV = isProduction ? process.env.ECPAY_HASH_IV! : 'EkRm7iFT261dpevs';
     const isTest = !isProduction;

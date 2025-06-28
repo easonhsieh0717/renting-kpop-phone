@@ -184,9 +184,10 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
     }
 
     // 準備ECPay請款參數
-    const merchantID = process.env.ECPAY_MERCHANT_ID || '3383324';
-    const hashKey = process.env.ECPAY_HASH_KEY!;
-    const hashIV = process.env.ECPAY_HASH_IV!;
+    const isProduction = process.env.VERCEL_ENV === 'production';
+    const merchantID = isProduction ? process.env.ECPAY_MERCHANT_ID! : '3002607';
+    const hashKey = isProduction ? process.env.ECPAY_HASH_KEY! : 'pwFHCqoQZGmho4w6';
+    const hashIV = isProduction ? process.env.ECPAY_HASH_IV! : 'EkRm7iFT261dpevs';
 
     if (!hashKey || !hashIV) {
       throw new Error('ECPay credentials not configured');
@@ -196,8 +197,6 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
     const captureOrderId = `${orderId}_CAPTURE_${Date.now()}`;
 
     // 呼叫ECPay預授權請款API
-    const isProduction = merchantID === '3383324';
-    
     console.log('Calling ECPay capture API for order:', orderId);
     console.log('Capture details:', {
       merchantTradeNo: captureOrderId,
