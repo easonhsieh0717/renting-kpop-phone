@@ -84,6 +84,7 @@ async function getPreAuthTransactionInfo(orderId: string) {
 }
 
 // 更新預授權取消狀態和所有相關欄位 (U、V、W、X)
+// 這是一個OVERWRITE操作 - 直接覆寫，不檢查當前狀態
 async function updateVoidStatusWithAllFields(orderId: string, status: string, refundAmount: number) {
   console.log(`[UPDATE_VOID_ALL_FIELDS] 開始更新訂單 ${orderId} 的狀態為 ${status}，退刷金額 ${refundAmount}`);
   
@@ -221,10 +222,12 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
       }, { status: 404 });
     }
 
+    // 只有成功取消的VOID狀態才阻止重複操作
+    // VOID_FAILED狀態允許重試
     if (preAuthInfo.depositStatus === 'VOID') {
       return NextResponse.json({
         success: false,
-        message: '此預授權已經取消'
+        message: '此預授權已經取消，無需重複操作'
       }, { status: 400 });
     }
 
@@ -296,7 +299,7 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
     console.log('ECPay void result:', ecpayResult);
 
     if (ecpayResult.success) {
-      // 取消成功，更新所有相關欄位
+      // ECPay取消成功 → 直接OVERWRITE為VOID，不管Google Sheets當前狀態
       try {
         await updateVoidStatusWithAllFields(orderId, 'VOID', preAuthInfo.depositAmount);
         console.log(`[VOID_PREAUTH_SUCCESS] ECPay取消成功，Google Sheets也已更新所有相關欄位`);
@@ -327,7 +330,7 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
         }
       });
     } else {
-      // 取消失敗，也要更新相關欄位記錄失敗狀態
+      // ECPay取消失敗 → 直接OVERWRITE為VOID_FAILED，記錄失敗狀態
       try {
         await updateVoidStatusWithAllFields(orderId, 'VOID_FAILED', 0); // 失敗時退刷金額為0
         console.log(`[VOID_PREAUTH_FAILED] ECPay取消失敗，已記錄到Google Sheets`);
