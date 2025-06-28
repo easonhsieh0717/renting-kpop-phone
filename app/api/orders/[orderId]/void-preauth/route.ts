@@ -49,8 +49,9 @@ async function getPreAuthTransactionInfo(orderId: string) {
   // 找到對應的訂單
   for (let i = 1; i < rows.length; i++) {
     const row = rows[i];
-    console.log(`[VOID_PREAUTH_DEBUG] 檢查第${i}行: 訂單編號="${row[0]}", 查找="${orderId}", 匹配=${row[0] === orderId}`);
-    console.log(`[VOID_PREAUTH_DEBUG] 第${i}行預授權交易編號: "${row[18]}"`);
+    const googleSheetsRowNumber = i + 1; // Google Sheets行號（包含標題行）
+    console.log(`[VOID_PREAUTH_DEBUG] 檢查陣列索引${i}行 (Google Sheets第${googleSheetsRowNumber}行): 訂單編號="${row[0]}", 查找="${orderId}", 匹配=${row[0] === orderId}`);
+    console.log(`[VOID_PREAUTH_DEBUG] 陣列索引${i}行預授權交易編號: "${row[18]}"`);
     
     if (row[0] === orderId) { // A欄是訂單編號
       const result = {
@@ -106,10 +107,10 @@ async function updateVoidStatus(orderId: string, status: string) {
   for (let i = 1; i < rows.length; i++) {
     const row = rows[i];
     if (row[0] === orderId) {
-      const rowIndex = i + 1;
+      const rowIndex = i + 1; // Google Sheets行號從1開始，且我們跳過了標題行
       found = true;
       
-      console.log(`[UPDATE_VOID_STATUS] 找到訂單在第 ${rowIndex} 行`);
+      console.log(`[UPDATE_VOID_STATUS] 找到訂單在第 ${rowIndex} 行 (陣列索引 ${i})`);
       console.log(`[UPDATE_VOID_STATUS] 更新前狀態: U${rowIndex} =`, row[20]); // U欄是索引20
       console.log(`[UPDATE_VOID_STATUS] 更新範圍: U${rowIndex} (狀態), W${rowIndex} (時間)`);
       console.log(`[UPDATE_VOID_STATUS] 要更新的狀態值:`, status);
