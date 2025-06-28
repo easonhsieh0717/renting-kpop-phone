@@ -18,7 +18,7 @@ export async function GET(req: NextRequest, { params }: { params: { orderId: str
     const sheets = await getGoogleSheetsClient();
     const spreadsheetId = process.env.GOOGLE_SHEET_ID;
     if (!spreadsheetId) throw new Error('GOOGLE_SHEET_ID is not configured');
-    const range = 'reservations!A:M';
+    const range = 'reservations!A:Z';
     const response = await sheets.spreadsheets.values.get({ spreadsheetId, range });
     const rows = response.data.values;
     if (!rows || rows.length < 2) return NextResponse.json({ message: '查無訂單' }, { status: 404 });
