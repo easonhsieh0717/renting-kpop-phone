@@ -32,7 +32,19 @@ async function getPreAuthOrders() {
 
   console.log(`Found ${rows.length} rows in total`);
   
-  // 跳過標題行，從第二行開始
+  // 先檢查是否能找到目標訂單
+  for (let i = 1; i < rows.length; i++) {
+    const row = rows[i];
+    const orderId = row[0] || '';
+    if (orderId === 'RENT1750990100151') {
+      console.log(`Found target order at row ${i}:`, row);
+      console.log(`S column (18): ${row[18]}`);
+      console.log(`T column (19): ${row[19]}`);
+      console.log(`U column (20): ${row[20]}`);
+    }
+  }
+  
+  // 跳過標題行，從第二行開始  
   for (let i = 1; i < rows.length; i++) {
     const row = rows[i];
     
