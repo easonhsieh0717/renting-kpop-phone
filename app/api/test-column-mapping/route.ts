@@ -6,20 +6,20 @@ import { google } from 'googleapis';
 const COLUMN_MAPPING = {
   // 基本訂單資訊（根據實際資料排列）
   ORDER_ID: 0,              // A: 訂單編號
-  PHONE_IMEI: 1,            // B: IMEI
+  PHONE_IMEI: 1,            // B: IMEI (手機ID)
   START_DATE: 2,            // C: 開始日期
   END_DATE: 3,              // D: 結束日期
-  AMOUNT: 4,                // E: 金額
+  ORIGINAL_AMOUNT: 4,       // E: 原始金額
   CUSTOMER_NAME: 5,         // F: 客戶姓名
   EMAIL: 6,                 // G: 電子郵件
   PHONE: 7,                 // H: 電話
   PAYMENT_STATUS: 8,        // I: 付款狀態
   PAYMENT_TIME: 9,          // J: 付款時間
-  NOTES1: 10,               // K: 備註1
-  QUANTITY: 11,             // L: 數量
-  FINAL_AMOUNT: 12,         // M: 最終金額
+  DISCOUNT_CODE: 10,        // K: 折扣碼
+  DISCOUNT_AMOUNT: 11,      // L: 總共折扣
+  FINAL_AMOUNT: 12,         // M: 最終付款
   NOTES2: 13,               // N: 備註2
-  NOTES3: 14,               // O: 備註3
+  CARRIER_NUMBER: 14,       // O: 手機載具號碼
   INVOICE_NO: 15,           // P: 發票編號
   INVOICE_STATUS: 16,       // Q: 發票狀態
   INVOICE_TIME: 17,         // R: 發票時間
