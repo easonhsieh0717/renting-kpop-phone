@@ -152,7 +152,7 @@ function Stepper({ step, setStep }: { step: number; setStep: (n: number) => void
 }
 
 // 合約條款渲染（正式版，動態帶入步驟三資訊）
-function renderContract(order: any, depositMode: string | null, needCable: boolean, needCharger: boolean, idNumber: string, phoneNumber: string) {
+function renderContract(order: any, depositMode: string | null, needCable: boolean, needCharger: boolean, idNumber: string, phoneNumber: string, depositAmount: number = 30000) {
   const today = new Date();
   const formatDate = (d: Date) => `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
   
@@ -213,7 +213,7 @@ function renderContract(order: any, depositMode: string | null, needCable: boole
         {depositMode === 'high' && (
           <>
             <span style={fontStyle}>&nbsp;&nbsp;</span><span style={boldStyle}>高押金模式（免證件）</span><br/>
-            <span style={fontStyle}>&nbsp;&nbsp;- 押金金額：NT$30,000（現金）</span><br/>
+            <span style={fontStyle}>&nbsp;&nbsp;- 押金金額：NT${depositAmount.toLocaleString()}（現金）</span><br/>
             <span style={fontStyle}>&nbsp;&nbsp;- 繳納方式：設備交付時以現金繳納</span><br/>
             <span style={fontStyle}>&nbsp;&nbsp;- 證件要求：無需提供身分證件</span><br/>
           </>
@@ -229,7 +229,7 @@ function renderContract(order: any, depositMode: string | null, needCable: boole
         {depositMode === 'preauth' && (
           <>
             <span style={fontStyle}>&nbsp;&nbsp;</span><span style={boldStyle}>預授權模式（免證件）</span><br/>
-            <span style={fontStyle}>&nbsp;&nbsp;- 預授權金額：NT$30,000（信用卡）</span><br/>
+            <span style={fontStyle}>&nbsp;&nbsp;- 預授權金額：NT${depositAmount.toLocaleString()}（信用卡）</span><br/>
             <span style={fontStyle}>&nbsp;&nbsp;- 繳納方式：設備交付前完成信用卡預授權</span><br/>
             <span style={fontStyle}>&nbsp;&nbsp;- 證件要求：無需提供身分證件</span><br/>
           </>
@@ -270,7 +270,7 @@ function renderContract(order: any, depositMode: string | null, needCable: boole
       {depositMode === 'preauth' && (
         <div style={{marginBottom: '16px'}}>
           <span style={boldStyle}>第七條 預授權規範</span><br/>
-          <span style={fontStyle}>1. 預授權模式下，乙方於交付設備前以信用卡完成NT$30,000預授權。</span><br/>
+          <span style={fontStyle}>1. 預授權模式下，乙方於交付設備前以信用卡完成NT${depositAmount.toLocaleString()}預授權。</span><br/>
           <span style={fontStyle}>2. 設備歸還且驗收無誤後，甲方於3個工作日內解除預授權。</span><br/>
           <span style={fontStyle}>3. 若設備未歸還、損壞或違約，甲方得依附件一執行扣款，並提供扣款明細。</span><br/>
           <span style={fontStyle}>4. 乙方對扣款有異議，應於收到扣款通知後7日內提出，甲方應提供證明文件（包含維修報價單或鑑定報告）。</span><br/>
@@ -444,6 +444,9 @@ export default function ContractPage() {
           setSigned(false);
           setSignatureUrl(null);
         }
+        // 從Google Sheet讀取預授權金額（第19欄，索引19）
+        const sheetDepositAmount = parseInt(data[19]) || 30000;
+        setDepositAmount(sheetDepositAmount);
         setLoading(false);
       })
       .catch(() => {
@@ -952,7 +955,7 @@ export default function ContractPage() {
                 <label htmlFor="high" className="flex-1">
                   <span className="font-medium">🏦 高押金模式（免證件）：</span>
                   <br/>
-                  <span className="text-gray-600">現金 NT$30,000，無需提供身分證件</span>
+                  <span className="text-gray-600">現金 NT${depositAmount.toLocaleString()}，無需提供身分證件</span>
                 </label>
               </div>
               <div className="flex items-start">
@@ -968,7 +971,7 @@ export default function ContractPage() {
                 <label htmlFor="preauth" className="flex-1">
                   <span className="font-medium">🔒 預授權模式（免證件）：</span>
                   <br/>
-                  <span className="text-gray-600">信用卡預授權 NT$30,000，無需現金和證件</span>
+                  <span className="text-gray-600">信用卡預授權 NT${depositAmount.toLocaleString()}，無需現金和證件</span>
                 </label>
               </div>
             </div>
@@ -1054,7 +1057,7 @@ export default function ContractPage() {
               <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
                 <h3 className="font-semibold text-blue-800 mb-2">🏦 高押金模式</h3>
                 <p className="text-blue-700 text-sm mb-3">
-                  請收取客戶現金押金 NT$30,000
+                  請收取客戶現金押金 NT${depositAmount.toLocaleString()}
                 </p>
                 <button
                   onClick={() => setDepositPaid(true)}
@@ -1095,7 +1098,7 @@ export default function ContractPage() {
       {step === 5 && (
         <div>
           <div className="mb-8">
-            {renderContract(order, depositMode, needCable, needCharger, idNumber, phoneNumber)}
+            {renderContract(order, depositMode, needCable, needCharger, idNumber, phoneNumber, depositAmount)}
           </div>
           <div className="border-t pt-6">
             <h3 className="text-lg font-semibold mb-4">電子簽署</h3>
