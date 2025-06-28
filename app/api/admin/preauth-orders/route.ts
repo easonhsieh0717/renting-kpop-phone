@@ -30,15 +30,30 @@ async function getPreAuthOrders() {
   const rows = response.data.values || [];
   const orders = [];
 
-  console.log(`Found ${rows.length} rows in total`);
+  console.log(`[PREAUTH_DEBUG] Found ${rows.length} rows in total`);
+  
+  // 檢查標題行，確認欄位對應
+  if (rows.length > 0) {
+    const headers = rows[0];
+    console.log(`[PREAUTH_DEBUG] Headers: A=${headers[0]}, S=${headers[18]}, T=${headers[19]}, U=${headers[20]}, Y=${headers[24]}`);
+  }
   
   // 跳過標題行，從第二行開始  
   for (let i = 1; i < rows.length; i++) {
     const row = rows[i];
     
     // 檢查是否有預授權交易編號（S欄）
-    const depositTransactionNo = row[18] || ''; // S欄：保證金交易編號
+    const depositTransactionNo = row[18] || ''; // S欄：保證金交易編號（索引18）
     const orderId = row[0] || '';
+    
+    // 詳細調試特定行
+    if (orderId.includes('RENT1750815760740') || i === 12) { // 第13行對應索引12
+      console.log(`[PREAUTH_DEBUG] 檢查第${i+1}行(索引${i}): 訂單=${orderId}`);
+      console.log(`[PREAUTH_DEBUG] S欄(索引18): "${row[18]}"`);
+      console.log(`[PREAUTH_DEBUG] T欄(索引19): "${row[19]}"`);
+      console.log(`[PREAUTH_DEBUG] U欄(索引20): "${row[20]}"`);
+      console.log(`[PREAUTH_DEBUG] 完整行資料:`, row.slice(0, 25));
+    }
     
     if (depositTransactionNo && depositTransactionNo.includes('P')) { // P代表PreAuth
       const customerName = row[5] || ''; // F欄：客戶姓名
@@ -69,6 +84,22 @@ async function getPreAuthOrders() {
         });
       } else {
         console.log(`[PREAUTH_DEBUG] 跳過已取消的預授權: ${orderId}`);
+      }
+    }
+  }
+
+  console.log(`[PREAUTH_DEBUG] 總共找到 ${orders.length} 筆預授權訂單`);
+  
+  // 如果沒有找到任何預授權訂單，檢查所有包含P的行
+  if (orders.length === 0) {
+    console.log(`[PREAUTH_DEBUG] 沒有找到預授權訂單，檢查所有可能的預授權資料...`);
+    for (let i = 1; i < rows.length; i++) {
+      const row = rows[i];
+      const orderId = row[0] || '';
+      const sColumn = row[18] || ''; // S欄
+      
+      if (sColumn && sColumn.toString().includes('P')) {
+        console.log(`[PREAUTH_DEBUG] 發現包含P的S欄資料 - 第${i+1}行: 訂單=${orderId}, S欄="${sColumn}", U欄="${row[20]}"`);
       }
     }
   }
