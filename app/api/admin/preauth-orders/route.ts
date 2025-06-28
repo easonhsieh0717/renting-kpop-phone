@@ -49,20 +49,27 @@ async function getPreAuthOrders() {
       const depositStatus = row[20] || ''; // U欄：保證金狀態
       const captureAmount = parseInt(row[21]) || 0; // V欄：已請款金額
       
-      orders.push({
-        orderId,
-        customerName,
-        phoneModel,
-        paymentStatus,
-        preAuthInfo: {
+      console.log(`[PREAUTH_DEBUG] 找到預授權訂單: ${orderId}, 狀態: ${depositStatus}, 交易編號: ${depositTransactionNo}`);
+      
+      // 只返回狀態不是VOID的預授權
+      if (depositStatus !== 'VOID') {
+        orders.push({
           orderId,
-          depositTransactionNo,
-          ecpayTradeNo,
-          depositAmount,
-          depositStatus,
-          captureAmount
-        }
-      });
+          customerName,
+          phoneModel,
+          paymentStatus,
+          preAuthInfo: {
+            orderId,
+            depositTransactionNo,
+            ecpayTradeNo,
+            depositAmount,
+            depositStatus,
+            captureAmount
+          }
+        });
+      } else {
+        console.log(`[PREAUTH_DEBUG] 跳過已取消的預授權: ${orderId}`);
+      }
     }
   }
 
