@@ -110,7 +110,9 @@ async function updateVoidStatus(orderId: string, status: string) {
       found = true;
       
       console.log(`[UPDATE_VOID_STATUS] 找到訂單在第 ${rowIndex} 行`);
+      console.log(`[UPDATE_VOID_STATUS] 更新前狀態: U${rowIndex} =`, row[20]); // U欄是索引20
       console.log(`[UPDATE_VOID_STATUS] 更新範圍: U${rowIndex} (狀態), W${rowIndex} (時間)`);
+      console.log(`[UPDATE_VOID_STATUS] 要更新的狀態值:`, status);
       
       try {
         // 更新預授權狀態和取消時間
@@ -133,6 +135,13 @@ async function updateVoidStatus(orderId: string, status: string) {
         
         console.log(`[UPDATE_VOID_STATUS] 更新成功:`, updateResult.status);
         console.log(`[UPDATE_VOID_STATUS] 更新了 ${updateResult.data.totalUpdatedCells} 個儲存格`);
+        
+        // 驗證更新結果
+        const verifyResponse = await sheets.spreadsheets.values.get({
+          spreadsheetId,
+          range: `U${rowIndex}:W${rowIndex}`,
+        });
+        console.log(`[UPDATE_VOID_STATUS] 驗證更新結果:`, verifyResponse.data.values);
       } catch (updateError: any) {
         console.error(`[UPDATE_VOID_STATUS] 更新失敗:`, updateError);
         throw updateError;
