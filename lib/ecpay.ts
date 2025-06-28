@@ -178,7 +178,8 @@ export function getECPayRefundParams({
   totalAmount,
   merchantID,
   hashKey,
-  hashIV
+  hashIV,
+  platformID
 }: {
   merchantTradeNo: string;
   tradeNo: string;
@@ -187,14 +188,19 @@ export function getECPayRefundParams({
   merchantID: string;
   hashKey: string;
   hashIV: string;
+  platformID?: string;
 }) {
-  const params = {
+  const params: any = {
     MerchantID: merchantID,
     MerchantTradeNo: merchantTradeNo,
     TradeNo: tradeNo,
     Action: action,
     TotalAmount: totalAmount
   };
+
+  if (platformID) {
+    params.PlatformID = platformID;
+  }
 
   // 生成CheckMacValue - 退刷API使用不同的參數結構
   const sortedData = Object.entries(params)
@@ -221,6 +227,7 @@ export async function callECPayRefundAPI({
   merchantID,
   hashKey,
   hashIV,
+  platformID,
   isProduction = false
 }: {
   merchantTradeNo: string;
@@ -230,6 +237,7 @@ export async function callECPayRefundAPI({
   merchantID: string;
   hashKey: string;
   hashIV: string;
+  platformID?: string;
   isProduction?: boolean;
 }) {
   const apiUrl = isProduction 
@@ -243,7 +251,8 @@ export async function callECPayRefundAPI({
     totalAmount,
     merchantID,
     hashKey,
-    hashIV
+    hashIV,
+    platformID
   });
 
   try {
