@@ -24,7 +24,8 @@ export default function TestPreAuthPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          amount: depositAmount
+          amount: depositAmount,
+          isTest: true
         })
       });
 

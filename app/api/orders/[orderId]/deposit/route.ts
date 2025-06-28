@@ -115,15 +115,10 @@ async function getOrderInfo(orderId: string) {
 // POST: 創建保證金預授權訂單（使用HoldTradeAMT）
 export async function POST(req: NextRequest, { params }: { params: { orderId: string } }) {
   try {
-    const { orderId } = params;
-    
-    // 獲取請求體中的金額
-    const body = await req.json();
-    const requestedAmount = body.amount || 30000;
-    
-    console.log(`Creating deposit pre-authorization for order ${orderId}, amount: ${requestedAmount}`);
+    const orderId = params.orderId;
+    const { depositAmount, isTest } = await req.json();
 
-    // 獲取訂單資訊
+    // 根據 orderId 獲取訂單詳細資訊
     const orderInfo = await getOrderInfo(orderId);
     
     // 檢查訂單狀態
@@ -146,7 +141,6 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
     const orderSuffix = orderId.slice(-6);
     const timestamp = Date.now().toString().slice(-8);
     const preAuthOrderId = `${orderSuffix}P${timestamp}`;
-    const depositAmount = requestedAmount; // 使用前端傳入的金額
 
     // 改善商品明細，明確標示為保證金預授權
     const phoneImei = orderInfo.phoneImei;
@@ -161,20 +155,46 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
     
     const itemName = `${phoneModelName}押金預授權-IMEI:${phoneImei}`;
 
-    // 強制使用 ECPay 平台商測試環境
-    const isProduction = false; 
-    
-    console.log('Forcing ECPay Test Environment');
+    let merchantID: string;
+    let hashKey: string;
+    let hashIV: string;
+    let merchantName: string;
+    let isProductionEnv = false;
 
-    const merchantID = '3085340'; // ECPay 平台商測試ID
-    const hashKey = 'HwiqPsywG1hLQNuN'; // ECPay 平台商測試 HashKey
-    const hashIV = 'YqITWD4TyKacYXpn'; // ECPay 平台商測試 HashIV
-    const merchantName = '測試商店'; // 測試時可自訂
+    if (isTest) {
+      // 來自 /test-preauth 頁面的請求，強制使用平台商測試資料
+      console.log('Request from test page, using ECPay Platform Test credentials.');
+      merchantID = '3085340';
+      hashKey = 'HwiqPsywG1hLQNuN';
+      hashIV = 'YqITWD4TyKacYXpn';
+      merchantName = '測試商店';
+      isProductionEnv = false;
+    } else {
+      // 來自網站正常流程的請求
+      const isVercelProduction = process.env.VERCEL_ENV === 'production';
+      if (isVercelProduction) {
+        // 正式環境
+        console.log('Production environment, using Production ECPay credentials.');
+        merchantID = process.env.ECPAY_MERCHANT_ID!;
+        hashKey = process.env.ECPAY_HASH_KEY!;
+        hashIV = process.env.ECPAY_HASH_IV!;
+        merchantName = '愛時代國際股份有限公司';
+        isProductionEnv = true;
+      } else {
+        // 開發或 Vercel 預覽環境
+        console.log('Non-production environment, using standard Test credentials.');
+        merchantID = '3002607';
+        hashKey = 'pwFHCqoQZGmho4w6';
+        hashIV = 'EkRm7iFT261dpevs';
+        merchantName = '測試商店';
+        isProductionEnv = false;
+      }
+    }
 
-    console.log('ECPay Test config:', {
+    console.log('Final ECPay config:', {
       merchantID,
       merchantName,
-      isProduction
+      isProductionEnv
     });
 
     // 確保 NEXT_PUBLIC_SITE_URL 存在
@@ -199,7 +219,7 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
     await updateDepositTransactionInSheet(orderId, preAuthOrderId, depositAmount);
 
     // 準備ECPay表單URL
-    const ecpayUrl = isProduction 
+    const ecpayUrl = isProductionEnv 
       ? 'https://payment.ecpay.com.tw/Cashier/AioCheckOut/V5'
       : 'https://payment-stage.ecpay.com.tw/Cashier/AioCheckOut/V5';
 
