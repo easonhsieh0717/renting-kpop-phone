@@ -166,7 +166,12 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
     const merchantID = isProduction ? process.env.ECPAY_MERCHANT_ID! : '3002607';
     const hashKey = isProduction ? process.env.ECPAY_HASH_KEY! : 'pwFHCqoQZGmho4w6';
     const hashIV = isProduction ? process.env.ECPAY_HASH_IV! : 'EkRm7iFT261dpevs';
-    const merchantName = isProduction ? '愛時代國際股份有限公司' : '測試商店';
+    const merchantName = isProduction ? '愛時代國際' : '測試商店';
+
+    // 確保 NEXT_PUBLIC_SITE_URL 存在
+    if (!process.env.NEXT_PUBLIC_SITE_URL) {
+      throw new Error('NEXT_PUBLIC_SITE_URL is not configured');
+    }
 
     const paymentParams = getECPayPreAuthParams({
       merchantTradeNo: preAuthOrderId,
@@ -175,8 +180,8 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
       merchantID,
       hashKey,
       hashIV,
-      holdTradeAmount: depositAmount, // 設定預授權金額，啟用預授權功能
-      merchantName // 添加商店名稱參數
+      holdTradeAmount: depositAmount,
+      merchantName
     });
 
     // 更新Google Sheet記錄保證金預授權交易號
