@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { google } from 'googleapis';
 import { getECPayPaymentParams } from '@/lib/ecpay';
+import { formatDateTimeInTaipei } from '@/lib/utils';
 
 // Google Sheets 客戶端
 async function getGoogleSheetsClient() {
@@ -42,7 +43,7 @@ async function updateDepositTransactionInSheet(
 
     // 更新保證金相關欄位 (S=交易號, T=金額, U=狀態)
     const updateRange = `reservations!S${rowIndex + 1}:U${rowIndex + 1}`;
-    const currentTime = new Date().toISOString();
+    const currentTime = formatDateTimeInTaipei(new Date());
     
     await sheets.spreadsheets.values.update({
       spreadsheetId,

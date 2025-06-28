@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { google } from 'googleapis';
+import { formatDateTimeInTaipei } from '@/lib/utils';
 import crypto from 'crypto';
 
 async function getGoogleSheetsClient() {
@@ -172,7 +173,7 @@ async function updateInvoiceInSheet(spreadsheetId: string, orderId: string, invo
 
     // 更新發票相關欄位 (P=發票號碼, Q=發票狀態, R=發票開立時間)
     const updateRange = `reservations!P${rowIndex + 1}:R${rowIndex + 1}`;
-    const currentTime = new Date().toISOString();
+    const currentTime = formatDateTimeInTaipei(new Date());
     
     await sheets.spreadsheets.values.update({
       spreadsheetId,

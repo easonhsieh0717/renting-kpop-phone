@@ -3,6 +3,7 @@ import { google } from 'googleapis';
 import { Phone, Discount } from '../../../types';
 import { getECPayPaymentParams } from '../../../lib/ecpay';
 import { deactivateDiscount, getDiscountByCode } from '../../../lib/sheets/discounts';
+import { formatDateTimeInTaipei } from '../../../lib/utils';
 
 async function getGoogleSheetsClient() {
   const auth = new google.auth.GoogleAuth({
@@ -86,7 +87,7 @@ async function appendToSheet(values: {
   await ensureReservationsWorksheet(sheets, spreadsheetId);
   
   const orderId = `RENT${Date.now()}`;
-  const createdAt = new Date().toISOString();
+  const createdAt = formatDateTimeInTaipei(new Date());
   const paymentStatus = 'PENDING';
 
   const newRow = [

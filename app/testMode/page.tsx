@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { formatDateTimeInTaipei } from '@/lib/utils';
 
 const TEST_MERCHANT_ID = "3002607";
 const TEST_HASH_KEY = "pwFHCqoQZGmho4w6";
@@ -79,7 +80,7 @@ export default function TestModePage() {
       RtnMsg: "交易成功",
       TradeNo: "testTradeNo",
       TradeAmt: 50,
-      PaymentDate: new Date().toISOString().slice(0,19).replace("T"," "),
+      PaymentDate: formatDateTimeInTaipei(new Date()).replace(/\//g, '-').replace(',', ''),
       PaymentType: "Credit_CreditCard",
       PaymentTypeChargeFee: 1,
       TradeDate: ecpayParams.MerchantTradeDate,

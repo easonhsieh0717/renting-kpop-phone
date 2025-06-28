@@ -81,4 +81,41 @@ export const toYYYYMMDD = (date: Date): string => {
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
+};
+
+/**
+ * 將 Date 物件或日期字串，以台北時區 (UTC+8) 格式化為完整的日期時間字串。
+ * @param date - 要格式化的日期，可以是 Date 物件、字串或 undefined。
+ * @param format - 格式化類型：'datetime' 或 'date'，預設為 'datetime'。
+ * @returns 格式化後的日期時間字串，或在輸入無效時返回空字串。
+ */
+export const formatDateTimeInTaipei = (
+  date: Date | string | undefined,
+  format: 'datetime' | 'date' = 'datetime'
+): string => {
+  if (!date) {
+    return '';
+  }
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  
+  // 檢查日期是否有效
+  if (isNaN(dateObj.getTime())) {
+    return '';
+  }
+
+  const options: Intl.DateTimeFormatOptions = {
+    timeZone: 'Asia/Taipei',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    ...(format === 'datetime' && {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    })
+  };
+
+  const formatter = new Intl.DateTimeFormat('zh-TW', options);
+  return formatter.format(dateObj);
 }; 

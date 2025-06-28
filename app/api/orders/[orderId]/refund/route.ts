@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { google } from 'googleapis';
 import { callECPayRefundAPI } from '@/lib/ecpay';
+import { formatDateTimeInTaipei } from '@/lib/utils';
 
 // Google Sheets 客戶端
 async function getGoogleSheetsClient() {
@@ -50,7 +51,7 @@ async function updateDepositRefundInSheet(
 
     // 更新保證金相關欄位 (U=保證金狀態, V=退刷金額, W=退刷時間, X=損壞費用)
     const updateRange = `reservations!U${rowIndex + 1}:X${rowIndex + 1}`;
-    const currentTime = new Date().toISOString();
+    const currentTime = formatDateTimeInTaipei(new Date());
     
     await sheets.spreadsheets.values.update({
       spreadsheetId,
