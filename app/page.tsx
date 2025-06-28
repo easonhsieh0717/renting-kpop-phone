@@ -40,6 +40,19 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             priority
           />
         </div>
+        
+        {/* 影片區塊 */}
+        <div className="rounded-2xl overflow-hidden shadow-2xl">
+          <video
+            className="w-full h-auto object-cover"
+            controls
+            preload="metadata"
+            poster="/images/DEMO.jpg"
+          >
+            <source src="/video.MP4" type="video/mp4" />
+            您的瀏覽器不支援影片播放。
+          </video>
+        </div>
         <div className="bg-brand-gray-dark/50 backdrop-blur-sm p-8 rounded-2xl shadow-2xl border border-brand-gray-dark">
           <h2 className="text-3xl font-bold text-center mb-6 text-brand-yellow">
             尋找你的追星神器
