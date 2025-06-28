@@ -142,11 +142,11 @@ async function updatePreAuthStatus(transactionNo: string, status: 'HELD' | 'PREA
           valueInputOption: 'USER_ENTERED',
           data: [
             {
-              range: `Y${rowIndex + 1}`, // Y欄：ECPay交易編號
+              range: `reservations!Y${rowIndex + 1}`, // Y欄：ECPay交易編號
               values: [[ecpayTradeNo]]
             },
             {
-              range: `U${rowIndex + 1}`, // U欄：保證金狀態
+              range: `reservations!U${rowIndex + 1}`, // U欄：保證金狀態
               values: [[status]]
             }
           ]
@@ -156,7 +156,7 @@ async function updatePreAuthStatus(transactionNo: string, status: 'HELD' | 'PREA
       // 只更新狀態
       await sheets.spreadsheets.values.update({
         spreadsheetId,
-        range: `U${rowIndex + 1}`,
+        range: `reservations!U${rowIndex + 1}`,
         valueInputOption: 'USER_ENTERED',
         requestBody: {
           values: [[status]],
