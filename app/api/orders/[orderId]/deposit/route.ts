@@ -184,7 +184,7 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
         // 正式環境
         console.log('Production environment, using Production ECPay credentials.');
         merchantID = process.env.ECPAY_MERCHANT_ID!;
-        platformID = process.env.ECPAY_PLATFORM_ID!;
+        platformID = process.env.ECPAY_MERCHANT_ID!; // 使用 MERCHANT_ID 作為 PLATFORM_ID
         hashKey = process.env.ECPAY_HASH_KEY!;
         hashIV = process.env.ECPAY_HASH_IV!;
         merchantName = '愛時代國際股份有限公司';
