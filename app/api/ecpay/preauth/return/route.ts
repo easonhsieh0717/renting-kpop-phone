@@ -1,0 +1,160 @@
+import { NextRequest, NextResponse } from 'next/server';
+import crypto from 'crypto';
+import { google } from 'googleapis';
+
+// 从 lib/ecpay.ts 复制的函数
+function ecpayUrlEncode(data: string): string {
+  return encodeURIComponent(data)
+    .replace(/%20/g, '+')
+    .replace(/!/g, '%21')
+    .replace(/'/g, '%27')
+    .replace(/\(/g, '%28')
+    .replace(/\)/g, '%29')
+    .replace(/\*/g, '%2a');
+}
+
+function verifyCheckMacValue(data: Record<string, any>, hashKey: string, hashIV: string, isTest: boolean): boolean {
+  const { CheckMacValue, ...rest } = data;
+  if (!CheckMacValue) return false;
+  if (isTest && CheckMacValue === 'test') return true;
+
+  const sortedData = Object.entries(rest)
+    .sort((a, b) => a[0].toLowerCase().localeCompare(b[0].toLowerCase()))
+    .map(([key, value]) => `${key}=${value}`)
+    .join('&');
+
+  const hashString = `HashKey=${hashKey}&${sortedData}&HashIV=${hashIV}`;
+  const encodedString = ecpayUrlEncode(hashString).toLowerCase();
+  const calculatedHash = crypto.createHash('sha256').update(encodedString).digest('hex').toUpperCase();
+  
+  return calculatedHash === CheckMacValue;
+}
+
+// 获取 Google Sheets 客户端
+async function getGoogleSheetsClient() {
+  const auth = new google.auth.GoogleAuth({
+    credentials: {
+      client_email: process.env.GOOGLE_SHEETS_CLIENT_EMAIL,
+      private_key: (process.env.GOOGLE_SHEETS_PRIVATE_KEY || '').replace(/\\n/g, '\n'),
+    },
+    scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+  });
+  return google.sheets({ version: 'v4', auth });
+}
+
+// 更新预授权状态
+async function updatePreAuthStatus(transactionNo: string, status: 'HELD' | 'PREAUTH_FAILED', ecpayTradeNo?: string) {
+  try {
+    const sheets = await getGoogleSheetsClient();
+    const spreadsheetId = process.env.GOOGLE_SHEET_ID;
+  
+    if (!spreadsheetId) {
+      throw new Error('GOOGLE_SHEET_ID is not configured');
+    }
+
+    // 获取所有数据来查找预授权交易号
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: 'reservations!A:BB',
+    });
+
+    const rows = response.data.values;
+    if (!rows) return;
+
+    // 查找包含该预授权交易号的行（S列是保证金交易编号）
+    const rowIndex = rows.findIndex((row: any) => row[18] === transactionNo); // S列索引是18
+    if (rowIndex === -1) {
+      console.log(`Pre-auth transaction ${transactionNo} not found`);
+      return;
+    }
+
+    // 更新预授权状态（U列）和ECPay交易编号（Y列）
+    if (ecpayTradeNo) {
+      // 同时更新ECPay交易编号和状态
+      await sheets.spreadsheets.values.batchUpdate({
+        spreadsheetId,
+        requestBody: {
+          valueInputOption: 'USER_ENTERED',
+          data: [
+            {
+              range: `reservations!Y${rowIndex + 1}`, // Y列：ECPay交易编号
+              values: [[ecpayTradeNo]]
+            },
+            {
+              range: `reservations!U${rowIndex + 1}`, // U列：保证金状态
+              values: [[status]]
+            }
+          ]
+        }
+      });
+    } else {
+      // 只更新状态
+      await sheets.spreadsheets.values.update({
+        spreadsheetId,
+        range: `reservations!U${rowIndex + 1}`,
+        valueInputOption: 'USER_ENTERED',
+        requestBody: {
+          values: [[status]],
+        },
+      });
+    }
+
+    console.log(`Updated pre-auth status for transaction ${transactionNo} to ${status}${ecpayTradeNo ? ` with ECPay TradeNo: ${ecpayTradeNo}` : ''}`);
+  } catch (error) {
+    console.error('Error updating pre-auth status:', error);
+    throw error;
+  }
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    const formData = await req.formData();
+    const data: Record<string, any> = {};
+    formData.forEach((value, key) => {
+      data[key] = value;
+    });
+
+    console.log('Received ECPay preauth return data:', data);
+
+    // 验证必要参数
+    if (!data.MerchantID || !data.MerchantTradeNo || !data.RtnCode) {
+      console.error('Missing required parameters');
+      return new NextResponse('0|Missing required parameters', { status: 400 });
+    }
+
+    // 验证 CheckMacValue
+    const isProduction = process.env.VERCEL_ENV === 'production';
+    const hashKey = isProduction ? process.env.ECPAY_HASH_KEY! : 'pwFHCqoQZGmho4w6';
+    const hashIV = isProduction ? process.env.ECPAY_HASH_IV! : 'EkRm7iFT261dpevs';
+    const isTest = !isProduction;
+    const isValid = verifyCheckMacValue(data, hashKey, hashIV, isTest);
+    
+    if (!isValid) {
+      console.error('CheckMacValue verification failed');
+      return new NextResponse('0|CheckMacValue verification failed', { status: 400 });
+    }
+
+    const { MerchantTradeNo: orderId, RtnCode, TradeNo: ecpayTradeNo } = data;
+    
+    // 确认是预授权交易
+    if (!orderId.includes('P')) {
+      console.error('Not a preauth transaction');
+      return new NextResponse('0|Not a preauth transaction', { status: 400 });
+    }
+
+    if (RtnCode === '1') {
+      // 预授权成功，保存 ECPay 交易编号并设置为 HELD 状态
+      await updatePreAuthStatus(orderId, 'HELD', ecpayTradeNo);
+      console.log(`Pre-authorization successful for transaction ${orderId}, ECPay TradeNo: ${ecpayTradeNo}, status updated.`);
+    } else {
+      // 预授权失败
+      await updatePreAuthStatus(orderId, 'PREAUTH_FAILED');
+      console.log(`Pre-authorization failed for transaction ${orderId}. RtnCode: ${RtnCode}`);
+    }
+
+    return new NextResponse('1|OK');
+  } catch (error) {
+    console.error('Error handling ECPay preauth return:', error);
+    return new NextResponse('0|Error', { status: 500 });
+  }
+} 
