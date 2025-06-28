@@ -83,9 +83,9 @@ async function getPreAuthTransactionInfo(orderId: string) {
   throw new Error(`找不到訂單資訊: ${orderId}`);
 }
 
-// 更新預授權取消狀態
-async function updateVoidStatus(orderId: string, status: string) {
-  console.log(`[UPDATE_VOID_STATUS] 開始更新訂單 ${orderId} 的狀態為 ${status}`);
+// 更新預授權取消狀態和所有相關欄位 (U、V、W、X)
+async function updateVoidStatusWithAllFields(orderId: string, status: string, refundAmount: number) {
+  console.log(`[UPDATE_VOID_ALL_FIELDS] 開始更新訂單 ${orderId} 的狀態為 ${status}，退刷金額 ${refundAmount}`);
   
   const sheets = await getGoogleSheetsClient();
   const spreadsheetId = process.env.GOOGLE_SHEET_ID;
@@ -100,7 +100,7 @@ async function updateVoidStatus(orderId: string, status: string) {
   });
 
   const rows = response.data.values || [];
-  console.log(`[UPDATE_VOID_STATUS] 總共有 ${rows.length} 行資料`);
+  console.log(`[UPDATE_VOID_ALL_FIELDS] 總共有 ${rows.length} 行資料`);
   
   // 找到對應的訂單並更新
   let found = false;
@@ -110,13 +110,18 @@ async function updateVoidStatus(orderId: string, status: string) {
       const rowIndex = i + 1; // Google Sheets行號從1開始，且我們跳過了標題行
       found = true;
       
-      console.log(`[UPDATE_VOID_STATUS] 找到訂單在第 ${rowIndex} 行 (陣列索引 ${i})`);
-      console.log(`[UPDATE_VOID_STATUS] 更新前狀態: U${rowIndex} =`, row[20]); // U欄是索引20
-      console.log(`[UPDATE_VOID_STATUS] 更新範圍: U${rowIndex} (狀態), W${rowIndex} (時間)`);
-      console.log(`[UPDATE_VOID_STATUS] 要更新的狀態值:`, status);
+      console.log(`[UPDATE_VOID_ALL_FIELDS] 找到訂單在第 ${rowIndex} 行 (陣列索引 ${i})`);
+      console.log(`[UPDATE_VOID_ALL_FIELDS] 更新前狀態: U${rowIndex} =`, row[20]); // U欄是索引20
+      
+      const updateTime = formatDateTimeInTaipei(new Date());
+      console.log(`[UPDATE_VOID_ALL_FIELDS] 準備更新:`);
+      console.log(`[UPDATE_VOID_ALL_FIELDS] - U${rowIndex} (保證金狀態) = ${status}`);
+      console.log(`[UPDATE_VOID_ALL_FIELDS] - V${rowIndex} (已退刷金額) = ${refundAmount}`);
+      console.log(`[UPDATE_VOID_ALL_FIELDS] - W${rowIndex} (退刷時間) = ${updateTime}`);
+      console.log(`[UPDATE_VOID_ALL_FIELDS] - X${rowIndex} (損壞費用) = 0`);
       
       try {
-        // 更新預授權狀態和取消時間
+        // 同時更新U、V、W、X欄位
         const updateResult = await sheets.spreadsheets.values.batchUpdate({
           spreadsheetId,
           requestBody: {
@@ -127,24 +132,39 @@ async function updateVoidStatus(orderId: string, status: string) {
                 values: [[status]]
               },
               {
-                range: `W${rowIndex}`, // W欄：取消時間
-                values: [[formatDateTimeInTaipei(new Date())]]
+                range: `V${rowIndex}`, // V欄：已退刷金額
+                values: [[refundAmount.toString()]]
+              },
+              {
+                range: `W${rowIndex}`, // W欄：退刷時間
+                values: [[updateTime]]
+              },
+              {
+                range: `X${rowIndex}`, // X欄：損壞費用
+                values: [['0']]
               }
             ]
           }
         });
         
-        console.log(`[UPDATE_VOID_STATUS] 更新成功:`, updateResult.status);
-        console.log(`[UPDATE_VOID_STATUS] 更新了 ${updateResult.data.totalUpdatedCells} 個儲存格`);
+        console.log(`[UPDATE_VOID_ALL_FIELDS] 更新成功:`, updateResult.status);
+        console.log(`[UPDATE_VOID_ALL_FIELDS] 更新了 ${updateResult.data.totalUpdatedCells} 個儲存格`);
         
         // 驗證更新結果
         const verifyResponse = await sheets.spreadsheets.values.get({
           spreadsheetId,
-          range: `U${rowIndex}:W${rowIndex}`,
+          range: `U${rowIndex}:X${rowIndex}`, // 驗證U到X欄位
         });
-        console.log(`[UPDATE_VOID_STATUS] 驗證更新結果:`, verifyResponse.data.values);
+        
+        const verifyData = verifyResponse.data.values?.[0] || [];
+        console.log(`[UPDATE_VOID_ALL_FIELDS] 驗證更新結果:`);
+        console.log(`[UPDATE_VOID_ALL_FIELDS] - 狀態: ${verifyData[0] || ''}`);
+        console.log(`[UPDATE_VOID_ALL_FIELDS] - 退刷金額: ${verifyData[1] || ''}`);
+        console.log(`[UPDATE_VOID_ALL_FIELDS] - 時間: ${verifyData[2] || ''}`);
+        console.log(`[UPDATE_VOID_ALL_FIELDS] - 損壞費用: ${verifyData[3] || ''}`);
+        
       } catch (updateError: any) {
-        console.error(`[UPDATE_VOID_STATUS] 更新失敗:`, updateError);
+        console.error(`[UPDATE_VOID_ALL_FIELDS] 更新失敗:`, updateError);
         throw updateError;
       }
       
@@ -153,11 +173,11 @@ async function updateVoidStatus(orderId: string, status: string) {
   }
   
   if (!found) {
-    console.error(`[UPDATE_VOID_STATUS] 未找到訂單 ${orderId}`);
+    console.error(`[UPDATE_VOID_ALL_FIELDS] 未找到訂單 ${orderId}`);
     throw new Error(`未找到訂單 ${orderId} 來更新狀態`);
   }
   
-  console.log(`[UPDATE_VOID_STATUS] 完成更新訂單 ${orderId} 的狀態`);
+  console.log(`[UPDATE_VOID_ALL_FIELDS] 完成更新訂單 ${orderId} 的所有相關欄位`);
 }
 
 interface VoidRequest {
@@ -276,10 +296,10 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
     console.log('ECPay void result:', ecpayResult);
 
     if (ecpayResult.success) {
-      // 取消成功，更新狀態
+      // 取消成功，更新所有相關欄位
       try {
-        await updateVoidStatus(orderId, 'VOID');
-        console.log(`[VOID_PREAUTH_SUCCESS] ECPay取消成功，Google Sheets也已更新`);
+        await updateVoidStatusWithAllFields(orderId, 'VOID', preAuthInfo.depositAmount);
+        console.log(`[VOID_PREAUTH_SUCCESS] ECPay取消成功，Google Sheets也已更新所有相關欄位`);
       } catch (updateError: any) {
         console.error(`[VOID_PREAUTH_WARNING] ECPay取消成功，但Google Sheets更新失敗:`, updateError);
         // 即使Google Sheets更新失敗，ECPay已經成功取消，所以仍然回傳成功
@@ -307,9 +327,10 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
         }
       });
     } else {
-      // 取消失敗
+      // 取消失敗，也要更新相關欄位記錄失敗狀態
       try {
-        await updateVoidStatus(orderId, 'VOID_FAILED');
+        await updateVoidStatusWithAllFields(orderId, 'VOID_FAILED', 0); // 失敗時退刷金額為0
+        console.log(`[VOID_PREAUTH_FAILED] ECPay取消失敗，已記錄到Google Sheets`);
       } catch (updateError: any) {
         console.error(`[VOID_PREAUTH_ERROR] ECPay取消失敗，Google Sheets更新也失敗:`, updateError);
       }
