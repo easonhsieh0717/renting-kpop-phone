@@ -44,7 +44,7 @@ async function getGoogleSheetsClient() {
 }
 
 // 更新保證金狀態
-async function updateDepositStatus(transactionNo: string, status: 'PAID' | 'FAILED') {
+async function updateDepositStatus(transactionNo: string, status: 'PAID' | 'FAILED', ecpayTradeNo?: string) {
   try {
     const sheets = await getGoogleSheetsClient();
     const spreadsheetId = process.env.GOOGLE_SHEET_ID;
@@ -56,7 +56,7 @@ async function updateDepositStatus(transactionNo: string, status: 'PAID' | 'FAIL
     // 獲取所有資料來查找交易號
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId,
-      range: 'reservations!A:U',
+      range: 'reservations!A:Z',
     });
 
     const rows = response.data.values;
@@ -69,19 +69,32 @@ async function updateDepositStatus(transactionNo: string, status: 'PAID' | 'FAIL
       return;
     }
 
-    // 更新保證金狀態（U欄）
-    const updateRange = `reservations!U${rowIndex + 1}`;
-    
-    await sheets.spreadsheets.values.update({
-      spreadsheetId,
-      range: updateRange,
-      valueInputOption: 'RAW',
-      requestBody: {
-        values: [[status]],
-      },
-    });
+    // 更新保證金狀態（U欄）和ECPay交易編號（Y欄）
+    if (ecpayTradeNo) {
+      // 同時更新狀態和ECPay交易編號
+      const updateRange = `reservations!U${rowIndex + 1}:Y${rowIndex + 1}`;
+      await sheets.spreadsheets.values.update({
+        spreadsheetId,
+        range: updateRange,
+        valueInputOption: 'RAW',
+        requestBody: {
+          values: [[status, '', '', ecpayTradeNo]], // U=狀態, V=退刷金額, W=退刷時間, X=損壞費用, Y=ECPay交易編號
+        },
+      });
+    } else {
+      // 只更新狀態
+      const updateRange = `reservations!U${rowIndex + 1}`;
+      await sheets.spreadsheets.values.update({
+        spreadsheetId,
+        range: updateRange,
+        valueInputOption: 'RAW',
+        requestBody: {
+          values: [[status]],
+        },
+      });
+    }
 
-    console.log(`Updated deposit status for transaction ${transactionNo} to ${status}`);
+    console.log(`Updated deposit status for transaction ${transactionNo} to ${status}${ecpayTradeNo ? ` with ECPay TradeNo: ${ecpayTradeNo}` : ''}`);
   } catch (error) {
     console.error('Error updating deposit status:', error);
     throw error;
@@ -110,16 +123,16 @@ export async function POST(req: NextRequest) {
         console.error('CheckMacValue verification failed');
         return new NextResponse('0|CheckMacValue verification failed', { status: 400 });
       }
-      const { MerchantTradeNo: orderId, RtnCode } = data;
+      const { MerchantTradeNo: orderId, RtnCode, TradeNo: ecpayTradeNo } = data;
       
       // 判斷是否為保證金交易（包含D字母的交易號）
       const isDepositTransaction = orderId.includes('D');
       
       if (RtnCode === '1') {
         if (isDepositTransaction) {
-          // 保證金交易成功
-          await updateDepositStatus(orderId, 'PAID');
-          console.log(`Deposit payment successful for transaction ${orderId}, status updated.`);
+          // 保證金交易成功，儲存ECPay交易編號
+          await updateDepositStatus(orderId, 'PAID', ecpayTradeNo);
+          console.log(`Deposit payment successful for transaction ${orderId}, ECPay TradeNo: ${ecpayTradeNo}, status updated.`);
         } else {
           // 一般租金交易成功
           await updateReservationStatus(orderId, 'PAID');

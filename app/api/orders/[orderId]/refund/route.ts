@@ -104,6 +104,7 @@ async function getDepositTransactionInfo(orderId: string) {
       refundAmount: parseInt(orderRow[21]) || 0, // V欄：已退刷金額
       refundTime: orderRow[22] || '', // W欄：退刷時間
       damageAmount: parseInt(orderRow[23]) || 0, // X欄：損壞費用
+      ecpayTradeNo: orderRow[24] || '', // Y欄：ECPay交易編號
     };
   } catch (error) {
     console.error('Error getting deposit transaction info:', error);
@@ -145,6 +146,13 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
       }, { status: 404 });
     }
 
+    if (!depositInfo.ecpayTradeNo) {
+      return NextResponse.json({
+        success: false,
+        message: '找不到ECPay交易編號，無法執行退刷'
+      }, { status: 404 });
+    }
+
     if (depositInfo.depositStatus === 'REFUNDED') {
       return NextResponse.json({
         success: false,
@@ -179,13 +187,13 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
     console.log('Calling ECPay refund API for order:', orderId);
     console.log('Refund details:', {
       merchantTradeNo: refundOrderId,
-      tradeNo: depositInfo.depositTransactionNo,
+      tradeNo: depositInfo.ecpayTradeNo, // 使用ECPay的真正交易編號
       totalAmount: body.refundAmount
     });
 
     const ecpayResult = await callECPayRefundAPI({
       merchantTradeNo: refundOrderId,
-      tradeNo: depositInfo.depositTransactionNo,
+      tradeNo: depositInfo.ecpayTradeNo, // 使用ECPay的真正交易編號
       action: 'R', // R=退刷
       totalAmount: body.refundAmount,
       merchantID,
