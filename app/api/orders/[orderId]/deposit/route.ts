@@ -141,15 +141,6 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
       }, { status: 400 });
     }
 
-    // 準備ECPay預授權參數
-    const merchantID = process.env.VERCEL_ENV === 'production' ? process.env.ECPAY_MERCHANT_ID! : '3002607';
-    const hashKey = process.env.VERCEL_ENV === 'production' ? process.env.ECPAY_HASH_KEY! : 'pwFHCqoQZGmho4w6';
-    const hashIV = process.env.VERCEL_ENV === 'production' ? process.env.ECPAY_HASH_IV! : 'EkRm7iFT261dpevs';
-
-    if (!hashKey || !hashIV) {
-      throw new Error('ECPay credentials not configured');
-    }
-
     // 生成保證金預授權訂單編號 (ECPay限制20字元)
     // 使用訂單號後6碼 + P(PreAuth) + 時間戳後8碼
     const orderSuffix = orderId.slice(-6);
@@ -171,6 +162,12 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
     const itemName = `${phoneModelName}押金預授權-IMEI:${phoneImei}`;
 
     // 使用新的預授權函數（包含HoldTradeAMT參數）
+    const isProduction = process.env.VERCEL_ENV === 'production';
+    const merchantID = isProduction ? process.env.ECPAY_MERCHANT_ID! : '3002607';
+    const hashKey = isProduction ? process.env.ECPAY_HASH_KEY! : 'pwFHCqoQZGmho4w6';
+    const hashIV = isProduction ? process.env.ECPAY_HASH_IV! : 'EkRm7iFT261dpevs';
+    const merchantName = isProduction ? '愛時代國際股份有限公司' : '測試商店';
+
     const paymentParams = getECPayPreAuthParams({
       merchantTradeNo: preAuthOrderId,
       totalAmount: depositAmount,
@@ -178,14 +175,14 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
       merchantID,
       hashKey,
       hashIV,
-      holdTradeAmount: depositAmount // 設定預授權金額，啟用預授權功能
+      holdTradeAmount: depositAmount, // 設定預授權金額，啟用預授權功能
+      merchantName // 添加商店名稱參數
     });
 
     // 更新Google Sheet記錄保證金預授權交易號
     await updateDepositTransactionInSheet(orderId, preAuthOrderId, depositAmount);
 
     // 準備ECPay表單URL
-    const isProduction = process.env.VERCEL_ENV === 'production';
     const ecpayUrl = isProduction 
       ? 'https://payment.ecpay.com.tw/Cashier/AioCheckOut/V5'
       : 'https://payment-stage.ecpay.com.tw/Cashier/AioCheckOut/V5';

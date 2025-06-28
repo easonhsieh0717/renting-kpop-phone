@@ -14,6 +14,7 @@ interface ECPayPaymentData {
   ClientBackURL: string;
   HoldTradeAMT?: number;
   CheckMacValue?: string;
+  MerchantName?: string;
 }
 
 function ecpayUrlEncode(data: string): string {
@@ -282,7 +283,8 @@ export function getECPayPreAuthParams({
   merchantID, 
   hashKey, 
   hashIV,
-  holdTradeAmount
+  holdTradeAmount,
+  merchantName
 }: {
   merchantTradeNo: string;
   totalAmount: number;
@@ -290,7 +292,8 @@ export function getECPayPreAuthParams({
   merchantID: string;
   hashKey: string;
   hashIV: string;
-  holdTradeAmount?: number; // 预授权金额，如果有设定就会启用预授权功能
+  holdTradeAmount?: number;
+  merchantName?: string;
 }) {
   const tradeDate = new Date();
   const formattedDate = `${tradeDate.getFullYear()}/${String(tradeDate.getMonth() + 1).padStart(2, '0')}/${String(tradeDate.getDate()).padStart(2, '0')} ${String(tradeDate.getHours()).padStart(2, '0')}:${String(tradeDate.getMinutes()).padStart(2, '0')}:${String(tradeDate.getSeconds()).padStart(2, '0')}`;
@@ -307,7 +310,8 @@ export function getECPayPreAuthParams({
     ChoosePayment: 'Credit',
     EncryptType: 1,
     ClientBackURL: `${process.env.NEXT_PUBLIC_SITE_URL}`,
-    HoldTradeAMT: 1 // 固定为预授权交易
+    HoldTradeAMT: 1, // 固定為預授權交易
+    MerchantName: merchantName
   };
 
   const checkMacValue = generateCheckMacValue(params as Omit<ECPayPaymentData, 'CheckMacValue'>, hashKey, hashIV);
