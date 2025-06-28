@@ -26,7 +26,7 @@ async function getPreAuthTransactionInfo(orderId: string) {
 
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId,
-    range: 'A:Z',
+    range: 'reservations!A:Z',
   });
 
   const rows = response.data.values || [];
@@ -60,7 +60,7 @@ async function updateCaptureStatus(orderId: string, captureAmount: number, statu
 
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId,
-    range: 'A:Z',
+    range: 'reservations!A:Z',
   });
 
   const rows = response.data.values || [];
