@@ -30,9 +30,7 @@ function ecpayUrlEncode(data: string): string {
 // 修正中文字符編碼問題的輔助函數
 function sanitizeForECPay(str: string): string {
   // 只替換可能影響參數解析的特殊字符
-  return str
-    .replace(/[&=]/g, '_') // 替換可能影響參數解析的字符
-    .substring(0, 20); // 限制長度以符合ECPay規範
+  return str.replace(/[&=]/g, '_');
 }
 
 function generateCheckMacValue(data: Omit<ECPayPaymentData, 'CheckMacValue'>, hashKey: string, hashIV: string): string {
@@ -76,8 +74,8 @@ export function getECPayPaymentParams({
     MerchantTradeDate: formattedDate,
     PaymentType: 'aio',
     TotalAmount: totalAmount,
-    TradeDesc: sanitizeForECPay('Mobile Rental Service'),
-    ItemName: sanitizeForECPay(itemName),
+    TradeDesc: sanitizeForECPay('Mobile Rental Service').substring(0, 200),
+    ItemName: sanitizeForECPay(itemName).substring(0, 400),
     ReturnURL: `${process.env.NEXT_PUBLIC_SITE_URL}/api/ecpay/return`,
     ChoosePayment: 'Credit',
     EncryptType: 1,
@@ -311,14 +309,14 @@ export function getECPayPreAuthParams({
     MerchantTradeDate: formattedDate,
     PaymentType: 'aio',
     TotalAmount: totalAmount,
-    TradeDesc: sanitizeForECPay('Mobile Rental Service'),
-    ItemName: sanitizeForECPay(itemName),
+    TradeDesc: sanitizeForECPay('Mobile Rental Service').substring(0, 200),
+    ItemName: sanitizeForECPay(itemName).substring(0, 400),
     ReturnURL: `${process.env.NEXT_PUBLIC_SITE_URL}/api/ecpay/preauth/return`,
     ChoosePayment: 'Credit',
     EncryptType: 1,
     ClientBackURL: `${process.env.NEXT_PUBLIC_SITE_URL}`,
     HoldTradeAMT: 1,
-    MerchantName: sanitizeForECPay(merchantName)
+    MerchantName: sanitizeForECPay(merchantName).substring(0, 20)
   };
 
   const checkMacValue = generateCheckMacValue(params as Omit<ECPayPaymentData, 'CheckMacValue'>, hashKey, hashIV);
