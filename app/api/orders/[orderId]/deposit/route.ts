@@ -161,12 +161,23 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
     
     const itemName = `${phoneModelName}押金預授權-IMEI:${phoneImei}`;
 
-    // 使用新的預授權函數（包含HoldTradeAMT參數）
+    // 根據環境設定參數
     const isProduction = process.env.VERCEL_ENV === 'production';
+    console.log('Environment:', {
+      VERCEL_ENV: process.env.VERCEL_ENV,
+      isProduction
+    });
+
     const merchantID = isProduction ? process.env.ECPAY_MERCHANT_ID! : '3002607';
     const hashKey = isProduction ? process.env.ECPAY_HASH_KEY! : 'pwFHCqoQZGmho4w6';
     const hashIV = isProduction ? process.env.ECPAY_HASH_IV! : 'EkRm7iFT261dpevs';
     const merchantName = isProduction ? '愛時代國際' : '測試商店';
+
+    console.log('ECPay config:', {
+      merchantID,
+      merchantName,
+      isProduction
+    });
 
     // 確保 NEXT_PUBLIC_SITE_URL 存在
     if (!process.env.NEXT_PUBLIC_SITE_URL) {
@@ -183,6 +194,8 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
       holdTradeAmount: depositAmount,
       merchantName
     });
+
+    console.log('Payment params:', paymentParams);
 
     // 更新Google Sheet記錄保證金預授權交易號
     await updateDepositTransactionInSheet(orderId, preAuthOrderId, depositAmount);

@@ -293,13 +293,17 @@ export function getECPayPreAuthParams({
   hashKey: string;
   hashIV: string;
   holdTradeAmount?: number;
-  merchantName?: string;
+  merchantName: string;
 }) {
   const tradeDate = new Date();
   const formattedDate = `${tradeDate.getFullYear()}/${String(tradeDate.getMonth() + 1).padStart(2, '0')}/${String(tradeDate.getDate()).padStart(2, '0')} ${String(tradeDate.getHours()).padStart(2, '0')}:${String(tradeDate.getMinutes()).padStart(2, '0')}:${String(tradeDate.getSeconds()).padStart(2, '0')}`;
 
   if (!process.env.NEXT_PUBLIC_SITE_URL) {
     throw new Error('NEXT_PUBLIC_SITE_URL environment variable is not set');
+  }
+
+  if (!merchantName) {
+    throw new Error('MerchantName is required');
   }
 
   const params: any = {
@@ -314,13 +318,9 @@ export function getECPayPreAuthParams({
     ChoosePayment: 'Credit',
     EncryptType: 1,
     ClientBackURL: `${process.env.NEXT_PUBLIC_SITE_URL}`,
-    HoldTradeAMT: 1, // 固定為預授權交易
+    HoldTradeAMT: 1,
+    MerchantName: sanitizeForECPay(merchantName)
   };
-
-  // 只在有提供商店名稱時才加入參數
-  if (merchantName) {
-    params.MerchantName = sanitizeForECPay(merchantName);
-  }
 
   const checkMacValue = generateCheckMacValue(params as Omit<ECPayPaymentData, 'CheckMacValue'>, hashKey, hashIV);
 
