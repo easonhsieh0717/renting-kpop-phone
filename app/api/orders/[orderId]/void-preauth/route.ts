@@ -34,15 +34,22 @@ async function getPreAuthTransactionInfo(orderId: string) {
   // 找到對應的訂單
   for (let i = 1; i < rows.length; i++) {
     const row = rows[i];
+    console.log(`檢查第${i}行: 訂單編號=${row[0]}, 查找=${orderId}, 匹配=${row[0] === orderId}`);
+    
     if (row[0] === orderId) { // A欄是訂單編號
-      return {
+      const result = {
         orderId: row[0],
         depositTransactionNo: row[18] || '', // S欄：保證金交易編號
-        ecpayTradeNo: row[24] || '', // Y欄：ECPay交易編號
+        ecpayTradeNo: row[24] || '', // Y欄：ECPay交易編號（第25欄，索引24）
         depositAmount: parseInt(row[19]) || 0, // T欄：保證金金額
         depositStatus: row[20] || '', // U欄：保證金狀態
         captureAmount: parseInt(row[21]) || 0, // V欄：已請款金額
       };
+      
+      console.log(`找到匹配行，讀取到的資料:`, result);
+      console.log(`完整行資料:`, row);
+      
+      return result;
     }
   }
   
@@ -117,6 +124,9 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
     // 獲取訂單的預授權交易資訊
     const preAuthInfo = await getPreAuthTransactionInfo(orderId);
     
+    // 添加調試信息
+    console.log('Pre-auth info retrieved:', preAuthInfo);
+    
     if (!preAuthInfo.depositTransactionNo) {
       return NextResponse.json({
         success: false,
@@ -127,7 +137,7 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
     if (!preAuthInfo.ecpayTradeNo) {
       return NextResponse.json({
         success: false,
-        message: '找不到ECPay交易編號，無法取消預授權'
+        message: `找不到ECPay交易編號，無法取消預授權。讀取到的資料: ${JSON.stringify(preAuthInfo)}`
       }, { status: 404 });
     }
 
