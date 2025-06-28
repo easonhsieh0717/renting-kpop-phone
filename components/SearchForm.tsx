@@ -76,17 +76,13 @@ const SearchForm = ({ models, searchParams }: SearchFormProps) => {
     toDate: toDate,
     defaultMonth: range?.from || today,
     disabled: { before: today },
-    classNames: {
-      caption: 'flex justify-center items-center mb-2',
-      caption_label: 'text-base font-bold text-brand-yellow',
-      nav_button: 'h-6 w-6 flex items-center justify-center rounded-full hover:bg-white/10',
-      head_cell: 'text-brand-yellow font-bold w-10 h-10',
-      day: 'h-10 w-10 rounded-full transition-colors hover:bg-brand-yellow/20',
-      day_selected: 'opacity-100',
-      day_range_middle: 'text-white !bg-brand-yellow/50 !rounded-none',
-      day_range_start: '!bg-brand-yellow !text-brand-black !rounded-full',
-      day_range_end: '!bg-brand-yellow !text-brand-black !rounded-full',
-      day_disabled: 'text-brand-gray-dark line-through opacity-50',
+    modifiersClassNames: {
+      selected: 'day-range-selected',
+      range_start: 'day-range-start',
+      range_end: 'day-range-end',
+      range_middle: 'day-range-middle',
+      today: 'day-today',
+      disabled: 'day-disabled'
     }
   };
 
@@ -96,11 +92,12 @@ const SearchForm = ({ models, searchParams }: SearchFormProps) => {
         <div className="md:col-span-2 flex justify-center">
           <div>
             <label className="block text-sm font-bold text-brand-gray-light mb-2">租借日期</label>
-            <DayPicker
-              {...dayPickerProps}
-              numberOfMonths={1}
-              className="bg-brand-black/50 p-4 rounded-md text-sm"
-            />
+            <div className="bg-brand-gray-dark p-4 sm:p-6 rounded-lg shadow-inner border border-white/10">
+              <DayPicker
+                {...dayPickerProps}
+                numberOfMonths={1}
+              />
+            </div>
           </div>
         </div>
 

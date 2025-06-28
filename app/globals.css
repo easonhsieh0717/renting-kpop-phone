@@ -42,13 +42,49 @@
   @apply text-brand-black !important;
 }
 .day-range-start {
-  @apply rounded-l-full;
+  @apply bg-brand-yellow !important;
+  @apply text-brand-black !important;
+  @apply rounded-full !important;
 }
 .day-range-end {
-  @apply rounded-r-full;
+  @apply bg-brand-yellow !important;
+  @apply text-brand-black !important;
+  @apply rounded-full !important;
+}
+.day-range-middle {
+  @apply bg-brand-yellow/30 !important;
+  @apply text-white !important;
 }
 .day-today {
-  @apply text-brand-yellow font-bold;
+  @apply text-brand-yellow !important;
+  @apply font-bold !important;
+  @apply ring-2 !important;
+  @apply ring-brand-yellow !important;
+}
+.day-disabled {
+  @apply text-gray-500 !important;
+  @apply line-through !important;
+  @apply opacity-50 !important;
+}
+
+/* DayPicker container improvements */
+.rdp {
+  @apply text-white;
+}
+.rdp-caption {
+  @apply text-brand-yellow font-bold mb-4;
+}
+.rdp-head_cell {
+  @apply text-brand-yellow font-semibold text-sm;
+}
+.rdp-day {
+  @apply text-white hover:bg-brand-yellow/20 transition-colors duration-200;
+}
+.rdp-nav_button {
+  @apply text-brand-yellow hover:bg-white/10 rounded-full;
+}
+.rdp-button {
+  @apply rounded-full w-10 h-10 flex items-center justify-center;
 }
 
 body {
