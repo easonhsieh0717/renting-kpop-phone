@@ -359,14 +359,28 @@ export default function ContractPage() {
       setTimeout(async () => {
         const contractNode = document.getElementById('contract-content');
         if (contractNode) {
-          contractNode.style.fontFamily = 'Noto Sans TC, Inter, system-ui, sans-serif';
+          // 確保字體正確載入和應用
+          contractNode.style.fontFamily = 'Noto Sans TC, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+          contractNode.style.fontWeight = 'normal';
+          contractNode.style.lineHeight = '1.6';
+          
+          // 對所有子元素也應用相同的字體
           contractNode.querySelectorAll('*').forEach(el => {
-            (el as HTMLElement).style.fontFamily = 'Noto Sans TC, Inter, system-ui, sans-serif';
+            const element = el as HTMLElement;
+            element.style.fontFamily = 'Noto Sans TC, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+            element.style.fontWeight = element.tagName === 'B' || element.tagName === 'STRONG' ? 'bold' : 'normal';
           });
+          
+          // 等待字體載入完成
+          await document.fonts.ready;
+          
           const computedFont = window.getComputedStyle(contractNode).fontFamily;
+          console.log('應用的字體:', computedFont);
+          
           if (!computedFont.includes('Noto Sans TC')) {
-            alert('字型未正確套用，PDF 可能會醜，請重新整理頁面再存檔！');
+            console.warn('Noto Sans TC 字型未正確載入，使用系統字型');
           }
+          
           try {
             // 多頁正確分頁：每頁用 transform 位移內容
             const pageHeight = 1122; // px, A4
@@ -380,15 +394,26 @@ export default function ContractPage() {
               pageDiv.style.height = pageHeight + 'px';
               pageDiv.style.overflow = 'hidden';
               pageDiv.style.background = '#fff';
+              pageDiv.style.fontFamily = 'Noto Sans TC, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+              
               // 只顯示本頁內容
               const inner = contractNode.cloneNode(true) as HTMLElement;
               inner.style.transform = `translateY(-${rendered}px)`;
+              inner.style.fontFamily = 'Noto Sans TC, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+              
               pageDiv.appendChild(inner);
               document.body.appendChild(pageDiv);
+              
+              // 等待一小段時間讓字體渲染完成
+              await new Promise(resolve => setTimeout(resolve, 100));
+              
               const canvas = await html2canvas(pageDiv, {
                 scale: 2,
                 useCORS: true,
-                backgroundColor: '#fff'
+                backgroundColor: '#fff',
+                allowTaint: true,
+                foreignObjectRendering: true,
+                logging: false
               });
               document.body.removeChild(pageDiv);
               const imgData = canvas.toDataURL('image/png');
@@ -860,8 +885,17 @@ async function addWatermark(base64: string, text: string): Promise<string> {
         // 繪製原始圖片
         ctx.drawImage(img, 0, 0);
         
-        // 字體大小再次放大一倍：從 36-72 增加到 72-144
-        const fontSize = Math.max(72, Math.min(144, img.width / 5));
+        // 判斷是否為電腦版本（大螢幕設備通常拍攝的照片解析度較高）
+        // 如果圖片寬度大於1200px，認為是電腦版本，字體大小除以4
+        let fontSize;
+        if (img.width > 1200) {
+          // 電腦版本：字體大小除以4
+          fontSize = Math.max(18, Math.min(36, img.width / 20));
+        } else {
+          // 手機版本：保持原來的大小
+          fontSize = Math.max(72, Math.min(144, img.width / 5));
+        }
+        
         ctx.font = `bold ${fontSize}px Arial`;
         
         // 測量文字寬度
@@ -905,7 +939,7 @@ async function addWatermark(base64: string, text: string): Promise<string> {
         
         // 使用較低品質但更穩定的壓縮
         const result = canvas.toDataURL('image/jpeg', 0.8);
-        console.log('浮水印處理成功，字體大小:', fontSize);
+        console.log('浮水印處理成功，字體大小:', fontSize, '圖片寬度:', img.width);
         resolve(result);
         
       } catch (error) {
