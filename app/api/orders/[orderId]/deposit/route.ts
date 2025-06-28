@@ -161,20 +161,17 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
     
     const itemName = `${phoneModelName}押金預授權-IMEI:${phoneImei}`;
 
-    // 根據環境設定參數
-    const isProduction = process.env.ECPAY_MERCHANT_ID === '3383324';
+    // 強制使用 ECPay 平台商測試環境
+    const isProduction = false; 
     
-    console.log('Environment determined by ECPAY_MERCHANT_ID:', {
-      ECPAY_MERCHANT_ID: process.env.ECPAY_MERCHANT_ID,
-      isProduction
-    });
+    console.log('Forcing ECPay Test Environment');
 
-    const merchantID = isProduction ? process.env.ECPAY_MERCHANT_ID! : '3002607';
-    const hashKey = isProduction ? process.env.ECPAY_HASH_KEY! : 'pwFHCqoQZGmho4w6';
-    const hashIV = isProduction ? process.env.ECPAY_HASH_IV! : 'EkRm7iFT261dpevs';
-    const merchantName = isProduction ? '愛時代國際股份有限公司' : '測試商店';
+    const merchantID = '3085340'; // ECPay 平台商測試ID
+    const hashKey = 'HwiqPsywG1hLQNuN'; // ECPay 平台商測試 HashKey
+    const hashIV = 'YqITWD4TyKacYXpn'; // ECPay 平台商測試 HashIV
+    const merchantName = '測試商店'; // 測試時可自訂
 
-    console.log('ECPay config:', {
+    console.log('ECPay Test config:', {
       merchantID,
       merchantName,
       isProduction
