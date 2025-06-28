@@ -146,8 +146,7 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
     const depositOrderId = `${orderSuffix}D${timestamp}`;
     const depositAmount = requestedAmount; // 使用前端傳入的金額
 
-    // 改善商品明細，包含手機型號、IMEI和客戶姓名
-    // phoneModel實際上是IMEI號碼，需要獲取真正的手機型號
+    // 改善商品明細，明確標示為保證金/押金
     const phoneImei = orderInfo.phoneModel; // 這是IMEI
     
     // 根據IMEI判斷手機型號（簡化版）
@@ -157,7 +156,8 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
       actualPhoneModel = 'Samsung Galaxy S25 Ultra';
     }
     
-    const itemName = `${actualPhoneModel}租賃保證金-客戶:${orderInfo.customerName}-IMEI:${phoneImei}`;
+    // 更明確的商品名稱：強調這是保證金/押金
+    const itemName = `【手機租賃保證金】${actualPhoneModel}-IMEI:${phoneImei}-客戶:${orderInfo.customerName}`;
 
     const paymentParams = getECPayPaymentParams({
       merchantTradeNo: depositOrderId,
