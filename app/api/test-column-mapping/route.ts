@@ -9,16 +9,16 @@ const COLUMN_MAPPING = {
   PHONE_IMEI: 1,            // B: IMEI (手機ID)
   START_DATE: 2,            // C: 開始日期
   END_DATE: 3,              // D: 結束日期
-  ORIGINAL_AMOUNT: 4,       // E: 原始金額
+  TOTAL_AMOUNT: 4,          // E: 總金額
   CUSTOMER_NAME: 5,         // F: 客戶姓名
-  EMAIL: 6,                 // G: 電子郵件
-  PHONE: 7,                 // H: 電話
+  CUSTOMER_EMAIL: 6,        // G: 客戶Email
+  CUSTOMER_PHONE: 7,        // H: 客戶電話
   PAYMENT_STATUS: 8,        // I: 付款狀態
-  PAYMENT_TIME: 9,          // J: 付款時間
+  CREATE_TIME: 9,           // J: 建立時間
   DISCOUNT_CODE: 10,        // K: 折扣碼
   DISCOUNT_AMOUNT: 11,      // L: 總共折扣
-  FINAL_AMOUNT: 12,         // M: 最終付款
-  NOTES2: 13,               // N: 備註2
+  FINAL_PAYMENT: 12,        // M: 最終付款
+  CONTRACT_SIGNATURE: 13,   // N: 租賃文件簽署
   CARRIER_NUMBER: 14,       // O: 手機載具號碼
   INVOICE_NO: 15,           // P: 發票編號
   INVOICE_STATUS: 16,       // Q: 發票狀態
@@ -107,16 +107,16 @@ export async function POST(request: NextRequest) {
         'IMEI',          // 1: 987654321098764  
         '開始日期',      // 2: 2025-07-11
         '結束日期',      // 3: 2025-07-11
-        '金額',          // 4: 650
+        '總金額',        // 4: 650
         '客戶姓名',      // 5: 黃子純
-        '電子郵件',      // 6: mavis0706@gmail.com
-        '電話',          // 7: 0912093673
+        '客戶Email',     // 6: mavis0706@gmail.com
+        '客戶電話',      // 7: 0912093673
         '付款狀態',      // 8: PAID
-        '付款時間',      // 9: 2025/06/27 10:08:20
+        '建立時間',      // 9: 2025/06/27 10:08:20
         '折扣碼',        // 10: 折扣碼
         '總共折扣',      // 11: 總共折扣
-        '最終金額',      // 12: 650
-        '備註2',         // 13: (空白)
+        '最終付款',      // 12: 650
+        '租賃文件簽署',  // 13: (空白)
         '手機載具號碼',  // 14: 手機載具號碼
         '發票編號',      // 15: PJ95392317
         '發票狀態',      // 16: 已開立
