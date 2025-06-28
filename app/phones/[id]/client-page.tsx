@@ -357,24 +357,32 @@ export default function PhoneDetailClient({ phone, vercelEnv, bookedDates }: Pho
               </div>
 
               <div className="mt-6 p-4 bg-black/20 rounded-lg border border-white/10">
-                <h3 className="text-lg font-bold text-brand-yellow mb-2">押金規則</h3>
-                <ul className="space-y-1 text-brand-gray-light">
-                  <li className="flex justify-between">
-                    <span>低押金 (需抵押證件正本)</span>
-                    <span className="font-bold text-white">$3,000</span>
-                  </li>
-                  <li className="flex justify-between">
-                    <span>免押金 (需證件正本核對)</span>
-                    <span className="font-bold text-white">信用卡預授權$30,000</span>
-                  </li>
-                  <li className="flex justify-between">
-                    <span>高押金 (免抵押證件)</span>
-                    <span className="font-bold text-white">$30,000</span>
-                  </li>
-                </ul>
-                <p className="text-xs text-gray-400 mt-3">
-                  * 押金將於手機歸還檢查無誤後，於24小時內退還。<br/>
-                  * 兩種方案押金金額相同，差別在於是否需要抵押證件正本。
+                <h3 className="text-lg font-bold text-brand-yellow mb-2">押金選擇</h3>
+                <p className="text-sm text-brand-gray-light mb-3 text-center">
+                  皆需攜帶身分證或護照正本
+                </p>
+                <div className="space-y-3 text-sm text-brand-gray-light">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <div className="font-medium text-white">經濟方案：現金 $3,000</div>
+                      <div className="text-xs text-gray-400">→證件需抵押至歸還</div>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <div className="font-medium text-white">信用卡方案：凍結額度 $30,000</div>
+                      <div className="text-xs text-gray-400">→證件僅供核對，無需抵押</div>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <div className="font-medium text-white">現金方案：現金 $30,000</div>
+                      <div className="text-xs text-gray-400">→證件僅供核對，無需抵押</div>
+                    </div>
+                  </div>
+                </div>
+                <p className="text-xs text-gray-400 mt-3 text-center">
+                  歸還時保證24小時內退還押金或解除凍結
                 </p>
               </div>
 
