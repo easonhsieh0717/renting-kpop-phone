@@ -955,7 +955,7 @@ export default function ContractPage() {
                 <label htmlFor="high" className="flex-1">
                   <span className="font-medium">🏦 高押金模式（免證件）：</span>
                   <br/>
-                  <span className="text-gray-600">現金 NT${depositAmount.toLocaleString()}，無需提供身分證件</span>
+                  <span className="text-gray-900">現金 NT$30,000，無需提供身分證件</span>
                 </label>
               </div>
               <div className="flex items-start">
@@ -963,7 +963,7 @@ export default function ContractPage() {
                 <label htmlFor="low" className="flex-1">
                   <span className="font-medium">💳 低押金模式（需證件正本）：</span>
                   <br/>
-                  <span className="text-gray-600">現金 NT$3,000 + 身分證正本抵押</span>
+                  <span className="text-gray-900">現金 NT$3,000 + 身分證正本抵押</span>
                 </label>
               </div>
               <div className="flex items-start">
@@ -971,7 +971,7 @@ export default function ContractPage() {
                 <label htmlFor="preauth" className="flex-1">
                   <span className="font-medium">🔒 預授權模式（免證件）：</span>
                   <br/>
-                  <span className="text-gray-600">信用卡預授權 NT${depositAmount.toLocaleString()}，無需現金和證件</span>
+                  <span className="text-gray-900">信用卡預授權 NT$30,000，無需現金和證件</span>
                 </label>
               </div>
             </div>
@@ -1057,7 +1057,7 @@ export default function ContractPage() {
               <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
                 <h3 className="font-semibold text-blue-800 mb-2">🏦 高押金模式</h3>
                 <p className="text-blue-700 text-sm mb-3">
-                  請收取客戶現金押金 NT${depositAmount.toLocaleString()}
+                  請收取客戶現金押金 NT$30,000
                 </p>
                 <button
                   onClick={() => setDepositPaid(true)}
