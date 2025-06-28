@@ -24,7 +24,7 @@ async function getPreAuthOrders() {
 
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId,
-    range: 'A:Z', // 使用標準的 A:Z 範圍
+    range: 'reservations!A:Z', // 指定 reservations 工作表
   });
 
   const rows = response.data.values || [];
