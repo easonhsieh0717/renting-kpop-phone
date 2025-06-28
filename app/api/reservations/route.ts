@@ -165,10 +165,12 @@ export async function POST(req: NextRequest) {
         throw new Error('ECPay credentials are not defined in environment variables for the current environment.');
     }
 
+    // 簡化商品名稱：手機租金
+    const phoneModelShort = phone.name.replace('Samsung Galaxy ', '').replace(' Ultra', 'U');
     const ecpayParams = getECPayPaymentParams({
       merchantTradeNo: orderId,
       totalAmount: totalAmount,
-      itemName: `${phone.name} ${phone.spec}`,
+      itemName: `${phoneModelShort}租金-IMEI:${phone.id}`,
       merchantID,
       hashKey,
       hashIV,

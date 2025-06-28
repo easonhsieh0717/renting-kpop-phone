@@ -243,6 +243,68 @@ export default function AdminPage() {
               </div>
             </div>
 
+            {/* 預授權管理卡片 */}
+            <div className="bg-white overflow-hidden shadow rounded-lg">
+              <div className="p-6">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <svg className="h-8 w-8 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                  </div>
+                  <div className="ml-5 w-0 flex-1">
+                    <dl>
+                      <dt className="text-sm font-medium text-gray-500 truncate">
+                        預授權管理
+                      </dt>
+                      <dd className="text-lg font-medium text-gray-900">
+                        ECPay 預授權操作
+                      </dd>
+                    </dl>
+                  </div>
+                </div>
+                <div className="mt-4">
+                  <button
+                    onClick={() => router.push('/admin/preauth-management')}
+                    className="w-full bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                  >
+                    預授權管理
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* 欄位對應測試卡片 */}
+            <div className="bg-white overflow-hidden shadow rounded-lg">
+              <div className="p-6">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <svg className="h-8 w-8 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div className="ml-5 w-0 flex-1">
+                    <dl>
+                      <dt className="text-sm font-medium text-gray-500 truncate">
+                        欄位對應測試
+                      </dt>
+                      <dd className="text-lg font-medium text-gray-900">
+                        驗證 Google Sheet 欄位
+                      </dd>
+                    </dl>
+                  </div>
+                </div>
+                <div className="mt-4">
+                  <button
+                    onClick={() => router.push('/test-column-mapping')}
+                    className="w-full bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                  >
+                    欄位測試
+                  </button>
+                </div>
+              </div>
+            </div>
+
           </div>
 
           {/* 狀態資訊 */}

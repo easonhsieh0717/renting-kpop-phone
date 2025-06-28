@@ -30,18 +30,18 @@ async function getPreAuthOrders() {
   for (let i = 1; i < rows.length; i++) {
     const row = rows[i];
     
-    // 檢查是否有預授權交易編號（V欄）
-    const depositTransactionNo = row[21] || ''; // V欄：保證金交易編號
+    // 檢查是否有預授權交易編號（S欄）
+    const depositTransactionNo = row[18] || ''; // S欄：保證金交易編號
     
     if (depositTransactionNo && depositTransactionNo.includes('P')) { // P代表PreAuth
       const orderId = row[0] || '';
-      const customerName = row[1] || '';
-      const phoneModel = row[4] || ''; // E欄：手機型號
+      const customerName = row[5] || ''; // F欄：客戶姓名
+      const phoneModel = row[1] || ''; // B欄：手機ID
       const paymentStatus = row[8] || ''; // I欄：付款狀態
-      const ecpayTradeNo = row[22] || ''; // W欄：ECPay交易編號
-      const depositAmount = parseInt(row[23]) || 0; // X欄：保證金金額
-      const depositStatus = row[24] || ''; // Y欄：保證金狀態
-      const captureAmount = parseInt(row[25]) || 0; // Z欄：已請款金額
+      const ecpayTradeNo = row[24] || ''; // Y欄：ECPay交易編號
+      const depositAmount = parseInt(row[19]) || 0; // T欄：保證金金額
+      const depositStatus = row[20] || ''; // U欄：保證金狀態
+      const captureAmount = parseInt(row[21]) || 0; // V欄：已請款金額
       
       orders.push({
         orderId,

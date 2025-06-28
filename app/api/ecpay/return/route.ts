@@ -72,21 +72,27 @@ async function updateDepositStatus(transactionNo: string, status: 'PAID' | 'FAIL
     // 更新保證金狀態（U欄）和ECPay交易編號（Y欄）
     if (ecpayTradeNo) {
       // 同時更新狀態和ECPay交易編號
-      const updateRange = `reservations!U${rowIndex + 1}:Y${rowIndex + 1}`;
-      await sheets.spreadsheets.values.update({
+      await sheets.spreadsheets.values.batchUpdate({
         spreadsheetId,
-        range: updateRange,
-        valueInputOption: 'RAW',
         requestBody: {
-          values: [[status, '', '', ecpayTradeNo]], // U=狀態, V=退刷金額, W=退刷時間, X=損壞費用, Y=ECPay交易編號
-        },
+          valueInputOption: 'RAW',
+          data: [
+            {
+              range: `reservations!U${rowIndex + 1}`, // U欄：保證金狀態
+              values: [[status]]
+            },
+            {
+              range: `reservations!Y${rowIndex + 1}`, // Y欄：ECPay交易編號
+              values: [[ecpayTradeNo]]
+            }
+          ]
+        }
       });
     } else {
       // 只更新狀態
-      const updateRange = `reservations!U${rowIndex + 1}`;
       await sheets.spreadsheets.values.update({
         spreadsheetId,
-        range: updateRange,
+        range: `reservations!U${rowIndex + 1}`,
         valueInputOption: 'RAW',
         requestBody: {
           values: [[status]],
@@ -120,14 +126,14 @@ async function updatePreAuthStatus(transactionNo: string, status: 'PREAUTH' | 'P
     const rows = response.data.values;
     if (!rows) return;
 
-    // 查找包含該預授權交易號的行（V欄是保證金交易編號）
-    const rowIndex = rows.findIndex((row: any) => row[21] === transactionNo); // V欄索引是21
+    // 查找包含該預授權交易號的行（S欄是保證金交易編號）
+    const rowIndex = rows.findIndex((row: any) => row[18] === transactionNo); // S欄索引是18
     if (rowIndex === -1) {
       console.log(`Pre-auth transaction ${transactionNo} not found`);
       return;
     }
 
-    // 更新預授權狀態（Y欄）和ECPay交易編號（W欄）
+    // 更新預授權狀態（U欄）和ECPay交易編號（Y欄）
     if (ecpayTradeNo) {
       // 同時更新ECPay交易編號和狀態
       await sheets.spreadsheets.values.batchUpdate({
@@ -136,11 +142,11 @@ async function updatePreAuthStatus(transactionNo: string, status: 'PREAUTH' | 'P
           valueInputOption: 'USER_ENTERED',
           data: [
             {
-              range: `W${rowIndex + 1}`, // W欄：ECPay交易編號
+              range: `Y${rowIndex + 1}`, // Y欄：ECPay交易編號
               values: [[ecpayTradeNo]]
             },
             {
-              range: `Y${rowIndex + 1}`, // Y欄：保證金狀態
+              range: `U${rowIndex + 1}`, // U欄：保證金狀態
               values: [[status]]
             }
           ]
@@ -150,7 +156,7 @@ async function updatePreAuthStatus(transactionNo: string, status: 'PREAUTH' | 'P
       // 只更新狀態
       await sheets.spreadsheets.values.update({
         spreadsheetId,
-        range: `Y${rowIndex + 1}`,
+        range: `U${rowIndex + 1}`,
         valueInputOption: 'USER_ENTERED',
         requestBody: {
           values: [[status]],

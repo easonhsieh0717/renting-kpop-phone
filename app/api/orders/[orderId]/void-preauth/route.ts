@@ -33,11 +33,11 @@ async function getPreAuthTransactionInfo(orderId: string) {
     if (row[0] === orderId) { // A欄是訂單編號
       return {
         orderId: row[0],
-        depositTransactionNo: row[21] || '', // V欄：保證金交易編號
-        ecpayTradeNo: row[22] || '', // W欄：ECPay交易編號
-        depositAmount: parseInt(row[23]) || 0, // X欄：保證金金額
-        depositStatus: row[24] || '', // Y欄：保證金狀態
-        captureAmount: parseInt(row[25]) || 0, // Z欄：已請款金額
+        depositTransactionNo: row[18] || '', // S欄：保證金交易編號
+        ecpayTradeNo: row[24] || '', // Y欄：ECPay交易編號
+        depositAmount: parseInt(row[19]) || 0, // T欄：保證金金額
+        depositStatus: row[20] || '', // U欄：保證金狀態
+        captureAmount: parseInt(row[21]) || 0, // V欄：已請款金額
       };
     }
   }
@@ -63,23 +63,23 @@ async function updateVoidStatus(orderId: string, status: string) {
     if (row[0] === orderId) {
       const rowIndex = i + 1;
       
-      // 更新預授權狀態和取消時間
-      await sheets.spreadsheets.values.batchUpdate({
-        spreadsheetId,
-        requestBody: {
-          valueInputOption: 'USER_ENTERED',
-          data: [
-            {
-              range: `Y${rowIndex}`, // Y欄：保證金狀態
-              values: [[status]]
-            },
-            {
-              range: `CC${rowIndex}`, // CC欄：取消時間
-              values: [[formatDateTimeInTaipei(new Date())]]
-            }
-          ]
-        }
-      });
+              // 更新預授權狀態和取消時間
+        await sheets.spreadsheets.values.batchUpdate({
+          spreadsheetId,
+          requestBody: {
+            valueInputOption: 'USER_ENTERED',
+            data: [
+              {
+                range: `U${rowIndex}`, // U欄：保證金狀態
+                values: [[status]]
+              },
+              {
+                range: `W${rowIndex}`, // W欄：取消時間
+                values: [[formatDateTimeInTaipei(new Date())]]
+              }
+            ]
+          }
+        });
       break;
     }
   }

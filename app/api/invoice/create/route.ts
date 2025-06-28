@@ -205,11 +205,11 @@ export async function POST(req: NextRequest) {
       TaxType: '1',
       SpecialTaxType: 0,
       SalesAmount: parseInt(orderData.finalAmount),
-      InvoiceRemark: '手機租賃服務',
+      InvoiceRemark: '手機租金',
       InvType: '07',
       vat: '1',
       Items: [{
-        ItemName: '手機租賃服務',
+        ItemName: '手機租金',
         ItemCount: 1,
         ItemWord: 'pcs',
         ItemPrice: parseInt(orderData.finalAmount),

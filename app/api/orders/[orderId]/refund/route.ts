@@ -49,17 +49,32 @@ async function updateDepositRefundInSheet(
     const rowIndex = rows.findIndex((row: any) => row[0] === orderId);
     if (rowIndex === -1) return;
 
-    // 更新保證金相關欄位 (U=保證金狀態, V=退刷金額, W=退刷時間, X=損壞費用)
-    const updateRange = `reservations!U${rowIndex + 1}:X${rowIndex + 1}`;
+    // 更新保證金相關欄位
     const currentTime = formatDateTimeInTaipei(new Date());
     
-    await sheets.spreadsheets.values.update({
+    await sheets.spreadsheets.values.batchUpdate({
       spreadsheetId,
-      range: updateRange,
-      valueInputOption: 'RAW',
       requestBody: {
-        values: [[status, refundAmount, currentTime, damageAmount]],
-      },
+        valueInputOption: 'RAW',
+        data: [
+          {
+            range: `reservations!U${rowIndex + 1}`, // U欄：保證金狀態
+            values: [[status]]
+          },
+          {
+            range: `reservations!V${rowIndex + 1}`, // V欄：退刷金額
+            values: [[refundAmount]]
+          },
+          {
+            range: `reservations!W${rowIndex + 1}`, // W欄：退刷時間
+            values: [[currentTime]]
+          },
+          {
+            range: `reservations!X${rowIndex + 1}`, // X欄：損壞費用
+            values: [[damageAmount]]
+          }
+        ]
+      }
     });
 
     console.log(`Updated deposit refund info for order ${orderId} in Google Sheet`);

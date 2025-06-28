@@ -42,16 +42,25 @@ async function updateDepositTransactionInSheet(
     if (rowIndex === -1) return;
 
     // 更新保證金相關欄位 (S=交易號, T=金額, U=狀態)
-    const updateRange = `reservations!S${rowIndex + 1}:U${rowIndex + 1}`;
-    const currentTime = formatDateTimeInTaipei(new Date());
-    
-    await sheets.spreadsheets.values.update({
+    await sheets.spreadsheets.values.batchUpdate({
       spreadsheetId,
-      range: updateRange,
-      valueInputOption: 'RAW',
       requestBody: {
-        values: [[transactionNo, amount, 'HELD']],
-      },
+        valueInputOption: 'RAW',
+        data: [
+          {
+            range: `reservations!S${rowIndex + 1}`, // S欄：保證金交易編號
+            values: [[transactionNo]]
+          },
+          {
+            range: `reservations!T${rowIndex + 1}`, // T欄：保證金金額
+            values: [[amount]]
+          },
+          {
+            range: `reservations!U${rowIndex + 1}`, // U欄：保證金狀態
+            values: [['HELD']]
+          }
+        ]
+      }
     });
 
     console.log(`Updated deposit transaction info for order ${orderId} in Google Sheet`);
@@ -157,8 +166,9 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
       actualPhoneModel = 'Samsung Galaxy S25 Ultra';
     }
     
-    // 更明確的商品名稱：強調這是保證金預授權（不會立即扣款）
-    const itemName = `【手機租賃保證金預授權】${actualPhoneModel}-IMEI:${phoneImei}-客戶:${orderInfo.customerName}`;
+    // 簡化商品名稱：押金預授權
+    const phoneModelShort = actualPhoneModel.replace('Samsung Galaxy ', '').replace(' Ultra', 'U');
+    const itemName = `${phoneModelShort}押金預授權-IMEI:${phoneImei}`;
 
     // 使用新的預授權函數（包含HoldTradeAMT參數）
     const paymentParams = getECPayPreAuthParams({

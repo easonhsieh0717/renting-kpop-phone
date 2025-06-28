@@ -281,9 +281,9 @@ async function triggerInvoiceCreation(orderId: string) {
       CustomerPhone: customerPhone,
       CarrierNum: carrierNumber,
       SalesAmount: finalAmount,
-      InvoiceRemark: '手機租賃服務',
+      InvoiceRemark: '手機租金',
       Items: [{
-        ItemName: '手機租賃服務',
+        ItemName: '手機租金',
         ItemCount: 1,
         ItemWord: 'pcs',
         ItemPrice: finalAmount,
