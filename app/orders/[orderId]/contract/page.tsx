@@ -215,11 +215,10 @@ function renderContract(order: any, depositMode: string | null, needCable: boole
         <span style={fontStyle}>&nbsp;&nbsp;- 繳納方式：設備交付時以現金繳納</span><br/>
         <span style={fontStyle}>&nbsp;&nbsp;- 證件要求：無需提供身分證件</span><br/>
         <span style={fontStyle}>&nbsp;&nbsp;</span><span style={boldStyle}>方案二：低押金（需證件）</span><br/>
-        <span style={fontStyle}>&nbsp;&nbsp;- 押金金額：NT$3,000（現金）+ 身分證正本</span><br/>
-        <span style={fontStyle}>&nbsp;&nbsp;- 或信用卡預授權：NT$30,000</span><br/>
+        <span style={fontStyle}>&nbsp;&nbsp;- 押金金額：NT$30,000（現金或線上支付）</span><br/>
         <span style={fontStyle}>&nbsp;&nbsp;- 繳納方式：設備交付時繳納</span><br/>
         <span style={fontStyle}>&nbsp;&nbsp;- 證件要求：需提供身分證正本及第二證件影本</span><br/>
-        <span style={fontStyle}>3. </span><span style={boldStyle}>押金退還：</span><span style={fontStyle}> 設備歸還且驗收無誤後，甲方於24小時內退還押金或解除預授權。</span><br/>
+        <span style={fontStyle}>3. </span><span style={boldStyle}>押金退還：</span><span style={fontStyle}> 設備歸還且驗收無誤後，甲方於24小時內退還押金。</span><br/>
       </div>
       
       {/* 繼續其他條款 - 使用相同的內聯樣式模式 */}

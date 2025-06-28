@@ -65,7 +65,7 @@ export async function getPhones(): Promise<Phone[]> {
           imageUrl: row[2] || '/images/s24-ultra.jpg',
           daily_rate_1_2: safeParseInt(row[4], 500),
           daily_rate_3_plus: safeParseInt(row[5], 450),
-          deposit: safeParseInt(row[6], 3000),
+          deposit: safeParseInt(row[6], 30000),
           active: safeParseBoolean(row[7], true),
         };
 

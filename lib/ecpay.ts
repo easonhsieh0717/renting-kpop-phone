@@ -163,4 +163,107 @@ export function getECPayInvoiceParams({
     ...sortedParams,
     CheckMacValue: checkMacValue,
   };
+}
+
+// 新增：ECPay退刷API功能
+export function getECPayRefundParams({
+  merchantTradeNo,
+  tradeNo,
+  action,
+  totalAmount,
+  merchantID,
+  hashKey,
+  hashIV
+}: {
+  merchantTradeNo: string;
+  tradeNo: string;
+  action: 'C' | 'R' | 'E' | 'N'; // C=關帳, R=退刷, E=取消, N=放棄
+  totalAmount: number;
+  merchantID: string;
+  hashKey: string;
+  hashIV: string;
+}) {
+  const params = {
+    MerchantID: merchantID,
+    MerchantTradeNo: merchantTradeNo,
+    TradeNo: tradeNo,
+    Action: action,
+    TotalAmount: totalAmount
+  };
+
+  // 生成CheckMacValue - 退刷API使用不同的參數結構
+  const sortedData = Object.entries(params)
+    .sort((a, b) => a[0].toLowerCase().localeCompare(b[0].toLowerCase()))
+    .map(([key, value]) => `${key}=${value}`)
+    .join('&');
+
+  const hashString = `HashKey=${hashKey}&${sortedData}&HashIV=${hashIV}`;
+  const encodedString = ecpayUrlEncode(hashString).toLowerCase();
+  const checkMacValue = crypto.createHash('sha256').update(encodedString).digest('hex').toUpperCase();
+
+  return {
+    ...params,
+    CheckMacValue: checkMacValue,
+  };
+}
+
+// 呼叫ECPay退刷API
+export async function callECPayRefundAPI({
+  merchantTradeNo,
+  tradeNo,
+  action,
+  totalAmount,
+  merchantID,
+  hashKey,
+  hashIV,
+  isProduction = false
+}: {
+  merchantTradeNo: string;
+  tradeNo: string;
+  action: 'C' | 'R' | 'E' | 'N';
+  totalAmount: number;
+  merchantID: string;
+  hashKey: string;
+  hashIV: string;
+  isProduction?: boolean;
+}) {
+  const apiUrl = isProduction 
+    ? 'https://payment.ecpay.com.tw/CreditDetail/DoAction'
+    : 'https://payment-stage.ecpay.com.tw/CreditDetail/DoAction';
+
+  const params = getECPayRefundParams({
+    merchantTradeNo,
+    tradeNo,
+    action,
+    totalAmount,
+    merchantID,
+    hashKey,
+    hashIV
+  });
+
+  try {
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams(params as any).toString(),
+    });
+
+    const result = await response.text();
+    
+    // 解析回傳結果
+    const resultParams = new URLSearchParams(result);
+    return {
+      MerchantID: resultParams.get('MerchantID'),
+      MerchantTradeNo: resultParams.get('MerchantTradeNo'),
+      TradeNo: resultParams.get('TradeNo'),
+      RtnCode: parseInt(resultParams.get('RtnCode') || '0'),
+      RtnMsg: resultParams.get('RtnMsg'),
+      success: parseInt(resultParams.get('RtnCode') || '0') === 1
+    };
+  } catch (error) {
+    console.error('ECPay退刷API呼叫失敗:', error);
+    throw error;
+  }
 } 
