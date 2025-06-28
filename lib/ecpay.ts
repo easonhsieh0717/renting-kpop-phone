@@ -15,6 +15,7 @@ interface ECPayPaymentData {
   HoldTradeAMT?: number;
   CheckMacValue?: string;
   MerchantName?: string;
+  PlatformID?: string;
 }
 
 function ecpayUrlEncode(data: string): string {
@@ -281,7 +282,8 @@ export function getECPayPreAuthParams({
   hashKey, 
   hashIV,
   holdTradeAmount,
-  merchantName
+  merchantName,
+  platformID
 }: {
   merchantTradeNo: string;
   totalAmount: number;
@@ -291,6 +293,7 @@ export function getECPayPreAuthParams({
   hashIV: string;
   holdTradeAmount?: number;
   merchantName: string;
+  platformID?: string;
 }) {
   const tradeDate = new Date();
   const formattedDate = `${tradeDate.getFullYear()}/${String(tradeDate.getMonth() + 1).padStart(2, '0')}/${String(tradeDate.getDate()).padStart(2, '0')} ${String(tradeDate.getHours()).padStart(2, '0')}:${String(tradeDate.getMinutes()).padStart(2, '0')}:${String(tradeDate.getSeconds()).padStart(2, '0')}`;
@@ -318,6 +321,10 @@ export function getECPayPreAuthParams({
     HoldTradeAMT: 1,
     MerchantName: sanitizeForECPay(merchantName).substring(0, 20)
   };
+
+  if (platformID) {
+    params.PlatformID = platformID;
+  }
 
   const checkMacValue = generateCheckMacValue(params as Omit<ECPayPaymentData, 'CheckMacValue'>, hashKey, hashIV);
 

@@ -156,6 +156,7 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
     const itemName = `${phoneModelName}押金預授權-IMEI:${phoneImei}`;
 
     let merchantID: string;
+    let platformID: string;
     let hashKey: string;
     let hashIV: string;
     let merchantName: string;
@@ -164,7 +165,8 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
     if (isTest) {
       // 來自 /test-preauth 頁面的請求，強制使用平台商測試資料
       console.log('Request from test page, using ECPay Platform Test credentials.');
-      merchantID = '3085340';
+      merchantID = '2000132'; // 子廠商ID
+      platformID = '3085340'; // 平台商ID
       hashKey = 'HwiqPsywG1hLQNuN';
       hashIV = 'YqITWD4TyKacYXpn';
       merchantName = '測試商店';
@@ -176,6 +178,7 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
         // 正式環境
         console.log('Production environment, using Production ECPay credentials.');
         merchantID = process.env.ECPAY_MERCHANT_ID!;
+        platformID = process.env.ECPAY_PLATFORM_ID!;
         hashKey = process.env.ECPAY_HASH_KEY!;
         hashIV = process.env.ECPAY_HASH_IV!;
         merchantName = '愛時代國際股份有限公司';
@@ -184,6 +187,7 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
         // 開發或 Vercel 預覽環境
         console.log('Non-production environment, using standard Test credentials.');
         merchantID = '3002607';
+        platformID = '3002607';
         hashKey = 'pwFHCqoQZGmho4w6';
         hashIV = 'EkRm7iFT261dpevs';
         merchantName = '測試商店';
@@ -193,6 +197,7 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
 
     console.log('Final ECPay config:', {
       merchantID,
+      platformID,
       merchantName,
       isProductionEnv
     });
@@ -207,6 +212,7 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
       totalAmount: depositAmount,
       itemName: itemName,
       merchantID,
+      platformID,
       hashKey,
       hashIV,
       holdTradeAmount: depositAmount,
