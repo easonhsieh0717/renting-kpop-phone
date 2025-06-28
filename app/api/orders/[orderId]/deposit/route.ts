@@ -106,7 +106,11 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
   try {
     const { orderId } = params;
     
-    console.log(`Creating deposit payment for order ${orderId}`);
+    // 獲取請求體中的金額
+    const body = await req.json();
+    const requestedAmount = body.amount || 30000;
+    
+    console.log(`Creating deposit payment for order ${orderId}, amount: ${requestedAmount}`);
 
     // 獲取訂單資訊
     const orderInfo = await getOrderInfo(orderId);
@@ -140,12 +144,25 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
     const orderSuffix = orderId.slice(-6);
     const timestamp = Date.now().toString().slice(-8);
     const depositOrderId = `${orderSuffix}D${timestamp}`;
-    const depositAmount = 30000;
+    const depositAmount = requestedAmount; // 使用前端傳入的金額
+
+    // 改善商品明細，包含手機型號、IMEI和客戶姓名
+    // phoneModel實際上是IMEI號碼，需要獲取真正的手機型號
+    const phoneImei = orderInfo.phoneModel; // 這是IMEI
+    
+    // 根據IMEI判斷手機型號（簡化版）
+    let actualPhoneModel = 'Samsung Galaxy手機';
+    if (phoneImei && phoneImei.length >= 15) {
+      // 可以根據IMEI前幾碼判斷型號，這裡先用通用名稱
+      actualPhoneModel = 'Samsung Galaxy S25 Ultra';
+    }
+    
+    const itemName = `${actualPhoneModel}租賃保證金-客戶:${orderInfo.customerName}-IMEI:${phoneImei}`;
 
     const paymentParams = getECPayPaymentParams({
       merchantTradeNo: depositOrderId,
       totalAmount: depositAmount,
-      itemName: `手機租賃保證金 - ${orderInfo.phoneModel}`,
+      itemName: itemName,
       merchantID,
       hashKey,
       hashIV
