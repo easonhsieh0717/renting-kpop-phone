@@ -164,11 +164,11 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
 
     if (isTest) {
       // 來自 /test-preauth 頁面的請求，強制使用平台商測試資料
-      console.log('Request from test page, using ECPay Platform Test credentials.');
+      console.log('Request from test page, using ECPay Platform Test credentials for sub-merchant.');
       merchantID = '2000132'; // 子廠商ID
       platformID = '3085340'; // 平台商ID
-      hashKey = 'HwiqPsywG1hLQNuN';
-      hashIV = 'YqITWD4TyKacYXpn';
+      hashKey = '5294y06JbISpM5x9'; // 子廠商金鑰
+      hashIV = 'v77hoKGq4kWxNNIS'; // 子廠商金鑰
       merchantName = '測試商店';
       isProductionEnv = false;
     } else {
