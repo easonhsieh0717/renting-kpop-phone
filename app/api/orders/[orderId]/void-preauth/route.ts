@@ -197,14 +197,15 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
     const voidOrderId = `${orderId}_VOID_${Date.now()}`;
 
     // 呼叫ECPay取消預授權API (使用N=放棄)
-    console.log('Calling ECPay void pre-auth API for order:', orderId);
-    console.log('Void details:', {
+    console.log('[VOID_PREAUTH_DEBUG] 嘗試取消預授權，訂單:', orderId);
+    console.log('[VOID_PREAUTH_DEBUG] 方案1 - 使用ECPay交易編號:', {
       merchantTradeNo: voidOrderId,
       tradeNo: preAuthInfo.ecpayTradeNo,
       totalAmount: preAuthInfo.depositAmount
     });
 
-    const ecpayResult = await callECPayRefundAPI({
+    // 先嘗試使用ECPay交易編號
+    let ecpayResult = await callECPayRefundAPI({
       merchantTradeNo: voidOrderId,
       tradeNo: preAuthInfo.ecpayTradeNo,
       action: 'N', // N=放棄(取消預授權)
@@ -214,6 +215,30 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
       hashIV,
       isProduction
     });
+
+    console.log('[VOID_PREAUTH_DEBUG] 方案1結果:', ecpayResult);
+
+    // 如果使用ECPay交易編號失敗，嘗試使用預授權交易編號
+    if (!ecpayResult.success && ecpayResult.RtnMsg === '訂單不存在') {
+      console.log('[VOID_PREAUTH_DEBUG] 方案2 - 使用預授權交易編號:', {
+        merchantTradeNo: voidOrderId,
+        tradeNo: preAuthInfo.depositTransactionNo,
+        totalAmount: preAuthInfo.depositAmount
+      });
+
+      ecpayResult = await callECPayRefundAPI({
+        merchantTradeNo: voidOrderId,
+        tradeNo: preAuthInfo.depositTransactionNo,
+        action: 'N', // N=放棄(取消預授權)
+        totalAmount: preAuthInfo.depositAmount,
+        merchantID,
+        hashKey,
+        hashIV,
+        isProduction
+      });
+
+      console.log('[VOID_PREAUTH_DEBUG] 方案2結果:', ecpayResult);
+    }
 
     console.log('ECPay void result:', ecpayResult);
 
