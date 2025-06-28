@@ -49,7 +49,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             preload="metadata"
             poster="/images/DEMO.jpg"
           >
-            <source src="/video.MP4" type="video/mp4" />
+            <source src="/images/video.MP4" type="video/mp4" />
             您的瀏覽器不支援影片播放。
           </video>
         </div>
