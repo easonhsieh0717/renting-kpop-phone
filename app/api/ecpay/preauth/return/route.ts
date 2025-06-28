@@ -78,7 +78,7 @@ async function updatePreAuthStatus(transactionNo: string, status: 'HELD' | 'PREA
           data: [
             {
               range: `reservations!Y${rowIndex + 1}`, // Y列：ECPay交易编号
-              values: [[ecpayTradeNo]]
+              values: [[`'${ecpayTradeNo}`]] // 加上單引號前綴強制為文字格式
             },
             {
               range: `reservations!U${rowIndex + 1}`, // U列：保证金状态

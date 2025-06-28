@@ -47,7 +47,7 @@ async function updatePreAuthManually(transactionNo: string, ecpayTradeNo: string
         data: [
           {
             range: `reservations!Y${rowIndex + 1}`, // Y欄：ECPay交易編號
-            values: [[ecpayTradeNo]]
+            values: [[`'${ecpayTradeNo}`]] // 加上單引號前綴強制為文字格式
           },
           {
             range: `reservations!U${rowIndex + 1}`, // U欄：保證金狀態
