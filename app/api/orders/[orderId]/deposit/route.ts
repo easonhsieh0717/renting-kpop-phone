@@ -178,7 +178,7 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
       merchantID,
       hashKey,
       hashIV,
-      holdTradeAmount: depositAmount // 設定預授權金額與總金額相同
+      holdTradeAmount: depositAmount // 設定預授權金額，啟用預授權功能
     });
 
     // 更新Google Sheet記錄保證金預授權交易號

@@ -290,7 +290,7 @@ export function getECPayPreAuthParams({
   merchantID: string;
   hashKey: string;
   hashIV: string;
-  holdTradeAmount?: number;
+  holdTradeAmount?: number; // 預授權金額，如果有設定就會啟用預授權功能
 }) {
   const tradeDate = new Date();
   const formattedDate = `${tradeDate.getFullYear()}/${String(tradeDate.getMonth() + 1).padStart(2, '0')}/${String(tradeDate.getDate()).padStart(2, '0')} ${String(tradeDate.getHours()).padStart(2, '0')}:${String(tradeDate.getMinutes()).padStart(2, '0')}:${String(tradeDate.getSeconds()).padStart(2, '0')}`;
@@ -307,7 +307,7 @@ export function getECPayPreAuthParams({
     ChoosePayment: 'Credit',
     EncryptType: 1,
     ClientBackURL: `${process.env.NEXT_PUBLIC_SITE_URL}`,
-    HoldTradeAMT: holdTradeAmount ? 1 : undefined // 如果有設定 holdTradeAmount，就啟用預授權
+    HoldTradeAMT: holdTradeAmount ? 1 : undefined // 1=啟用預授權，undefined=一般刷卡
   };
 
   const checkMacValue = generateCheckMacValue(params as Omit<ECPayPaymentData, 'CheckMacValue'>, hashKey, hashIV);
