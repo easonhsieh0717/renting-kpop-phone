@@ -155,111 +155,163 @@ function Stepper({ step, setStep }: { step: number; setStep: (n: number) => void
 function renderContract(order: any, depositMode: string | null, needCable: boolean, needCharger: boolean, idNumber: string, phoneNumber: string) {
   const today = new Date();
   const formatDate = (d: Date) => `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
+  
+  // 統一的字體樣式
+  const fontStyle = {
+    fontFamily: '"Noto Sans TC", "Microsoft JhengHei", "PingFang TC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif',
+    color: '#000000',
+    fontSize: '16px',
+    lineHeight: '1.6',
+    WebkitFontSmoothing: 'antialiased' as const,
+    MozOsxFontSmoothing: 'grayscale' as const,
+    textRendering: 'optimizeLegibility' as const
+  };
+  
+  const boldStyle = {
+    ...fontStyle,
+    fontWeight: 'bold' as const
+  };
+  
+  const titleStyle = {
+    ...fontStyle,
+    fontWeight: 'bold' as const,
+    fontSize: '20px',
+    marginBottom: '16px'
+  };
+  
   return (
-    <div 
-      className="space-y-4 text-base leading-relaxed mb-8 text-gray-800"
-      style={{
-        fontFamily: 'Noto Sans TC, "Microsoft JhengHei", "PingFang TC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif',
-        WebkitFontSmoothing: 'antialiased',
-        MozOsxFontSmoothing: 'grayscale',
-        textRendering: 'optimizeLegibility',
-        color: '#000000'
-      }}
-    >
-      <h2 
-        className="text-xl font-bold mb-2 text-gray-900"
-        style={{
-          fontFamily: 'Noto Sans TC, "Microsoft JhengHei", "PingFang TC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif',
-          fontWeight: 'bold',
-          color: '#000000'
-        }}
-      >
+    <div style={{...fontStyle, padding: '20px', backgroundColor: '#ffffff'}}>
+      <div style={titleStyle}>
         三星Galaxy S25 Ultra手機租賃契約書
-      </h2>
-      <b>第一條 租賃標的</b><br/>
-      1. <b>出租人（甲方）：</b> 愛時代國際股份有限公司<br/>
-      2. <b>承租人（乙方）：</b> {order[5]}<br/>
-      &nbsp;&nbsp;- <b>身分證字號：</b> {idNumber || '尚未填寫'}<br/>
-      &nbsp;&nbsp;- <b>聯絡電話：</b> {phoneNumber || '尚未填寫'}<br/>
-      3. <b>租賃設備：</b><br/>
-      &nbsp;&nbsp;- 手機品牌與型號：三星Galaxy S25 Ultra<br/>
-      &nbsp;&nbsp;- IMEI序號：{order[1]}<br/>
-      &nbsp;&nbsp;- 配件：原廠USB-C充電線、專用保護殼<br/>
-      &nbsp;&nbsp;- 初始狀況：外觀無明顯刮痕、無凹陷、無裂痕，功能正常，有特別狀態以照片拍攝為準<br/>
-      &nbsp;&nbsp;- 清潔要求：乙方應保持設備清潔，歸還時不得有污漬、異味或損壞，否則甲方將收取清潔費用NT$500，於押金或預授權中扣除。<br/>
-      <b>第二條 租賃期間</b><br/>
-      1. <b>租期：</b> 自{order[2]}起至{order[3]}止。<br/>
-      2. <b>延租申請：</b> 乙方需於租期結束前24小時以書面（電子郵件或LINE官方帳號）通知甲方，經甲方書面同意後方可延租。延租費用依第三條規定計算。<br/>
-      3. <b>最長租期：</b> 本契約單次租期不得超過30日。超過30日，乙方需與甲方重新簽訂新契約。<br/>
-      <b>第三條 租金與押金</b><br/>
-      1. <b>租金：</b> 每日租金NT$600，乙方應於設備交付時以現金或電子支付方式一次付清全額租金，或依雙方書面約定按日結算。<br/>
-      2. <b>押金方案（擇一）：</b><br/>
-      &nbsp;&nbsp;<b>方案一：高押金（免證件）</b><br/>
-      &nbsp;&nbsp;- 押金金額：NT$30,000（現金）<br/>
-      &nbsp;&nbsp;- 繳納方式：設備交付時以現金繳納<br/>
-      &nbsp;&nbsp;- 證件要求：無需提供身分證件<br/>
-      &nbsp;&nbsp;<b>方案二：低押金（需證件）</b><br/>
-      &nbsp;&nbsp;- 押金金額：NT$3,000（現金）+ 身分證正本<br/>
-      &nbsp;&nbsp;- 或信用卡預授權：NT$30,000<br/>
-      &nbsp;&nbsp;- 繳納方式：設備交付時繳納<br/>
-      &nbsp;&nbsp;- 證件要求：需提供身分證正本及第二證件影本<br/>
-      3. <b>押金退還：</b> 設備歸還且驗收無誤後，甲方於24小時內退還押金或解除預授權。<br/>
-      <b>第四條 設備交付與歸還</b><br/>
-      1. <b>交付程序：</b> 甲乙雙方於交付時共同檢查設備外觀、功能及配件，簽署《設備交付確認單》（附件二），並拍照存證（包含螢幕、機身、配件完整性）。<br/>
-      2. <b>歸還驗收：</b> 乙方應於租期結束當日親自或委託快遞將設備歸還至甲方指定地點。甲方依《損害賠償參考表》（附件一）檢查設備並計算賠償（如適用）。<br/>
-      3. <b>逾期處理：</b><br/>
-      &nbsp;&nbsp;- 逾期未歸還，每日加收租金NT$600。<br/>
-      &nbsp;&nbsp;- 逾期超過3日未歸還，視為設備遺失，甲方將扣除全額押金或預授權金額，並保留向乙方追償損失的權利。<br/>
-      4. <b>損壞或遺失賠償：</b> 乙方應賠償設備維修或重置費用（依附件一），並支付營業損失補償（每日NT$600，最高15日，計NT$9,000）。<br/>
-      5. <b>爭議處理：</b> 若對設備狀況有爭議，雙方同意委託三星原廠授權維修中心進行鑑定，鑑定費用由爭議發起方預付，鑑定結果為最終依據。<br/>
-      <b>第五條 雙方責任</b><br/>
-      1. <b>甲方責任：</b><br/>
-      &nbsp;&nbsp;- 保證設備於交付時功能正常，已完成清潔及消毒（符合衛生署標準）。<br/>
-      &nbsp;&nbsp;- 若設備因非人為因素故障，甲方提供同型號備用設備或退還剩餘租金。<br/>
-      2. <b>乙方責任：</b><br/>
-      &nbsp;&nbsp;- 妥善保管及使用設備，不得拆解、轉租、刷機、越獄或安裝未經授權軟體。<br/>
-      &nbsp;&nbsp;- 因乙方疏失導致設備損壞或遺失，乙方負全額賠償責任（依附件一）。<br/>
-      3. <b>不可抗力：</b> 因天災、戰爭等不可抗力導致設備無法使用或歸還，雙方免責。乙方需於事件發生後24小時內以書面或電子方式通知甲方，雙方協商後續處理。<br/>
-      <b>第六條 證件與個人資料管理</b><br/>
-      1. 低押金模式下，乙方提供身分證及第二證件影本，甲方僅用於本契約身分驗證及履約管理。<br/>
-      2. 甲方依《個人資料保護法》採取加密儲存及限制存取措施，確保乙方個人資料安全。若違反，甲方負法律責任。<br/>
-      3. 租期結束後7日內，甲方銷毀乙方證件影本或歸還正本。乙方有權要求甲方提供書面銷毀證明。<br/>
-      <b>第七條 預授權規範</b><br/>
-      1. 低押金模式下，乙方於交付設備前以信用卡完成NT$30,000預授權。<br/>
-      2. 設備歸還且驗收無誤後，甲方於3個工作日內解除預授權。<br/>
-      3. 若設備未歸還、損壞或違約，甲方得依附件一執行扣款，並提供扣款明細。<br/>
-      4. 乙方對扣款有異議，應於收到扣款通知後7日內提出，甲方應提供證明文件（包含維修報價單或鑑定報告）。<br/>
-      <b>第八條 違約與解約</b><br/>
-      1. <b>乙方違約情事：</b> 包括但不限於逾期未歸還、設備遺失、未經同意轉租、故意損壞設備。甲方得終止契約，扣除押金或預授權，並保留追償權利。<br/>
-      2. <b>爭議解決：</b><br/>
-      &nbsp;&nbsp;- 雙方應以協商為原則解決爭議。<br/>
-      &nbsp;&nbsp;- 協商不成，提交中華民國消費者保護委員會或第三方調解機構調解。<br/>
-      &nbsp;&nbsp;- 調解不成，以台灣台北地方法院為第一審管轄法院。<br/>
-      <b>第九條 契約效力</b><br/>
-      1. 本契約依據《中華民國民法》及《消費者保護法》制定，屬定型化契約。<br/>
-      2. 乙方於簽署前享有5日審閱期，簽署即表示同意全部條款。<br/>
-      3. 本契約以中文為準，其他語言版本僅供參考。<br/>
-      <b>第十條 契約份數與簽署</b><br/>
-      1. 本契約一式兩份，甲乙雙方各執一份，具同等法律效力。<br/>
-      2. 電子簽署依《電子簽章法》執行，與手寫簽署具同等效力。<br/>
-      <b>第十一條 不可抗力與風險轉移</b><br/>
-      1. 因不可抗力（如地震、颱風、政府命令）導致設備無法使用或歸還，雙方免責。乙方需於事件發生後24小時內通知甲方，雙方協商後續處理。<br/>
-      2. 租賃期間設備毀損風險由乙方承擔，但因甲方提供瑕疵設備導致損失，由甲方負責賠償。<br/>
-      <b>第十二條 通知方式</b><br/>
-      1. 所有通知（包括延租、違約、爭議）以書面（電子郵件或LINE）送達。<br/>
-      2. 乙方聯繫方式變更，應立即通知甲方，否則視為有效送達。<br/>
-      3. <b>甲方聯繫方式：</b> 02-8252-7208，電子郵件：a0970580318@gmail.com，地址：台北市板橋區文化路二段385之3號<br/>
-      <b>簽署欄位</b><br/>
-      甲方簽章：____________________　日期：{formatDate(today)}<br/>
-      乙方簽章：____________________　日期：{formatDate(today)}<br/>
-      <b>附件一：損害賠償參考表</b><br/>
-      - 螢幕破裂：NT$6,400（以三星原廠最終維修報價為主）<br/>
-      - 電池損壞：NT$4,000（以三星原廠最終維修報價為主）<br/>
-      - 設備遺失：NT$43,900（依三星Galaxy S25 Ultra市場當日零售價為主）<br/>
-      - 配件遺失：<br/>
-      &nbsp;&nbsp;- 原廠USB-C充電線：NT$800<br/>
-      &nbsp;&nbsp;- 專用保護殼：NT$800<br/>
-      - 其他損壞：依三星原廠授權維修中心報價單計算。<br/>
+      </div>
+      
+      <div style={{marginBottom: '16px'}}>
+        <span style={boldStyle}>第一條 租賃標的</span><br/>
+        <span style={fontStyle}>1. </span><span style={boldStyle}>出租人（甲方）：</span><span style={fontStyle}> 愛時代國際股份有限公司</span><br/>
+        <span style={fontStyle}>2. </span><span style={boldStyle}>承租人（乙方）：</span><span style={fontStyle}> {order[5]}</span><br/>
+        <span style={fontStyle}>&nbsp;&nbsp;- </span><span style={boldStyle}>身分證字號：</span><span style={fontStyle}> {idNumber || '尚未填寫'}</span><br/>
+        <span style={fontStyle}>&nbsp;&nbsp;- </span><span style={boldStyle}>聯絡電話：</span><span style={fontStyle}> {phoneNumber || '尚未填寫'}</span><br/>
+        <span style={fontStyle}>3. </span><span style={boldStyle}>租賃設備：</span><br/>
+        <span style={fontStyle}>&nbsp;&nbsp;- 手機品牌與型號：三星Galaxy S25 Ultra</span><br/>
+        <span style={fontStyle}>&nbsp;&nbsp;- IMEI序號：{order[1]}</span><br/>
+        <span style={fontStyle}>&nbsp;&nbsp;- 配件：原廠USB-C充電線、專用保護殼</span><br/>
+        <span style={fontStyle}>&nbsp;&nbsp;- 初始狀況：外觀無明顯刮痕、無凹陷、無裂痕，功能正常，有特別狀態以照片拍攝為準</span><br/>
+        <span style={fontStyle}>&nbsp;&nbsp;- 清潔要求：乙方應保持設備清潔，歸還時不得有污漬、異味或損壞，否則甲方將收取清潔費用NT$500，於押金或預授權中扣除。</span><br/>
+      </div>
+      
+      <div style={{marginBottom: '16px'}}>
+        <span style={boldStyle}>第二條 租賃期間</span><br/>
+        <span style={fontStyle}>1. </span><span style={boldStyle}>租期：</span><span style={fontStyle}> 自{order[2]}起至{order[3]}止。</span><br/>
+        <span style={fontStyle}>2. </span><span style={boldStyle}>延租申請：</span><span style={fontStyle}> 乙方需於租期結束前24小時以書面（電子郵件或LINE官方帳號）通知甲方，經甲方書面同意後方可延租。延租費用依第三條規定計算。</span><br/>
+        <span style={fontStyle}>3. </span><span style={boldStyle}>最長租期：</span><span style={fontStyle}> 本契約單次租期不得超過30日。超過30日，乙方需與甲方重新簽訂新契約。</span><br/>
+      </div>
+      
+      <div style={{marginBottom: '16px'}}>
+        <span style={boldStyle}>第三條 租金與押金</span><br/>
+        <span style={fontStyle}>1. </span><span style={boldStyle}>租金：</span><span style={fontStyle}> 每日租金NT$600，乙方應於設備交付時以現金或電子支付方式一次付清全額租金，或依雙方書面約定按日結算。</span><br/>
+        <span style={fontStyle}>2. </span><span style={boldStyle}>押金方案（擇一）：</span><br/>
+        <span style={fontStyle}>&nbsp;&nbsp;</span><span style={boldStyle}>方案一：高押金（免證件）</span><br/>
+        <span style={fontStyle}>&nbsp;&nbsp;- 押金金額：NT$30,000（現金）</span><br/>
+        <span style={fontStyle}>&nbsp;&nbsp;- 繳納方式：設備交付時以現金繳納</span><br/>
+        <span style={fontStyle}>&nbsp;&nbsp;- 證件要求：無需提供身分證件</span><br/>
+        <span style={fontStyle}>&nbsp;&nbsp;</span><span style={boldStyle}>方案二：低押金（需證件）</span><br/>
+        <span style={fontStyle}>&nbsp;&nbsp;- 押金金額：NT$3,000（現金）+ 身分證正本</span><br/>
+        <span style={fontStyle}>&nbsp;&nbsp;- 或信用卡預授權：NT$30,000</span><br/>
+        <span style={fontStyle}>&nbsp;&nbsp;- 繳納方式：設備交付時繳納</span><br/>
+        <span style={fontStyle}>&nbsp;&nbsp;- 證件要求：需提供身分證正本及第二證件影本</span><br/>
+        <span style={fontStyle}>3. </span><span style={boldStyle}>押金退還：</span><span style={fontStyle}> 設備歸還且驗收無誤後，甲方於24小時內退還押金或解除預授權。</span><br/>
+      </div>
+      
+      {/* 繼續其他條款 - 使用相同的內聯樣式模式 */}
+      <div style={{marginBottom: '16px'}}>
+        <span style={boldStyle}>第四條 設備交付與歸還</span><br/>
+        <span style={fontStyle}>1. </span><span style={boldStyle}>交付程序：</span><span style={fontStyle}> 甲乙雙方於交付時共同檢查設備外觀、功能及配件，簽署《設備交付確認單》（附件二），並拍照存證（包含螢幕、機身、配件完整性）。</span><br/>
+        <span style={fontStyle}>2. </span><span style={boldStyle}>歸還驗收：</span><span style={fontStyle}> 乙方應於租期結束當日親自或委託快遞將設備歸還至甲方指定地點。甲方依《損害賠償參考表》（附件一）檢查設備並計算賠償（如適用）。</span><br/>
+        <span style={fontStyle}>3. </span><span style={boldStyle}>逾期處理：</span><br/>
+        <span style={fontStyle}>&nbsp;&nbsp;- 逾期未歸還，每日加收租金NT$600。</span><br/>
+        <span style={fontStyle}>&nbsp;&nbsp;- 逾期超過3日未歸還，視為設備遺失，甲方將扣除全額押金或預授權金額，並保留向乙方追償損失的權利。</span><br/>
+        <span style={fontStyle}>4. </span><span style={boldStyle}>損壞或遺失賠償：</span><span style={fontStyle}> 乙方應賠償設備維修或重置費用（依附件一），並支付營業損失補償（每日NT$600，最高15日，計NT$9,000）。</span><br/>
+        <span style={fontStyle}>5. </span><span style={boldStyle}>爭議處理：</span><span style={fontStyle}> 若對設備狀況有爭議，雙方同意委託三星原廠授權維修中心進行鑑定，鑑定費用由爭議發起方預付，鑑定結果為最終依據。</span><br/>
+      </div>
+      
+      <div style={{marginBottom: '16px'}}>
+        <span style={boldStyle}>第五條 雙方責任</span><br/>
+        <span style={fontStyle}>1. </span><span style={boldStyle}>甲方責任：</span><br/>
+        <span style={fontStyle}>&nbsp;&nbsp;- 保證設備於交付時功能正常，已完成清潔及消毒（符合衛生署標準）。</span><br/>
+        <span style={fontStyle}>&nbsp;&nbsp;- 若設備因非人為因素故障，甲方提供同型號備用設備或退還剩餘租金。</span><br/>
+        <span style={fontStyle}>2. </span><span style={boldStyle}>乙方責任：</span><br/>
+        <span style={fontStyle}>&nbsp;&nbsp;- 妥善保管及使用設備，不得拆解、轉租、刷機、越獄或安裝未經授權軟體。</span><br/>
+        <span style={fontStyle}>&nbsp;&nbsp;- 因乙方疏失導致設備損壞或遺失，乙方負全額賠償責任（依附件一）。</span><br/>
+        <span style={fontStyle}>3. </span><span style={boldStyle}>不可抗力：</span><span style={fontStyle}> 因天災、戰爭等不可抗力導致設備無法使用或歸還，雙方免責。乙方需於事件發生後24小時內以書面或電子方式通知甲方，雙方協商後續處理。</span><br/>
+      </div>
+      
+      <div style={{marginBottom: '16px'}}>
+        <span style={boldStyle}>第六條 證件與個人資料管理</span><br/>
+        <span style={fontStyle}>1. 低押金模式下，乙方提供身分證及第二證件影本，甲方僅用於本契約身分驗證及履約管理。</span><br/>
+        <span style={fontStyle}>2. 甲方依《個人資料保護法》採取加密儲存及限制存取措施，確保乙方個人資料安全。若違反，甲方負法律責任。</span><br/>
+        <span style={fontStyle}>3. 租期結束後7日內，甲方銷毀乙方證件影本或歸還正本。乙方有權要求甲方提供書面銷毀證明。</span><br/>
+      </div>
+      
+      <div style={{marginBottom: '16px'}}>
+        <span style={boldStyle}>第七條 預授權規範</span><br/>
+        <span style={fontStyle}>1. 低押金模式下，乙方於交付設備前以信用卡完成NT$30,000預授權。</span><br/>
+        <span style={fontStyle}>2. 設備歸還且驗收無誤後，甲方於3個工作日內解除預授權。</span><br/>
+        <span style={fontStyle}>3. 若設備未歸還、損壞或違約，甲方得依附件一執行扣款，並提供扣款明細。</span><br/>
+        <span style={fontStyle}>4. 乙方對扣款有異議，應於收到扣款通知後7日內提出，甲方應提供證明文件（包含維修報價單或鑑定報告）。</span><br/>
+      </div>
+      
+      <div style={{marginBottom: '16px'}}>
+        <span style={boldStyle}>第八條 違約與解約</span><br/>
+        <span style={fontStyle}>1. </span><span style={boldStyle}>乙方違約情事：</span><span style={fontStyle}> 包括但不限於逾期未歸還、設備遺失、未經同意轉租、故意損壞設備。甲方得終止契約，扣除押金或預授權，並保留追償權利。</span><br/>
+        <span style={fontStyle}>2. </span><span style={boldStyle}>爭議解決：</span><br/>
+        <span style={fontStyle}>&nbsp;&nbsp;- 雙方應以協商為原則解決爭議。</span><br/>
+        <span style={fontStyle}>&nbsp;&nbsp;- 協商不成，提交中華民國消費者保護委員會或第三方調解機構調解。</span><br/>
+        <span style={fontStyle}>&nbsp;&nbsp;- 調解不成，以台灣台北地方法院為第一審管轄法院。</span><br/>
+      </div>
+      
+      <div style={{marginBottom: '16px'}}>
+        <span style={boldStyle}>第九條 契約效力</span><br/>
+        <span style={fontStyle}>1. 本契約依據《中華民國民法》及《消費者保護法》制定，屬定型化契約。</span><br/>
+        <span style={fontStyle}>2. 乙方於簽署前享有5日審閱期，簽署即表示同意全部條款。</span><br/>
+        <span style={fontStyle}>3. 本契約以中文為準，其他語言版本僅供參考。</span><br/>
+      </div>
+      
+      <div style={{marginBottom: '16px'}}>
+        <span style={boldStyle}>第十條 契約份數與簽署</span><br/>
+        <span style={fontStyle}>1. 本契約一式兩份，甲乙雙方各執一份，具同等法律效力。</span><br/>
+        <span style={fontStyle}>2. 電子簽署依《電子簽章法》執行，與手寫簽署具同等效力。</span><br/>
+      </div>
+      
+      <div style={{marginBottom: '16px'}}>
+        <span style={boldStyle}>第十一條 不可抗力與風險轉移</span><br/>
+        <span style={fontStyle}>1. 因不可抗力（如地震、颱風、政府命令）導致設備無法使用或歸還，雙方免責。乙方需於事件發生後24小時內通知甲方，雙方協商後續處理。</span><br/>
+        <span style={fontStyle}>2. 租賃期間設備毀損風險由乙方承擔，但因甲方提供瑕疵設備導致損失，由甲方負責賠償。</span><br/>
+      </div>
+      
+      <div style={{marginBottom: '16px'}}>
+        <span style={boldStyle}>第十二條 通知方式</span><br/>
+        <span style={fontStyle}>1. 所有通知（包括延租、違約、爭議）以書面（電子郵件或LINE）送達。</span><br/>
+        <span style={fontStyle}>2. 乙方聯繫方式變更，應立即通知甲方，否則視為有效送達。</span><br/>
+        <span style={fontStyle}>3. </span><span style={boldStyle}>甲方聯繫方式：</span><span style={fontStyle}> 02-8252-7208，電子郵件：a0970580318@gmail.com，地址：台北市板橋區文化路二段385之3號</span><br/>
+      </div>
+      
+      <div style={{marginBottom: '16px'}}>
+        <span style={boldStyle}>簽署欄位</span><br/>
+        <span style={fontStyle}>甲方簽章：____________________　日期：{formatDate(today)}</span><br/>
+        <span style={fontStyle}>乙方簽章：____________________　日期：{formatDate(today)}</span><br/>
+      </div>
+      
+      <div style={{marginBottom: '16px'}}>
+        <span style={boldStyle}>附件一：損害賠償參考表</span><br/>
+        <span style={fontStyle}>- 螢幕破裂：NT$6,400（以三星原廠最終維修報價為主）</span><br/>
+        <span style={fontStyle}>- 電池損壞：NT$4,000（以三星原廠最終維修報價為主）</span><br/>
+        <span style={fontStyle}>- 設備遺失：NT$43,900（依三星Galaxy S25 Ultra市場當日零售價為主）</span><br/>
+        <span style={fontStyle}>- 配件遺失：</span><br/>
+        <span style={fontStyle}>&nbsp;&nbsp;- 原廠USB-C充電線：NT$800</span><br/>
+        <span style={fontStyle}>&nbsp;&nbsp;- 專用保護殼：NT$800</span><br/>
+        <span style={fontStyle}>- 其他損壞：依三星原廠授權維修中心報價單計算。</span><br/>
+      </div>
+      
       {renderAttachment2(order, depositMode, needCable, needCharger, idNumber, phoneNumber)}
     </div>
   );
@@ -267,22 +319,46 @@ function renderContract(order: any, depositMode: string | null, needCable: boole
 
 function renderAttachment2(order: any, depositMode: string | null, needCable: boolean, needCharger: boolean, idNumber: string, phoneNumber: string) {
   const today = new Date();
+  
+  // 統一的字體樣式
+  const fontStyle = {
+    fontFamily: '"Noto Sans TC", "Microsoft JhengHei", "PingFang TC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif',
+    color: '#000000',
+    fontSize: '16px',
+    lineHeight: '1.6',
+    WebkitFontSmoothing: 'antialiased' as const,
+    MozOsxFontSmoothing: 'grayscale' as const,
+    textRendering: 'optimizeLegibility' as const
+  };
+  
+  const boldStyle = {
+    ...fontStyle,
+    fontWeight: 'bold' as const
+  };
+  
   return (
-    <div className="mt-4 p-4 border border-gray-300 rounded bg-white text-gray-900">
-      <b>附件二：設備交付確認單</b><br/>
-      - 承租人：{order[5]}<br/>
-      - 身分證字號：{idNumber || '尚未填寫'}<br/>
-      - 聯絡電話：{phoneNumber || '尚未填寫'}<br/>
-      - 設備型號：三星Galaxy S25 Ultra<br/>
-      - IMEI序號：{order[1]}<br/>
-      - 交付日期：{today.getFullYear()}年{today.getMonth() + 1}月{today.getDate()}日<br/>
-      - 初始狀況：外觀無明顯刮痕、無凹陷、無裂痕，功能正常，有特別狀態以照片拍攝為準<br/>
-      - 配件清單：
+    <div style={{
+      ...fontStyle,
+      marginTop: '16px',
+      padding: '16px',
+      border: '1px solid #d1d5db',
+      borderRadius: '8px',
+      backgroundColor: '#ffffff'
+    }}>
+      <span style={boldStyle}>附件二：設備交付確認單</span><br/>
+      <span style={fontStyle}>- 承租人：{order[5]}</span><br/>
+      <span style={fontStyle}>- 身分證字號：{idNumber || '尚未填寫'}</span><br/>
+      <span style={fontStyle}>- 聯絡電話：{phoneNumber || '尚未填寫'}</span><br/>
+      <span style={fontStyle}>- 設備型號：三星Galaxy S25 Ultra</span><br/>
+      <span style={fontStyle}>- IMEI序號：{order[1]}</span><br/>
+      <span style={fontStyle}>- 交付日期：{today.getFullYear()}年{today.getMonth() + 1}月{today.getDate()}日</span><br/>
+      <span style={fontStyle}>- 初始狀況：外觀無明顯刮痕、無凹陷、無裂痕，功能正常，有特別狀態以照片拍攝為準</span><br/>
+      <span style={fontStyle}>- 配件清單：
         {needCharger && '原廠充電頭，'}
         {needCable && '原廠USB-C充電線，'}
-        專用保護殼<br/>
-      - 押金模式：{depositMode === 'high' ? '高押金（免證件）' : depositMode === 'low' ? '低押金（需證件及預授權）' : '未選擇'}<br/>
-      - 甲方簽章：____________________　乙方簽章：____________________<br/>
+        專用保護殼</span><br/>
+      <span style={fontStyle}>- 押金模式：{depositMode === 'high' ? '高押金（免證件）' : depositMode === 'low' ? '低押金（需證件及預授權）' : '未選擇'}</span><br/>
+      <span style={fontStyle}>- 甲方簽章：____________________　乙方簽章：____________________</span><br/>
     </div>
   );
 }
@@ -377,121 +453,41 @@ export default function ContractPage() {
       setTimeout(async () => {
         const contractNode = document.getElementById('contract-content');
         if (contractNode) {
-          // 確保字體正確載入和應用
-          contractNode.style.fontFamily = 'Noto Sans TC, "Microsoft JhengHei", "PingFang TC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif';
-          contractNode.style.fontWeight = 'normal';
-          contractNode.style.lineHeight = '1.6';
-          contractNode.style.color = '#000000';
-          contractNode.style.backgroundColor = '#ffffff';
-          // @ts-ignore
-          contractNode.style.webkitFontSmoothing = 'antialiased';
-          // @ts-ignore
-          contractNode.style.mozOsxFontSmoothing = 'grayscale';
-          contractNode.style.textRendering = 'optimizeLegibility';
-          
-          // 對所有子元素也應用相同的字體
-          contractNode.querySelectorAll('*').forEach(el => {
-            const element = el as HTMLElement;
-            element.style.fontFamily = 'Noto Sans TC, "Microsoft JhengHei", "PingFang TC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif';
-            element.style.fontWeight = element.tagName === 'B' || element.tagName === 'STRONG' ? 'bold' : 'normal';
-            element.style.color = '#000000';
-            // @ts-ignore
-            element.style.webkitFontSmoothing = 'antialiased';
-            // @ts-ignore
-            element.style.mozOsxFontSmoothing = 'grayscale';
-            element.style.textRendering = 'optimizeLegibility';
-          });
-          
           // 等待字體載入完成
           await document.fonts.ready;
-          
-          // 額外等待確保字體完全載入
-          await new Promise(resolve => setTimeout(resolve, 500));
-          
-          const computedFont = window.getComputedStyle(contractNode).fontFamily;
-          console.log('應用的字體:', computedFont);
-          console.log('合約節點內容長度:', contractNode.textContent?.length);
-          console.log('合約節點高度:', contractNode.scrollHeight);
-          
-          if (!computedFont.includes('Noto Sans TC')) {
-            console.warn('Noto Sans TC 字型未正確載入，使用系統字型');
-          }
+          console.log('字體載入完成，開始生成PDF');
           
           try {
-            // 檢測是否為手機設備
-            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-            console.log('檢測設備類型:', isMobile ? '手機' : '電腦');
-            
             // 多頁正確分頁：每頁用 transform 位移內容
             const pageHeight = 1122; // px, A4
             const totalHeight = contractNode.scrollHeight;
             const pdf = new jsPDF({ unit: 'px', format: 'a4' });
             let rendered = 0;
             let pageNum = 0;
+            
+            console.log('合約總高度:', totalHeight);
+            
             while (rendered < totalHeight) {
               const pageDiv = document.createElement('div');
               pageDiv.style.width = contractNode.offsetWidth + 'px';
               pageDiv.style.height = pageHeight + 'px';
               pageDiv.style.overflow = 'hidden';
-              pageDiv.style.background = '#ffffff';
-              pageDiv.style.fontFamily = 'Noto Sans TC, "Microsoft JhengHei", "PingFang TC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif';
-              // @ts-ignore
-              pageDiv.style.webkitFontSmoothing = 'antialiased';
-              // @ts-ignore
-              pageDiv.style.mozOsxFontSmoothing = 'grayscale';
-              pageDiv.style.textRendering = 'optimizeLegibility';
+              pageDiv.style.backgroundColor = '#ffffff';
               
               // 只顯示本頁內容
               const inner = contractNode.cloneNode(true) as HTMLElement;
               inner.style.transform = `translateY(-${rendered}px)`;
-              inner.style.fontFamily = 'Noto Sans TC, "Microsoft JhengHei", "PingFang TC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif';
-              // @ts-ignore
-              inner.style.webkitFontSmoothing = 'antialiased';
-              // @ts-ignore
-              inner.style.mozOsxFontSmoothing = 'grayscale';
-              inner.style.textRendering = 'optimizeLegibility';
-              
-              // 對克隆的內容也應用字體設定
-              inner.querySelectorAll('*').forEach(el => {
-                const element = el as HTMLElement;
-                if (element.style) {
-                  element.style.fontFamily = 'Noto Sans TC, "Microsoft JhengHei", "PingFang TC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif';
-                  element.style.color = '#000000';
-                  // @ts-ignore
-                  element.style.webkitFontSmoothing = 'antialiased';
-                  // @ts-ignore
-                  element.style.mozOsxFontSmoothing = 'grayscale';
-                  element.style.textRendering = 'optimizeLegibility';
-                }
-              });
-              
               pageDiv.appendChild(inner);
               document.body.appendChild(pageDiv);
               
-              // 手機版需要更長的等待時間確保字體載入
-              const waitTime = isMobile ? 800 : 200;
-              await new Promise(resolve => setTimeout(resolve, waitTime));
+              // 等待渲染完成
+              await new Promise(resolve => setTimeout(resolve, 300));
               
-              console.log(`渲染第 ${pageNum + 1} 頁，高度: ${pageHeight}px，已渲染: ${rendered}px，設備: ${isMobile ? '手機' : '電腦'}`);
+              console.log(`渲染第 ${pageNum + 1} 頁`);
               
-              // 手機版使用更高的縮放比例和更穩定的設定
-              const canvasOptions = isMobile ? {
-                scale: 3, // 手機版使用更高縮放
-                useCORS: true,
-                backgroundColor: '#ffffff',
-                allowTaint: false,
-                foreignObjectRendering: false,
-                logging: true, // 手機版開啟日誌
-                width: pageDiv.offsetWidth,
-                height: pageHeight,
-                removeContainer: true,
-                imageTimeout: 5000, // 手機版更長的超時時間
-                ignoreElements: (element: Element) => {
-                  // 忽略可能導致問題的元素
-                  return element.tagName === 'SCRIPT' || element.tagName === 'STYLE';
-                }
-              } : {
-                scale: 2,
+              // 使用統一的高品質設定
+              const canvas = await html2canvas(pageDiv, {
+                scale: 2.5,
                 useCORS: true,
                 backgroundColor: '#ffffff',
                 allowTaint: false,
@@ -500,53 +496,7 @@ export default function ContractPage() {
                 width: pageDiv.offsetWidth,
                 height: pageHeight,
                 removeContainer: true,
-                imageTimeout: 0
-              };
-              
-              const canvas = await html2canvas(pageDiv, {
-                ...canvasOptions,
-                onclone: (clonedDoc) => {
-                  // 確保克隆的文件也有正確的字體
-                  const clonedElements = clonedDoc.querySelectorAll('*');
-                  clonedElements.forEach(el => {
-                    const element = el as HTMLElement;
-                    if (element.style) {
-                      element.style.fontFamily = 'Noto Sans TC, "Microsoft JhengHei", "PingFang TC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif';
-                      element.style.color = '#000000';
-                      element.style.fontSize = element.style.fontSize || '16px';
-                      // @ts-ignore
-                      element.style.webkitFontSmoothing = 'antialiased';
-                      // @ts-ignore  
-                      element.style.mozOsxFontSmoothing = 'grayscale';
-                      element.style.textRendering = 'optimizeLegibility';
-                    }
-                  });
-                  
-                  // 添加更完整的字體樣式到克隆文件
-                  const style = clonedDoc.createElement('style');
-                  style.textContent = `
-                    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap');
-                    * {
-                      font-family: 'Noto Sans TC', "Microsoft JhengHei", "PingFang TC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif !important;
-                      -webkit-font-smoothing: antialiased !important;
-                      -moz-osx-font-smoothing: grayscale !important;
-                      text-rendering: optimizeLegibility !important;
-                      color: #000000 !important;
-                    }
-                    body, html {
-                      font-family: 'Noto Sans TC', "Microsoft JhengHei", "PingFang TC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif !important;
-                    }
-                  `;
-                  clonedDoc.head.appendChild(style);
-                  
-                  // 手機版額外處理：確保字體載入
-                  if (isMobile) {
-                    const link = clonedDoc.createElement('link');
-                    link.href = 'https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap';
-                    link.rel = 'stylesheet';
-                    clonedDoc.head.appendChild(link);
-                  }
-                }
+                imageTimeout: 3000
               });
               document.body.removeChild(pageDiv);
               const imgData = canvas.toDataURL('image/png');
