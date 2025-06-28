@@ -2,29 +2,29 @@ import { NextRequest, NextResponse } from 'next/server';
 import { GoogleAuth } from 'google-auth-library';
 import { google } from 'googleapis';
 
-// 欄位對應配置
+// 根據實際資料排列的欄位對應配置
 const COLUMN_MAPPING = {
-  // A-R (0-17): 基本訂單資訊
+  // 基本訂單資訊（根據實際資料排列）
   ORDER_ID: 0,              // A: 訂單編號
-  CUSTOMER_NAME: 1,         // B: 客戶姓名
-  PHONE: 2,                 // C: 電話
-  EMAIL: 3,                 // D: 電子郵件
-  START_DATE: 4,            // E: 開始日期
-  END_DATE: 5,              // F: 結束日期
-  DAYS: 6,                  // G: 天數
-  PHONE_MODEL: 7,           // H: 手機型號
-  PHONE_IMEI: 8,            // I: IMEI
-  DAILY_RATE: 9,            // J: 日租金
-  TOTAL_AMOUNT: 10,         // K: 總金額
-  DISCOUNT_AMOUNT: 11,      // L: 折扣金額
+  PHONE_IMEI: 1,            // B: IMEI
+  START_DATE: 2,            // C: 開始日期
+  END_DATE: 3,              // D: 結束日期
+  AMOUNT: 4,                // E: 金額
+  CUSTOMER_NAME: 5,         // F: 客戶姓名
+  EMAIL: 6,                 // G: 電子郵件
+  PHONE: 7,                 // H: 電話
+  PAYMENT_STATUS: 8,        // I: 付款狀態
+  PAYMENT_TIME: 9,          // J: 付款時間
+  NOTES1: 10,               // K: 備註1
+  QUANTITY: 11,             // L: 數量
   FINAL_AMOUNT: 12,         // M: 最終金額
-  PAYMENT_STATUS: 13,       // N: 付款狀態
-  PAYMENT_TIME: 14,         // O: 付款時間
-  RETURN_STATUS: 15,        // P: 歸還狀態
-  RETURN_TIME: 16,          // Q: 歸還時間
-  NOTES: 17,                // R: 備註
+  NOTES2: 13,               // N: 備註2
+  NOTES3: 14,               // O: 備註3
+  INVOICE_NO: 15,           // P: 發票編號
+  INVOICE_STATUS: 16,       // Q: 發票狀態
+  INVOICE_TIME: 17,         // R: 發票時間
 
-  // S-Z (18-25): 保證金/預授權資訊
+  // S-Z: 保證金/預授權資訊
   DEPOSIT_TRADE_NO: 18,     // S: 保證金交易編號 (D=保證金, P=預授權)
   DEPOSIT_AMOUNT: 19,       // T: 保證金金額
   DEPOSIT_STATUS: 20,       // U: 保證金狀態
@@ -101,12 +101,34 @@ export async function POST(request: NextRequest) {
       const sheets = google.sheets({ version: 'v4', auth });
       const spreadsheetId = process.env.GOOGLE_SHEET_ID;
 
-      // 標準標題行
+      // 根據實際資料排列的標題行
       const standardHeaders = [
-        '訂單編號', '客戶姓名', '電話', '電子郵件', '開始日期', '結束日期', '天數', '手機型號', 
-        'IMEI', '日租金', '總金額', '折扣金額', '最終金額', '付款狀態', '付款時間', '歸還狀態', 
-        '歸還時間', '備註', '保證金交易編號', '保證金金額', '保證金狀態', '已退刷金額', 
-        '退刷時間', '損壞費用', 'ECPay交易編號', '額外備註'
+        '訂單編號',      // 0: RENT1750990100151
+        'IMEI',          // 1: 987654321098764  
+        '開始日期',      // 2: 2025-07-11
+        '結束日期',      // 3: 2025-07-11
+        '金額',          // 4: 650
+        '客戶姓名',      // 5: 黃子純
+        '電子郵件',      // 6: mavis0706@gmail.com
+        '電話',          // 7: 0912093673
+        '付款狀態',      // 8: PAID
+        '付款時間',      // 9: 2025/06/27 10:08:20
+        '備註1',         // 10: (空白)
+        '數量',          // 11: 0
+        '最終金額',      // 12: 650
+        '備註2',         // 13: (空白)
+        '備註3',         // 14: (空白)
+        '發票編號',      // 15: PJ95392317
+        '發票狀態',      // 16: 已開立
+        '發票時間',      // 17: 2025/06/27 18:10:32
+        '保證金交易編號', // 18: 100151P05799798
+        '保證金金額',    // 19: 100
+        '保證金狀態',    // 20: HELD
+        '已退刷金額',    // 21: (空白)
+        '退刷時間',      // 22: (空白)
+        '損壞費用',      // 23: (空白)
+        'ECPay交易編號', // 24: (空白)
+        '額外備註'       // 25: (空白)
       ];
 
       await sheets.spreadsheets.values.update({
