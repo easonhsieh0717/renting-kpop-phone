@@ -156,8 +156,26 @@ function renderContract(order: any, depositMode: string | null, needCable: boole
   const today = new Date();
   const formatDate = (d: Date) => `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
   return (
-    <div className="space-y-4 text-base leading-relaxed mb-8 text-gray-800">
-      <h2 className="text-xl font-bold mb-2 text-gray-900">三星Galaxy S25 Ultra手機租賃契約書</h2>
+    <div 
+      className="space-y-4 text-base leading-relaxed mb-8 text-gray-800"
+      style={{
+        fontFamily: 'Noto Sans TC, "Microsoft JhengHei", "PingFang TC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif',
+        WebkitFontSmoothing: 'antialiased',
+        MozOsxFontSmoothing: 'grayscale',
+        textRendering: 'optimizeLegibility',
+        color: '#000000'
+      }}
+    >
+      <h2 
+        className="text-xl font-bold mb-2 text-gray-900"
+        style={{
+          fontFamily: 'Noto Sans TC, "Microsoft JhengHei", "PingFang TC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif',
+          fontWeight: 'bold',
+          color: '#000000'
+        }}
+      >
+        三星Galaxy S25 Ultra手機租賃契約書
+      </h2>
       <b>第一條 租賃標的</b><br/>
       1. <b>出租人（甲方）：</b> 愛時代國際股份有限公司<br/>
       2. <b>承租人（乙方）：</b> {order[5]}<br/>
@@ -360,18 +378,28 @@ export default function ContractPage() {
         const contractNode = document.getElementById('contract-content');
         if (contractNode) {
           // 確保字體正確載入和應用
-          contractNode.style.fontFamily = 'Noto Sans TC, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+          contractNode.style.fontFamily = 'Noto Sans TC, "Microsoft JhengHei", "PingFang TC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif';
           contractNode.style.fontWeight = 'normal';
           contractNode.style.lineHeight = '1.6';
           contractNode.style.color = '#000000';
           contractNode.style.backgroundColor = '#ffffff';
+          // @ts-ignore
+          contractNode.style.webkitFontSmoothing = 'antialiased';
+          // @ts-ignore
+          contractNode.style.mozOsxFontSmoothing = 'grayscale';
+          contractNode.style.textRendering = 'optimizeLegibility';
           
           // 對所有子元素也應用相同的字體
           contractNode.querySelectorAll('*').forEach(el => {
             const element = el as HTMLElement;
-            element.style.fontFamily = 'Noto Sans TC, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+            element.style.fontFamily = 'Noto Sans TC, "Microsoft JhengHei", "PingFang TC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif';
             element.style.fontWeight = element.tagName === 'B' || element.tagName === 'STRONG' ? 'bold' : 'normal';
             element.style.color = '#000000';
+            // @ts-ignore
+            element.style.webkitFontSmoothing = 'antialiased';
+            // @ts-ignore
+            element.style.mozOsxFontSmoothing = 'grayscale';
+            element.style.textRendering = 'optimizeLegibility';
           });
           
           // 等待字體載入完成
@@ -418,24 +446,43 @@ export default function ContractPage() {
               console.log(`渲染第 ${pageNum + 1} 頁，高度: ${pageHeight}px，已渲染: ${rendered}px`);
               
               const canvas = await html2canvas(pageDiv, {
-                scale: 1.5,
+                scale: 2,
                 useCORS: true,
                 backgroundColor: '#ffffff',
-                allowTaint: true,
+                allowTaint: false,
                 foreignObjectRendering: false,
-                logging: true,
+                logging: false,
                 width: pageDiv.offsetWidth,
                 height: pageHeight,
+                removeContainer: true,
+                imageTimeout: 0,
                 onclone: (clonedDoc) => {
                   // 確保克隆的文件也有正確的字體
                   const clonedElements = clonedDoc.querySelectorAll('*');
                   clonedElements.forEach(el => {
                     const element = el as HTMLElement;
                     if (element.style) {
-                      element.style.fontFamily = 'Noto Sans TC, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+                      element.style.fontFamily = 'Noto Sans TC, "Microsoft JhengHei", "PingFang TC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif';
                       element.style.color = '#000000';
+                      // @ts-ignore
+                      element.style.webkitFontSmoothing = 'antialiased';
+                      // @ts-ignore  
+                      element.style.mozOsxFontSmoothing = 'grayscale';
+                      element.style.textRendering = 'optimizeLegibility';
                     }
                   });
+                  
+                  // 添加字體樣式到克隆文件
+                  const style = clonedDoc.createElement('style');
+                  style.textContent = `
+                    * {
+                      font-family: 'Noto Sans TC', "Microsoft JhengHei", "PingFang TC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif !important;
+                      -webkit-font-smoothing: antialiased !important;
+                      -moz-osx-font-smoothing: grayscale !important;
+                      text-rendering: optimizeLegibility !important;
+                    }
+                  `;
+                  clonedDoc.head.appendChild(style);
                 }
               });
               document.body.removeChild(pageDiv);
@@ -917,26 +964,30 @@ async function addWatermark(base64: string, text: string): Promise<string> {
         // 繪製原始圖片
         ctx.drawImage(img, 0, 0);
         
-        // 判斷設備類型並設定字體大小
+        // 根據圖片解析度自動計算字體大小
         let fontSize;
         
-        // 檢查 User Agent 來判斷設備類型
-        const userAgent = navigator.userAgent.toLowerCase();
-        const isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
-        const isTablet = /ipad|android(?!.*mobile)/i.test(userAgent);
+        // 計算圖片的總像素數
+        const totalPixels = img.width * img.height;
+        const maxDimension = Math.max(img.width, img.height);
         
-        console.log('設備判斷 - User Agent:', userAgent);
-        console.log('設備判斷 - isMobile:', isMobile, 'isTablet:', isTablet);
         console.log('圖片尺寸:', img.width, 'x', img.height);
+        console.log('總像素數:', totalPixels);
+        console.log('最大尺寸:', maxDimension);
         
-        if (isMobile && !isTablet) {
-          // 手機拍攝：字體大小除以4
-          fontSize = Math.max(18, Math.min(36, Math.max(img.width, img.height) / 20));
-          console.log('判斷為手機設備，使用小字體:', fontSize);
+        // 根據圖片解析度判斷是手機拍攝還是電腦截圖
+        if (totalPixels > 2000000 && maxDimension > 2000) {
+          // 高解析度圖片（通常是手機拍攝）- 使用較大字體
+          fontSize = Math.max(60, Math.min(120, maxDimension / 15));
+          console.log('判斷為高解析度圖片（手機拍攝），使用大字體:', fontSize);
+        } else if (maxDimension < 1500) {
+          // 低解析度圖片（通常是電腦截圖或壓縮過的圖片）- 使用較小字體
+          fontSize = Math.max(24, Math.min(48, maxDimension / 25));
+          console.log('判斷為低解析度圖片（電腦截圖），使用小字體:', fontSize);
         } else {
-          // 電腦/平板：保持較大字體
-          fontSize = Math.max(72, Math.min(144, Math.max(img.width, img.height) / 5));
-          console.log('判斷為電腦/平板設備，使用大字體:', fontSize);
+          // 中等解析度 - 使用中等字體
+          fontSize = Math.max(36, Math.min(72, maxDimension / 20));
+          console.log('判斷為中等解析度圖片，使用中等字體:', fontSize);
         }
         
         ctx.font = `bold ${fontSize}px Arial`;
