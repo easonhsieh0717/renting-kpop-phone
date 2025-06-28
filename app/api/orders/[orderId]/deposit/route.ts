@@ -97,10 +97,10 @@ async function getOrderInfo(orderId: string) {
 
     return {
       orderId: orderRow[0],
-      phoneModel: orderRow[1],
-      customerName: orderRow[5],
-      customerPhone: orderRow[7],
-      paymentStatus: orderRow[8], // I欄：付款狀態
+      customerName: orderRow[1],
+      phoneModel: orderRow[7], // H欄：手機型號
+      phoneImei: orderRow[8],  // I欄：IMEI
+      paymentStatus: orderRow[13], // N欄：付款狀態
       depositTransactionNo: orderRow[18], // S欄：保證金交易號
       depositAmount: parseInt(orderRow[19]) || 0, // T欄：保證金金額
       depositStatus: orderRow[20] || '', // U欄：保證金狀態
@@ -157,14 +157,8 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
     const depositAmount = requestedAmount; // 使用前端傳入的金額
 
     // 改善商品明細，明確標示為保證金預授權
-    const phoneImei = orderInfo.phoneModel; // 這是IMEI
-    
-    // 根據IMEI判斷手機型號（簡化版）
-    let actualPhoneModel = 'Samsung Galaxy手機';
-    if (phoneImei && phoneImei.length >= 15) {
-      // 可以根據IMEI前幾碼判斷型號，這裡先用通用名稱
-      actualPhoneModel = 'Samsung Galaxy S25 Ultra';
-    }
+    const phoneImei = orderInfo.phoneImei;
+    const actualPhoneModel = orderInfo.phoneModel || 'Samsung Galaxy S25 Ultra';
     
     // 簡化商品名稱：押金預授權
     const phoneModelShort = actualPhoneModel.replace('Samsung Galaxy ', '').replace(' Ultra', 'U');
