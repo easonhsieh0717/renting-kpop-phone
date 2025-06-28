@@ -101,6 +101,70 @@ async function updateDepositStatus(transactionNo: string, status: 'PAID' | 'FAIL
   }
 }
 
+// 更新預授權狀態
+async function updatePreAuthStatus(transactionNo: string, status: 'PREAUTH' | 'PREAUTH_FAILED', ecpayTradeNo?: string) {
+  try {
+    const sheets = await getGoogleSheetsClient();
+    const spreadsheetId = process.env.GOOGLE_SHEETS_SPREADSHEET_ID;
+    
+    if (!spreadsheetId) {
+      throw new Error('GOOGLE_SHEETS_SPREADSHEET_ID is not configured');
+    }
+
+    // 獲取所有資料來查找預授權交易號
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: 'A:BB',
+    });
+
+    const rows = response.data.values;
+    if (!rows) return;
+
+    // 查找包含該預授權交易號的行（V欄是保證金交易編號）
+    const rowIndex = rows.findIndex((row: any) => row[21] === transactionNo); // V欄索引是21
+    if (rowIndex === -1) {
+      console.log(`Pre-auth transaction ${transactionNo} not found`);
+      return;
+    }
+
+    // 更新預授權狀態（Y欄）和ECPay交易編號（W欄）
+    if (ecpayTradeNo) {
+      // 同時更新ECPay交易編號和狀態
+      await sheets.spreadsheets.values.batchUpdate({
+        spreadsheetId,
+        requestBody: {
+          valueInputOption: 'USER_ENTERED',
+          data: [
+            {
+              range: `W${rowIndex + 1}`, // W欄：ECPay交易編號
+              values: [[ecpayTradeNo]]
+            },
+            {
+              range: `Y${rowIndex + 1}`, // Y欄：保證金狀態
+              values: [[status]]
+            }
+          ]
+        }
+      });
+    } else {
+      // 只更新狀態
+      await sheets.spreadsheets.values.update({
+        spreadsheetId,
+        range: `Y${rowIndex + 1}`,
+        valueInputOption: 'USER_ENTERED',
+        requestBody: {
+          values: [[status]],
+        },
+      });
+    }
+
+    console.log(`Updated pre-auth status for transaction ${transactionNo} to ${status}${ecpayTradeNo ? ` with ECPay TradeNo: ${ecpayTradeNo}` : ''}`);
+  } catch (error) {
+    console.error('Error updating pre-auth status:', error);
+    throw error;
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
@@ -125,14 +189,19 @@ export async function POST(req: NextRequest) {
       }
       const { MerchantTradeNo: orderId, RtnCode, TradeNo: ecpayTradeNo } = data;
       
-      // 判斷是否為保證金交易（包含D字母的交易號）
-      const isDepositTransaction = orderId.includes('D');
+      // 判斷交易類型
+      const isDepositTransaction = orderId.includes('D'); // 舊的保證金交易（立即扣款）
+      const isPreAuthTransaction = orderId.includes('P'); // 新的預授權交易（延遲撥款）
       
       if (RtnCode === '1') {
         if (isDepositTransaction) {
           // 保證金交易成功，儲存ECPay交易編號
           await updateDepositStatus(orderId, 'PAID', ecpayTradeNo);
           console.log(`Deposit payment successful for transaction ${orderId}, ECPay TradeNo: ${ecpayTradeNo}, status updated.`);
+        } else if (isPreAuthTransaction) {
+          // 預授權交易成功，儲存ECPay交易編號並設定為PREAUTH狀態
+          await updatePreAuthStatus(orderId, 'PREAUTH', ecpayTradeNo);
+          console.log(`Pre-authorization successful for transaction ${orderId}, ECPay TradeNo: ${ecpayTradeNo}, status updated.`);
         } else {
           // 一般租金交易成功
           await updateReservationStatus(orderId, 'PAID');
@@ -143,6 +212,10 @@ export async function POST(req: NextRequest) {
           // 保證金交易失敗
           await updateDepositStatus(orderId, 'FAILED');
           console.log(`Deposit payment failed for transaction ${orderId}. RtnCode: ${RtnCode}`);
+        } else if (isPreAuthTransaction) {
+          // 預授權交易失敗
+          await updatePreAuthStatus(orderId, 'PREAUTH_FAILED');
+          console.log(`Pre-authorization failed for transaction ${orderId}. RtnCode: ${RtnCode}`);
         } else {
           // 一般租金交易失敗
           await updateReservationStatus(orderId, 'FAILED');

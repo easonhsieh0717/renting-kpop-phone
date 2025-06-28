@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { google } from 'googleapis';
-import { getECPayPaymentParams } from '@/lib/ecpay';
+import { getECPayPreAuthParams } from '@/lib/ecpay';
 import { formatDateTimeInTaipei } from '@/lib/utils';
 
 // Google Sheets 客戶端
@@ -102,7 +102,7 @@ async function getOrderInfo(orderId: string) {
   }
 }
 
-// POST: 創建保證金收款訂單
+// POST: 創建保證金預授權訂單（使用HoldTradeAMT）
 export async function POST(req: NextRequest, { params }: { params: { orderId: string } }) {
   try {
     const { orderId } = params;
@@ -111,7 +111,7 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
     const body = await req.json();
     const requestedAmount = body.amount || 30000;
     
-    console.log(`Creating deposit payment for order ${orderId}, amount: ${requestedAmount}`);
+    console.log(`Creating deposit pre-authorization for order ${orderId}, amount: ${requestedAmount}`);
 
     // 獲取訂單資訊
     const orderInfo = await getOrderInfo(orderId);
@@ -127,11 +127,11 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
     if (orderInfo.depositTransactionNo) {
       return NextResponse.json({
         success: false,
-        message: '此訂單已經收取過保證金'
+        message: '此訂單已經建立過保證金預授權'
       }, { status: 400 });
     }
 
-    // 準備ECPay付款參數
+    // 準備ECPay預授權參數
     const merchantID = process.env.ECPAY_MERCHANT_ID || '3383324';
     const hashKey = process.env.ECPAY_HASH_KEY!;
     const hashIV = process.env.ECPAY_HASH_IV!;
@@ -140,14 +140,14 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
       throw new Error('ECPay credentials not configured');
     }
 
-    // 生成保證金訂單編號 (ECPay限制20字元)
-    // 使用訂單號後6碼 + D + 時間戳後8碼
+    // 生成保證金預授權訂單編號 (ECPay限制20字元)
+    // 使用訂單號後6碼 + P(PreAuth) + 時間戳後8碼
     const orderSuffix = orderId.slice(-6);
     const timestamp = Date.now().toString().slice(-8);
-    const depositOrderId = `${orderSuffix}D${timestamp}`;
+    const preAuthOrderId = `${orderSuffix}P${timestamp}`;
     const depositAmount = requestedAmount; // 使用前端傳入的金額
 
-    // 改善商品明細，明確標示為保證金/押金
+    // 改善商品明細，明確標示為保證金預授權
     const phoneImei = orderInfo.phoneModel; // 這是IMEI
     
     // 根據IMEI判斷手機型號（簡化版）
@@ -157,11 +157,12 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
       actualPhoneModel = 'Samsung Galaxy S25 Ultra';
     }
     
-    // 更明確的商品名稱：強調這是保證金/押金
-    const itemName = `【手機租賃保證金】${actualPhoneModel}-IMEI:${phoneImei}-客戶:${orderInfo.customerName}`;
+    // 更明確的商品名稱：強調這是保證金預授權（不會立即扣款）
+    const itemName = `【手機租賃保證金預授權】${actualPhoneModel}-IMEI:${phoneImei}-客戶:${orderInfo.customerName}`;
 
-    const paymentParams = getECPayPaymentParams({
-      merchantTradeNo: depositOrderId,
+    // 使用新的預授權函數（包含HoldTradeAMT參數）
+    const paymentParams = getECPayPreAuthParams({
+      merchantTradeNo: preAuthOrderId,
       totalAmount: depositAmount,
       itemName: itemName,
       merchantID,
@@ -169,8 +170,8 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
       hashIV
     });
 
-    // 更新Google Sheet記錄保證金交易號
-    await updateDepositTransactionInSheet(orderId, depositOrderId, depositAmount);
+    // 更新Google Sheet記錄保證金預授權交易號
+    await updateDepositTransactionInSheet(orderId, preAuthOrderId, depositAmount);
 
     // 準備ECPay表單URL
     const isProduction = merchantID === '3383324';
@@ -180,11 +181,12 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
 
     return NextResponse.json({
       success: true,
-      message: '保證金收款訂單已建立',
+      message: '保證金預授權訂單已建立（不會立即扣款）',
       paymentParams,
       ecpayUrl,
-      depositOrderId,
+      preAuthOrderId,
       depositAmount,
+      isPreAuth: true, // 標示這是預授權
       orderInfo: {
         orderId: orderInfo.orderId,
         customerName: orderInfo.customerName,
@@ -193,10 +195,10 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
     });
 
   } catch (error: any) {
-    console.error('Create deposit payment error:', error);
+    console.error('Create deposit pre-authorization error:', error);
     return NextResponse.json({
       success: false,
-      message: error.message || '建立保證金收款失敗'
+      message: error.message || '建立保證金預授權失敗'
     }, { status: 500 });
   }
 }

@@ -12,6 +12,7 @@ interface ECPayPaymentData {
   ChoosePayment: string;
   EncryptType: number;
   ClientBackURL: string;
+  HoldTradeAMT?: number;
   CheckMacValue?: string;
 }
 
@@ -55,7 +56,8 @@ export function getECPayPaymentParams({
   itemName, 
   merchantID, 
   hashKey, 
-  hashIV 
+  hashIV,
+  holdTradeAmount
 }: {
   merchantTradeNo: string;
   totalAmount: number;
@@ -63,11 +65,12 @@ export function getECPayPaymentParams({
   merchantID: string;
   hashKey: string;
   hashIV: string;
+  holdTradeAmount?: number;
 }) {
   const tradeDate = new Date();
   const formattedDate = `${tradeDate.getFullYear()}/${String(tradeDate.getMonth() + 1).padStart(2, '0')}/${String(tradeDate.getDate()).padStart(2, '0')} ${String(tradeDate.getHours()).padStart(2, '0')}:${String(tradeDate.getMinutes()).padStart(2, '0')}:${String(tradeDate.getSeconds()).padStart(2, '0')}`;
 
-  const params = {
+  const params: any = {
     MerchantID: merchantID,
     MerchantTradeNo: merchantTradeNo,
     MerchantTradeDate: formattedDate,
@@ -81,7 +84,10 @@ export function getECPayPaymentParams({
     ClientBackURL: `${process.env.NEXT_PUBLIC_SITE_URL}`,
   };
 
-  // 使用統一的CheckMacValue生成方法
+  if (holdTradeAmount && holdTradeAmount > 0) {
+    params.HoldTradeAMT = holdTradeAmount;
+  }
+
   const checkMacValue = generateCheckMacValue(params as Omit<ECPayPaymentData, 'CheckMacValue'>, hashKey, hashIV);
 
   return {
@@ -264,6 +270,146 @@ export async function callECPayRefundAPI({
     };
   } catch (error) {
     console.error('ECPay退刷API呼叫失敗:', error);
+    throw error;
+  }
+}
+
+// 新增：專門用於保證金預授權的函數
+export function getECPayPreAuthParams({ 
+  merchantTradeNo, 
+  totalAmount, 
+  itemName, 
+  merchantID, 
+  hashKey, 
+  hashIV
+}: {
+  merchantTradeNo: string;
+  totalAmount: number;
+  itemName: string;
+  merchantID: string;
+  hashKey: string;
+  hashIV: string;
+}) {
+  const tradeDate = new Date();
+  const formattedDate = `${tradeDate.getFullYear()}/${String(tradeDate.getMonth() + 1).padStart(2, '0')}/${String(tradeDate.getDate()).padStart(2, '0')} ${String(tradeDate.getHours()).padStart(2, '0')}:${String(tradeDate.getMinutes()).padStart(2, '0')}:${String(tradeDate.getSeconds()).padStart(2, '0')}`;
+
+  const params = {
+    MerchantID: merchantID,
+    MerchantTradeNo: merchantTradeNo,
+    MerchantTradeDate: formattedDate,
+    PaymentType: 'aio',
+    TotalAmount: totalAmount,
+    TradeDesc: sanitizeForECPay('Mobile Rental Deposit PreAuth'),
+    ItemName: sanitizeForECPay(itemName),
+    ReturnURL: `${process.env.NEXT_PUBLIC_SITE_URL}/api/ecpay/return`,
+    ChoosePayment: 'Credit',
+    EncryptType: 1,
+    ClientBackURL: `${process.env.NEXT_PUBLIC_SITE_URL}`,
+    HoldTradeAMT: totalAmount,
+  };
+
+  const checkMacValue = generateCheckMacValue(params as Omit<ECPayPaymentData, 'CheckMacValue'>, hashKey, hashIV);
+
+  return {
+    ...params,
+    CheckMacValue: checkMacValue,
+  };
+}
+
+// 新增：ECPay預授權請款API功能
+export function getECPayCaptureParams({
+  merchantTradeNo,
+  tradeNo,
+  captureAmount,
+  merchantID,
+  hashKey,
+  hashIV
+}: {
+  merchantTradeNo: string;
+  tradeNo: string;
+  captureAmount: number;
+  merchantID: string;
+  hashKey: string;
+  hashIV: string;
+}) {
+  const params = {
+    MerchantID: merchantID,
+    MerchantTradeNo: merchantTradeNo,
+    TradeNo: tradeNo,
+    Action: 'C', // C=請款(Capture)
+    TotalAmount: captureAmount
+  };
+
+  // 生成CheckMacValue
+  const sortedData = Object.entries(params)
+    .sort((a, b) => a[0].toLowerCase().localeCompare(b[0].toLowerCase()))
+    .map(([key, value]) => `${key}=${value}`)
+    .join('&');
+
+  const hashString = `HashKey=${hashKey}&${sortedData}&HashIV=${hashIV}`;
+  const encodedString = ecpayUrlEncode(hashString).toLowerCase();
+  const checkMacValue = crypto.createHash('sha256').update(encodedString).digest('hex').toUpperCase();
+
+  return {
+    ...params,
+    CheckMacValue: checkMacValue,
+  };
+}
+
+// 呼叫ECPay預授權請款API
+export async function callECPayCaptureAPI({
+  merchantTradeNo,
+  tradeNo,
+  captureAmount,
+  merchantID,
+  hashKey,
+  hashIV,
+  isProduction = false
+}: {
+  merchantTradeNo: string;
+  tradeNo: string;
+  captureAmount: number;
+  merchantID: string;
+  hashKey: string;
+  hashIV: string;
+  isProduction?: boolean;
+}) {
+  const apiUrl = isProduction 
+    ? 'https://payment.ecpay.com.tw/CreditDetail/DoAction'
+    : 'https://payment-stage.ecpay.com.tw/CreditDetail/DoAction';
+
+  const params = getECPayCaptureParams({
+    merchantTradeNo,
+    tradeNo,
+    captureAmount,
+    merchantID,
+    hashKey,
+    hashIV
+  });
+
+  try {
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams(params as any).toString(),
+    });
+
+    const result = await response.text();
+    
+    // 解析回傳結果
+    const resultParams = new URLSearchParams(result);
+    return {
+      MerchantID: resultParams.get('MerchantID'),
+      MerchantTradeNo: resultParams.get('MerchantTradeNo'),
+      TradeNo: resultParams.get('TradeNo'),
+      RtnCode: parseInt(resultParams.get('RtnCode') || '0'),
+      RtnMsg: resultParams.get('RtnMsg'),
+      success: parseInt(resultParams.get('RtnCode') || '0') === 1
+    };
+  } catch (error) {
+    console.error('ECPay預授權請款API呼叫失敗:', error);
     throw error;
   }
 } 
