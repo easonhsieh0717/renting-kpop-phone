@@ -128,19 +128,19 @@ async function updateVoidStatusWithAllFields(orderId: string, status: string, re
             valueInputOption: 'USER_ENTERED',
             data: [
               {
-                range: `U${rowIndex}`, // U欄：保證金狀態
+                range: `reservations!U${rowIndex}`, // U欄：保證金狀態
                 values: [[status]]
               },
               {
-                range: `V${rowIndex}`, // V欄：已退刷金額
+                range: `reservations!V${rowIndex}`, // V欄：已退刷金額
                 values: [[refundAmount.toString()]]
               },
               {
-                range: `W${rowIndex}`, // W欄：退刷時間
+                range: `reservations!W${rowIndex}`, // W欄：退刷時間
                 values: [[updateTime]]
               },
               {
-                range: `X${rowIndex}`, // X欄：損壞費用
+                range: `reservations!X${rowIndex}`, // X欄：損壞費用
                 values: [['0']]
               }
             ]
@@ -153,7 +153,7 @@ async function updateVoidStatusWithAllFields(orderId: string, status: string, re
         // 驗證更新結果
         const verifyResponse = await sheets.spreadsheets.values.get({
           spreadsheetId,
-          range: `U${rowIndex}:X${rowIndex}`, // 驗證U到X欄位
+          range: `reservations!U${rowIndex}:X${rowIndex}`, // 驗證U到X欄位
         });
         
         const verifyData = verifyResponse.data.values?.[0] || [];
