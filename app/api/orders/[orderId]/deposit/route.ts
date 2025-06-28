@@ -162,9 +162,10 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
     const itemName = `${phoneModelName}押金預授權-IMEI:${phoneImei}`;
 
     // 根據環境設定參數
-    const isProduction = process.env.VERCEL_ENV === 'production';
-    console.log('Environment:', {
-      VERCEL_ENV: process.env.VERCEL_ENV,
+    const isProduction = process.env.ECPAY_MERCHANT_ID === '3383324';
+    
+    console.log('Environment determined by ECPAY_MERCHANT_ID:', {
+      ECPAY_MERCHANT_ID: process.env.ECPAY_MERCHANT_ID,
       isProduction
     });
 
