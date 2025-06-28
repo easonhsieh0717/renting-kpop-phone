@@ -135,8 +135,11 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
       throw new Error('ECPay credentials not configured');
     }
 
-    // 生成保證金訂單編號
-    const depositOrderId = `${orderId}_DEPOSIT_${Date.now()}`;
+    // 生成保證金訂單編號 (ECPay限制20字元)
+    // 使用訂單號後6碼 + D + 時間戳後8碼
+    const orderSuffix = orderId.slice(-6);
+    const timestamp = Date.now().toString().slice(-8);
+    const depositOrderId = `${orderSuffix}D${timestamp}`;
     const depositAmount = 30000;
 
     const paymentParams = getECPayPaymentParams({
