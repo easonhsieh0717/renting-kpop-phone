@@ -64,7 +64,19 @@ async function getPreAuthOrders() {
       const depositStatus = row[20] || ''; // U欄：保證金狀態
       const captureAmount = parseInt(row[21]) || 0; // V欄：已請款金額
       
-      console.log(`[PREAUTH_DEBUG] 找到預授權訂單: ${orderId}, 狀態: ${depositStatus}, 交易編號: ${depositTransactionNo}`);
+      // 特別針對RENT1750815760740進行詳細調試
+      if (orderId === 'RENT1750815760740') {
+        console.log(`[PREAUTH_DEBUG] ===== 詳細調試 ${orderId} =====`);
+        console.log(`[PREAUTH_DEBUG] T欄原始值: "${row[19]}", 類型: ${typeof row[19]}`);
+        console.log(`[PREAUTH_DEBUG] 轉換後金額: ${depositAmount}`);
+        console.log(`[PREAUTH_DEBUG] V欄原始值: "${row[21]}", 類型: ${typeof row[21]}`);
+        console.log(`[PREAUTH_DEBUG] 轉換後已請款金額: ${captureAmount}`);
+        console.log(`[PREAUTH_DEBUG] U欄狀態: "${depositStatus}"`);
+        console.log(`[PREAUTH_DEBUG] 完整行資料:`, row.slice(18, 26)); // S到Z欄
+        console.log(`[PREAUTH_DEBUG] ================================`);
+      }
+      
+      console.log(`[PREAUTH_DEBUG] 找到預授權訂單: ${orderId}, 金額: ${depositAmount}, 狀態: ${depositStatus}, 交易編號: ${depositTransactionNo}`);
       
       // 返回所有預授權訂單（包括VOID狀態，讓用戶看到完整狀況）
       orders.push({
@@ -81,8 +93,6 @@ async function getPreAuthOrders() {
           captureAmount
         }
       });
-      
-      console.log(`[PREAUTH_DEBUG] 找到預授權訂單: ${orderId}, 狀態: ${depositStatus}, 交易編號: ${depositTransactionNo}`);
     }
   }
 
