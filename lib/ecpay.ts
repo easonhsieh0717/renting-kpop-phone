@@ -316,8 +316,8 @@ export function getECPayPreAuthParams({
     ChoosePayment: 'Credit',
     EncryptType: 1,
     ClientBackURL: `${process.env.NEXT_PUBLIC_SITE_URL}`,
-    HoldTradeAMT: 1,
-    MerchantName: '伊森不累' // 使用綠界後台實際註冊的商店名稱（不進行任何編碼處理）
+    HoldTradeAMT: 1
+    // 暫時移除 MerchantName，檢查是否是預授權功能問題
   };
 
   if (platformID) {
