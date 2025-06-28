@@ -418,6 +418,10 @@ export default function ContractPage() {
           }
           
           try {
+            // 檢測是否為手機設備
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            console.log('檢測設備類型:', isMobile ? '手機' : '電腦');
+            
             // 多頁正確分頁：每頁用 transform 位移內容
             const pageHeight = 1122; // px, A4
             const totalHeight = contractNode.scrollHeight;
@@ -429,23 +433,64 @@ export default function ContractPage() {
               pageDiv.style.width = contractNode.offsetWidth + 'px';
               pageDiv.style.height = pageHeight + 'px';
               pageDiv.style.overflow = 'hidden';
-              pageDiv.style.background = '#fff';
-              pageDiv.style.fontFamily = 'Noto Sans TC, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+              pageDiv.style.background = '#ffffff';
+              pageDiv.style.fontFamily = 'Noto Sans TC, "Microsoft JhengHei", "PingFang TC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif';
+              // @ts-ignore
+              pageDiv.style.webkitFontSmoothing = 'antialiased';
+              // @ts-ignore
+              pageDiv.style.mozOsxFontSmoothing = 'grayscale';
+              pageDiv.style.textRendering = 'optimizeLegibility';
               
               // 只顯示本頁內容
               const inner = contractNode.cloneNode(true) as HTMLElement;
               inner.style.transform = `translateY(-${rendered}px)`;
-              inner.style.fontFamily = 'Noto Sans TC, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+              inner.style.fontFamily = 'Noto Sans TC, "Microsoft JhengHei", "PingFang TC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif';
+              // @ts-ignore
+              inner.style.webkitFontSmoothing = 'antialiased';
+              // @ts-ignore
+              inner.style.mozOsxFontSmoothing = 'grayscale';
+              inner.style.textRendering = 'optimizeLegibility';
+              
+              // 對克隆的內容也應用字體設定
+              inner.querySelectorAll('*').forEach(el => {
+                const element = el as HTMLElement;
+                if (element.style) {
+                  element.style.fontFamily = 'Noto Sans TC, "Microsoft JhengHei", "PingFang TC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif';
+                  element.style.color = '#000000';
+                  // @ts-ignore
+                  element.style.webkitFontSmoothing = 'antialiased';
+                  // @ts-ignore
+                  element.style.mozOsxFontSmoothing = 'grayscale';
+                  element.style.textRendering = 'optimizeLegibility';
+                }
+              });
               
               pageDiv.appendChild(inner);
               document.body.appendChild(pageDiv);
               
-              // 等待一小段時間讓字體渲染完成
-              await new Promise(resolve => setTimeout(resolve, 200));
+              // 手機版需要更長的等待時間確保字體載入
+              const waitTime = isMobile ? 800 : 200;
+              await new Promise(resolve => setTimeout(resolve, waitTime));
               
-              console.log(`渲染第 ${pageNum + 1} 頁，高度: ${pageHeight}px，已渲染: ${rendered}px`);
+              console.log(`渲染第 ${pageNum + 1} 頁，高度: ${pageHeight}px，已渲染: ${rendered}px，設備: ${isMobile ? '手機' : '電腦'}`);
               
-              const canvas = await html2canvas(pageDiv, {
+              // 手機版使用更高的縮放比例和更穩定的設定
+              const canvasOptions = isMobile ? {
+                scale: 3, // 手機版使用更高縮放
+                useCORS: true,
+                backgroundColor: '#ffffff',
+                allowTaint: false,
+                foreignObjectRendering: false,
+                logging: true, // 手機版開啟日誌
+                width: pageDiv.offsetWidth,
+                height: pageHeight,
+                removeContainer: true,
+                imageTimeout: 5000, // 手機版更長的超時時間
+                ignoreElements: (element: Element) => {
+                  // 忽略可能導致問題的元素
+                  return element.tagName === 'SCRIPT' || element.tagName === 'STYLE';
+                }
+              } : {
                 scale: 2,
                 useCORS: true,
                 backgroundColor: '#ffffff',
@@ -455,7 +500,11 @@ export default function ContractPage() {
                 width: pageDiv.offsetWidth,
                 height: pageHeight,
                 removeContainer: true,
-                imageTimeout: 0,
+                imageTimeout: 0
+              };
+              
+              const canvas = await html2canvas(pageDiv, {
+                ...canvasOptions,
                 onclone: (clonedDoc) => {
                   // 確保克隆的文件也有正確的字體
                   const clonedElements = clonedDoc.querySelectorAll('*');
@@ -464,6 +513,7 @@ export default function ContractPage() {
                     if (element.style) {
                       element.style.fontFamily = 'Noto Sans TC, "Microsoft JhengHei", "PingFang TC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif';
                       element.style.color = '#000000';
+                      element.style.fontSize = element.style.fontSize || '16px';
                       // @ts-ignore
                       element.style.webkitFontSmoothing = 'antialiased';
                       // @ts-ignore  
@@ -472,17 +522,30 @@ export default function ContractPage() {
                     }
                   });
                   
-                  // 添加字體樣式到克隆文件
+                  // 添加更完整的字體樣式到克隆文件
                   const style = clonedDoc.createElement('style');
                   style.textContent = `
+                    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap');
                     * {
                       font-family: 'Noto Sans TC', "Microsoft JhengHei", "PingFang TC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif !important;
                       -webkit-font-smoothing: antialiased !important;
                       -moz-osx-font-smoothing: grayscale !important;
                       text-rendering: optimizeLegibility !important;
+                      color: #000000 !important;
+                    }
+                    body, html {
+                      font-family: 'Noto Sans TC', "Microsoft JhengHei", "PingFang TC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif !important;
                     }
                   `;
                   clonedDoc.head.appendChild(style);
+                  
+                  // 手機版額外處理：確保字體載入
+                  if (isMobile) {
+                    const link = clonedDoc.createElement('link');
+                    link.href = 'https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap';
+                    link.rel = 'stylesheet';
+                    clonedDoc.head.appendChild(link);
+                  }
                 }
               });
               document.body.removeChild(pageDiv);
