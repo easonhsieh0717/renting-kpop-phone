@@ -26,17 +26,29 @@ export default function PreAuthManagementPage() {
   const [selectedOrder, setSelectedOrder] = useState<string>('');
   const [captureAmount, setCaptureAmount] = useState<number>(0);
   const [showCaptureModal, setShowCaptureModal] = useState(false);
+  const [lastUpdate, setLastUpdate] = useState<string>('');
 
-  // 載入訂單資料
+  // 載入訂單資料 - 確保不使用緩存，每次都從Google Sheets讀取最新資料
   const loadOrders = async () => {
     setLoading(true);
     try {
-      // 這裡需要實作一個API來獲取所有有預授權的訂單
-      const response = await fetch('/api/admin/preauth-orders');
+      // 添加時間戳和no-cache headers確保每次都獲取最新資料
+      const timestamp = new Date().getTime();
+      const response = await fetch(`/api/admin/preauth-orders?t=${timestamp}`, {
+        method: 'GET',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
       const result = await response.json();
       
       if (result.success) {
         setOrders(result.data);
+        setLastUpdate(new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' }));
+        console.log(`[PREAUTH_MANAGEMENT] 載入了 ${result.data.length} 筆預授權訂單資料`);
+        setMessage(''); // 清除之前的錯誤訊息
       } else {
         setMessage(`載入失敗: ${result.message}`);
       }
@@ -150,8 +162,19 @@ export default function PreAuthManagementPage() {
   };
 
   useEffect(() => {
+    // 頁面載入時立即獲取最新資料
     loadOrders();
-  }, []);
+    
+    // 每30秒自動刷新一次，確保資料保持最新
+    const interval = setInterval(() => {
+      if (!loading) {
+        loadOrders();
+      }
+    }, 30000);
+    
+    // 清理定時器
+    return () => clearInterval(interval);
+  }, [loading]);
 
   return (
     <div className="max-w-6xl mx-auto py-8 px-4">
@@ -166,7 +189,7 @@ export default function PreAuthManagementPage() {
         </div>
       )}
 
-      <div className="mb-4 flex gap-4">
+      <div className="mb-4 flex gap-4 items-center">
         <button
           onClick={loadOrders}
           disabled={loading}
@@ -174,6 +197,11 @@ export default function PreAuthManagementPage() {
         >
           {loading ? '載入中...' : '重新載入'}
         </button>
+        {lastUpdate && (
+          <div className="text-sm text-gray-600">
+            最後更新：{lastUpdate} <span className="text-green-600">（直接從Google Sheets讀取，無緩存）</span>
+          </div>
+        )}
       </div>
 
       <div className="bg-white shadow-md rounded-lg overflow-hidden">

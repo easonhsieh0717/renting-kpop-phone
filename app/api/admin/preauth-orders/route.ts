@@ -76,18 +76,29 @@ async function getPreAuthOrders() {
   return orders;
 }
 
-// GET: 獲取所有預授權訂單
+// GET: 獲取所有預授權訂單 - 確保不使用緩存
 export async function GET(req: NextRequest) {
   try {
-    console.log('Getting all pre-auth orders');
+    console.log('[PREAUTH_ORDERS_API] 開始從Google Sheets獲取預授權訂單，確保不使用緩存');
 
     const orders = await getPreAuthOrders();
     
-    return NextResponse.json({
+    console.log(`[PREAUTH_ORDERS_API] 成功獲取 ${orders.length} 筆預授權訂單`);
+    
+    // 添加no-cache headers確保不緩存回應
+    const response = NextResponse.json({
       success: true,
       data: orders,
-      count: orders.length
+      count: orders.length,
+      timestamp: new Date().toISOString()
     });
+    
+    // 設定不緩存的headers
+    response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    response.headers.set('Pragma', 'no-cache');
+    response.headers.set('Expires', '0');
+    
+    return response;
 
   } catch (error: any) {
     console.error('Get pre-auth orders error:', error);
