@@ -363,19 +363,27 @@ export default function ContractPage() {
           contractNode.style.fontFamily = 'Noto Sans TC, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
           contractNode.style.fontWeight = 'normal';
           contractNode.style.lineHeight = '1.6';
+          contractNode.style.color = '#000000';
+          contractNode.style.backgroundColor = '#ffffff';
           
           // 對所有子元素也應用相同的字體
           contractNode.querySelectorAll('*').forEach(el => {
             const element = el as HTMLElement;
             element.style.fontFamily = 'Noto Sans TC, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
             element.style.fontWeight = element.tagName === 'B' || element.tagName === 'STRONG' ? 'bold' : 'normal';
+            element.style.color = '#000000';
           });
           
           // 等待字體載入完成
           await document.fonts.ready;
           
+          // 額外等待確保字體完全載入
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
           const computedFont = window.getComputedStyle(contractNode).fontFamily;
           console.log('應用的字體:', computedFont);
+          console.log('合約節點內容長度:', contractNode.textContent?.length);
+          console.log('合約節點高度:', contractNode.scrollHeight);
           
           if (!computedFont.includes('Noto Sans TC')) {
             console.warn('Noto Sans TC 字型未正確載入，使用系統字型');
@@ -405,15 +413,30 @@ export default function ContractPage() {
               document.body.appendChild(pageDiv);
               
               // 等待一小段時間讓字體渲染完成
-              await new Promise(resolve => setTimeout(resolve, 100));
+              await new Promise(resolve => setTimeout(resolve, 200));
+              
+              console.log(`渲染第 ${pageNum + 1} 頁，高度: ${pageHeight}px，已渲染: ${rendered}px`);
               
               const canvas = await html2canvas(pageDiv, {
-                scale: 2,
+                scale: 1.5,
                 useCORS: true,
-                backgroundColor: '#fff',
+                backgroundColor: '#ffffff',
                 allowTaint: true,
-                foreignObjectRendering: true,
-                logging: false
+                foreignObjectRendering: false,
+                logging: true,
+                width: pageDiv.offsetWidth,
+                height: pageHeight,
+                onclone: (clonedDoc) => {
+                  // 確保克隆的文件也有正確的字體
+                  const clonedElements = clonedDoc.querySelectorAll('*');
+                  clonedElements.forEach(el => {
+                    const element = el as HTMLElement;
+                    if (element.style) {
+                      element.style.fontFamily = 'Noto Sans TC, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+                      element.style.color = '#000000';
+                    }
+                  });
+                }
               });
               document.body.removeChild(pageDiv);
               const imgData = canvas.toDataURL('image/png');
@@ -425,15 +448,24 @@ export default function ContractPage() {
             const pdfData = pdf.output('dataurlstring');
             const maxSize = 3.5 * 1024 * 1024; // 3.5MB
             const chunks = splitBase64(pdfData, maxSize);
+            let allUploadsSuccessful = true;
+            
             for (let i = 0; i < chunks.length; i++) {
               console.log('PDF upload part', i + 1, 'size', chunks[i].length);
-              await fetch(`/api/orders/${orderId}/upload?part=${i + 1}&total=${chunks.length}`, {
+              const uploadResponse = await fetch(`/api/orders/${orderId}/upload?part=${i + 1}&total=${chunks.length}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ file: chunks[i], type: 'pdf' })
               });
+              
+              if (!uploadResponse.ok) {
+                allUploadsSuccessful = false;
+                console.error(`PDF upload part ${i + 1} failed:`, uploadResponse.status);
+                break;
+              }
             }
-            if (response.ok) {
+            
+            if (allUploadsSuccessful) {
               setIsUploading(false);
               alert("合約簽署完成！");
             } else {
