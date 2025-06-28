@@ -118,6 +118,12 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
     const orderId = params.orderId;
     const { depositAmount, isTest } = await req.json();
 
+    // --- 防禦性修正：確保金額為純整數 ---
+    const finalAmount = Math.round(Number(depositAmount));
+    if (isNaN(finalAmount) || finalAmount <= 0) {
+      return NextResponse.json({ success: false, message: `Invalid deposit amount: ${depositAmount}` }, { status: 400 });
+    }
+
     // 根據 orderId 獲取訂單詳細資訊
     const orderInfo = await getOrderInfo(orderId);
     
@@ -209,20 +215,20 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
 
     const paymentParams = getECPayPreAuthParams({
       merchantTradeNo: preAuthOrderId,
-      totalAmount: depositAmount,
+      totalAmount: finalAmount,
       itemName: itemName,
       merchantID,
       platformID,
       hashKey,
       hashIV,
-      holdTradeAmount: depositAmount,
+      holdTradeAmount: finalAmount,
       merchantName
     });
 
     console.log('Payment params:', paymentParams);
 
     // 更新Google Sheet記錄保證金預授權交易號
-    await updateDepositTransactionInSheet(orderId, preAuthOrderId, depositAmount);
+    await updateDepositTransactionInSheet(orderId, preAuthOrderId, finalAmount);
 
     // 準備ECPay表單URL
     const ecpayUrl = isProductionEnv 
@@ -235,7 +241,7 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
       paymentParams,
       ecpayUrl,
       preAuthOrderId,
-      depositAmount,
+      depositAmount: finalAmount,
       isPreAuth: true, // 標示這是預授權
       orderInfo: {
         orderId: orderInfo.orderId,
