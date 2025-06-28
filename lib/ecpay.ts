@@ -319,7 +319,7 @@ export function getECPayPreAuthParams({
     EncryptType: 1,
     ClientBackURL: `${process.env.NEXT_PUBLIC_SITE_URL}`,
     HoldTradeAMT: 1,
-    MerchantName: ecpayUrlEncode(sanitizeForECPay(merchantName).substring(0, 20))
+    MerchantName: sanitizeForECPay(merchantName).substring(0, 10) // 限制10個字符，不進行URL編碼
   };
 
   if (platformID) {
