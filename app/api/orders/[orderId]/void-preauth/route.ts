@@ -84,6 +84,8 @@ async function getPreAuthTransactionInfo(orderId: string) {
 
 // 更新預授權取消狀態
 async function updateVoidStatus(orderId: string, status: string) {
+  console.log(`[UPDATE_VOID_STATUS] 開始更新訂單 ${orderId} 的狀態為 ${status}`);
+  
   const sheets = await getGoogleSheetsClient();
   const spreadsheetId = process.env.GOOGLE_SHEET_ID;
 
@@ -97,15 +99,22 @@ async function updateVoidStatus(orderId: string, status: string) {
   });
 
   const rows = response.data.values || [];
+  console.log(`[UPDATE_VOID_STATUS] 總共有 ${rows.length} 行資料`);
   
   // 找到對應的訂單並更新
+  let found = false;
   for (let i = 1; i < rows.length; i++) {
     const row = rows[i];
     if (row[0] === orderId) {
       const rowIndex = i + 1;
+      found = true;
       
-              // 更新預授權狀態和取消時間
-        await sheets.spreadsheets.values.batchUpdate({
+      console.log(`[UPDATE_VOID_STATUS] 找到訂單在第 ${rowIndex} 行`);
+      console.log(`[UPDATE_VOID_STATUS] 更新範圍: U${rowIndex} (狀態), W${rowIndex} (時間)`);
+      
+      try {
+        // 更新預授權狀態和取消時間
+        const updateResult = await sheets.spreadsheets.values.batchUpdate({
           spreadsheetId,
           requestBody: {
             valueInputOption: 'USER_ENTERED',
@@ -121,9 +130,24 @@ async function updateVoidStatus(orderId: string, status: string) {
             ]
           }
         });
+        
+        console.log(`[UPDATE_VOID_STATUS] 更新成功:`, updateResult.status);
+        console.log(`[UPDATE_VOID_STATUS] 更新了 ${updateResult.data.totalUpdatedCells} 個儲存格`);
+      } catch (updateError: any) {
+        console.error(`[UPDATE_VOID_STATUS] 更新失敗:`, updateError);
+        throw updateError;
+      }
+      
       break;
     }
   }
+  
+  if (!found) {
+    console.error(`[UPDATE_VOID_STATUS] 未找到訂單 ${orderId}`);
+    throw new Error(`未找到訂單 ${orderId} 來更新狀態`);
+  }
+  
+  console.log(`[UPDATE_VOID_STATUS] 完成更新訂單 ${orderId} 的狀態`);
 }
 
 interface VoidRequest {
@@ -243,7 +267,24 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
 
     if (ecpayResult.success) {
       // 取消成功，更新狀態
-      await updateVoidStatus(orderId, 'VOID');
+      try {
+        await updateVoidStatus(orderId, 'VOID');
+        console.log(`[VOID_PREAUTH_SUCCESS] ECPay取消成功，Google Sheets也已更新`);
+      } catch (updateError: any) {
+        console.error(`[VOID_PREAUTH_WARNING] ECPay取消成功，但Google Sheets更新失敗:`, updateError);
+        // 即使Google Sheets更新失敗，ECPay已經成功取消，所以仍然回傳成功
+        return NextResponse.json({
+          success: true,
+          message: '預授權取消成功，但狀態更新失敗。請手動檢查。',
+          data: {
+            orderId,
+            voidAmount: preAuthInfo.depositAmount,
+            status: 'VOID',
+            ecpayResult,
+            updateWarning: updateError.message || '更新錯誤'
+          }
+        });
+      }
       
       return NextResponse.json({
         success: true,
@@ -257,7 +298,11 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
       });
     } else {
       // 取消失敗
-      await updateVoidStatus(orderId, 'VOID_FAILED');
+      try {
+        await updateVoidStatus(orderId, 'VOID_FAILED');
+      } catch (updateError: any) {
+        console.error(`[VOID_PREAUTH_ERROR] ECPay取消失敗，Google Sheets更新也失敗:`, updateError);
+      }
       
       return NextResponse.json({
         success: false,
