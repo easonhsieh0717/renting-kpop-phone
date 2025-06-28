@@ -159,16 +159,16 @@ function renderContract(order: any, depositMode: string | null, needCable: boole
     <div className="space-y-4 text-base leading-relaxed mb-8 text-gray-800">
       <h2 className="text-xl font-bold mb-2 text-gray-900">三星Galaxy S25 Ultra手機租賃契約書</h2>
       <b>第一條 租賃標的</b><br/>
-      1. <b>出租人（甲方）：</b> 伊森不累手機租借平台<br/>
+      1. <b>出租人（甲方）：</b> 愛時代國際股份有限公司<br/>
       2. <b>承租人（乙方）：</b> {order[5]}<br/>
       &nbsp;&nbsp;- <b>身分證字號：</b> {idNumber || '尚未填寫'}<br/>
       &nbsp;&nbsp;- <b>聯絡電話：</b> {phoneNumber || '尚未填寫'}<br/>
       3. <b>租賃設備：</b><br/>
       &nbsp;&nbsp;- 手機品牌與型號：三星Galaxy S25 Ultra<br/>
       &nbsp;&nbsp;- IMEI序號：{order[1]}<br/>
-      &nbsp;&nbsp;- 配件：原廠USB-C充電線、原廠盒裝、原廠保護殼（若提供）<br/>
+      &nbsp;&nbsp;- 配件：原廠USB-C充電線、專用保護殼（若提供）<br/>
       &nbsp;&nbsp;- 初始狀況：電池健康度95%，外觀無刮痕、無凹陷、無裂痕，功能正常，經雙方確認無既有瑕疵<br/>
-      &nbsp;&nbsp;- 清潔要求：乙方應保持設備清潔，歸還時不得有污漬、異味或殞損，否則甲方將收取清潔費用NT$500，於押金或預授權中扣除。<br/>
+      &nbsp;&nbsp;- 清潔要求：乙方應保持設備清潔，歸還時不得有污漬、異味或損壞，否則甲方將收取清潔費用NT$500，於押金或預授權中扣除。<br/>
       <b>第二條 租賃期間</b><br/>
       1. <b>租期：</b> 自{order[2]}起至{order[3]}止。<br/>
       2. <b>延租申請：</b> 乙方需於租期結束前24小時以書面（電子郵件或LINE官方帳號）通知甲方，經甲方書面同意後方可延租。延租費用依第三條規定計算。<br/>
@@ -240,8 +240,7 @@ function renderContract(order: any, depositMode: string | null, needCable: boole
       - 設備遺失：NT$43,900（依三星Galaxy S25 Ultra市場當日零售價為主）<br/>
       - 配件遺失：<br/>
       &nbsp;&nbsp;- 原廠USB-C充電線：NT$800<br/>
-      &nbsp;&nbsp;- 原廠保護殼：NT$1,000<br/>
-      &nbsp;&nbsp;- 原廠盒裝：NT$500<br/>
+      &nbsp;&nbsp;- 專用保護殼：NT$800<br/>
       - 其他損壞：依三星原廠授權維修中心報價單計算。<br/>
       {renderAttachment2(order, depositMode, needCable, needCharger, idNumber, phoneNumber)}
     </div>
@@ -263,7 +262,7 @@ function renderAttachment2(order: any, depositMode: string | null, needCable: bo
       - 配件清單：
         {needCharger && '原廠充電頭，'}
         {needCable && '原廠USB-C充電線，'}
-        原廠保護殼（標配）<br/>
+        專用保護殼（標配）<br/>
       - 押金模式：{depositMode === 'high' ? '高押金（免證件）' : depositMode === 'low' ? '低押金（需證件及預授權）' : '未選擇'}<br/>
       - 甲方簽章：____________________　乙方簽章：____________________<br/>
     </div>
