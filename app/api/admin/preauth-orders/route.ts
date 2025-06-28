@@ -30,15 +30,20 @@ async function getPreAuthOrders() {
   const rows = response.data.values || [];
   const orders = [];
 
+  console.log(`Found ${rows.length} rows in total`);
+  
   // 跳過標題行，從第二行開始
   for (let i = 1; i < rows.length; i++) {
     const row = rows[i];
     
     // 檢查是否有預授權交易編號（S欄）
     const depositTransactionNo = row[18] || ''; // S欄：保證金交易編號
+    const orderId = row[0] || '';
+    
+    console.log(`Row ${i}: OrderId=${orderId}, DepositTxnNo=${depositTransactionNo}`);
     
     if (depositTransactionNo && depositTransactionNo.includes('P')) { // P代表PreAuth
-      const orderId = row[0] || '';
+      console.log(`Found preauth order: ${orderId}`);
       const customerName = row[5] || ''; // F欄：客戶姓名
       const phoneModel = row[1] || ''; // B欄：手機ID
       const paymentStatus = row[8] || ''; // I欄：付款狀態
