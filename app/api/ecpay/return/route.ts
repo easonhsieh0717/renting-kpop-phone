@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { updateReservationStatus } from '../../../../lib/sheets/reservations';
 import crypto from 'crypto';
+import { google } from 'googleapis';
 
 // This function is copied from lib/ecpay.ts, ensure it's in sync or refactor to a shared utility
 function ecpayUrlEncode(data: string): string {
@@ -30,6 +31,63 @@ function verifyCheckMacValue(data: Record<string, any>, hashKey: string, hashIV:
   return calculatedHash === CheckMacValue;
 }
 
+// 獲取Google Sheets客戶端
+async function getGoogleSheetsClient() {
+  const auth = new google.auth.GoogleAuth({
+    credentials: {
+      client_email: process.env.GOOGLE_SHEETS_CLIENT_EMAIL,
+      private_key: (process.env.GOOGLE_SHEETS_PRIVATE_KEY || '').replace(/\\n/g, '\n'),
+    },
+    scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+  });
+  return google.sheets({ version: 'v4', auth });
+}
+
+// 更新保證金狀態
+async function updateDepositStatus(transactionNo: string, status: 'PAID' | 'FAILED') {
+  try {
+    const sheets = await getGoogleSheetsClient();
+    const spreadsheetId = process.env.GOOGLE_SHEET_ID;
+    
+    if (!spreadsheetId) {
+      throw new Error('GOOGLE_SHEET_ID is not configured');
+    }
+
+    // 獲取所有資料來查找交易號
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: 'reservations!A:U',
+    });
+
+    const rows = response.data.values;
+    if (!rows) return;
+
+    // 查找包含該交易號的行（S欄是保證金交易號）
+    const rowIndex = rows.findIndex((row: any) => row[18] === transactionNo); // S欄索引是18
+    if (rowIndex === -1) {
+      console.log(`Deposit transaction ${transactionNo} not found`);
+      return;
+    }
+
+    // 更新保證金狀態（U欄）
+    const updateRange = `reservations!U${rowIndex + 1}`;
+    
+    await sheets.spreadsheets.values.update({
+      spreadsheetId,
+      range: updateRange,
+      valueInputOption: 'RAW',
+      requestBody: {
+        values: [[status]],
+      },
+    });
+
+    console.log(`Updated deposit status for transaction ${transactionNo} to ${status}`);
+  } catch (error) {
+    console.error('Error updating deposit status:', error);
+    throw error;
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
@@ -53,12 +111,30 @@ export async function POST(req: NextRequest) {
         return new NextResponse('0|CheckMacValue verification failed', { status: 400 });
       }
       const { MerchantTradeNo: orderId, RtnCode } = data;
+      
+      // 判斷是否為保證金交易（包含D字母的交易號）
+      const isDepositTransaction = orderId.includes('D');
+      
       if (RtnCode === '1') {
-        await updateReservationStatus(orderId, 'PAID');
-        console.log(`Payment successful for order ${orderId}, status updated.`);
+        if (isDepositTransaction) {
+          // 保證金交易成功
+          await updateDepositStatus(orderId, 'PAID');
+          console.log(`Deposit payment successful for transaction ${orderId}, status updated.`);
+        } else {
+          // 一般租金交易成功
+          await updateReservationStatus(orderId, 'PAID');
+          console.log(`Payment successful for order ${orderId}, status updated.`);
+        }
       } else {
-        await updateReservationStatus(orderId, 'FAILED');
-        console.log(`Payment not successful for order ${orderId}. RtnCode: ${RtnCode}`);
+        if (isDepositTransaction) {
+          // 保證金交易失敗
+          await updateDepositStatus(orderId, 'FAILED');
+          console.log(`Deposit payment failed for transaction ${orderId}. RtnCode: ${RtnCode}`);
+        } else {
+          // 一般租金交易失敗
+          await updateReservationStatus(orderId, 'FAILED');
+          console.log(`Payment not successful for order ${orderId}. RtnCode: ${RtnCode}`);
+        }
       }
       return new NextResponse('1|OK');
     } else if (data.succ && data.od_sob) {
