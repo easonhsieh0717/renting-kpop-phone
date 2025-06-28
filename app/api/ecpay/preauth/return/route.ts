@@ -122,13 +122,35 @@ export async function POST(req: NextRequest) {
       return new NextResponse('0|Missing required parameters', { status: 400 });
     }
 
-    // 验证 CheckMacValue
-    const isProduction = process.env.VERCEL_ENV === 'production';
-    const merchantID = isProduction ? process.env.ECPAY_MERCHANT_ID! : '3002607';
-    const hashKey = isProduction ? process.env.ECPAY_HASH_KEY! : 'pwFHCqoQZGmho4w6';
-    const hashIV = isProduction ? process.env.ECPAY_HASH_IV! : 'EkRm7iFT261dpevs';
-    const isTest = !isProduction;
-    const isValid = verifyCheckMacValue(data, hashKey, hashIV, isTest);
+    // --- 關鍵修正：動態選擇驗證金鑰 ---
+    let hashKey: string;
+    let hashIV: string;
+    const receivedMerchantID = data.MerchantID;
+
+    if (receivedMerchantID === '2000132') {
+      // 平台商的子廠商測試金鑰
+      console.log('Verifying callback for sub-merchant test transaction.');
+      hashKey = '5294y06JbISpM5x9';
+      hashIV = 'v77hoKGq4kWxNNIS';
+    } else if (receivedMerchantID === '3002607') {
+      // 標準測試金鑰
+      console.log('Verifying callback for standard test transaction.');
+      hashKey = 'pwFHCqoQZGmho4w6';
+      hashIV = 'EkRm7iFT261dpevs';
+    } else {
+      // 正式環境金鑰
+      console.log('Verifying callback for production transaction.');
+      hashKey = process.env.ECPAY_HASH_KEY!;
+      hashIV = process.env.ECPAY_HASH_IV!;
+    }
+    
+    if (!hashKey || !hashIV) {
+      console.error('ECPay credentials for verification not found.');
+      return new NextResponse('0|ECPay credentials not configured', { status: 500 });
+    }
+
+    // 使用動態選擇的金鑰進行驗證
+    const isValid = verifyCheckMacValue(data, hashKey, hashIV, false); // isTest=false 進行實際驗證
     
     if (!isValid) {
       console.error('CheckMacValue verification failed');
