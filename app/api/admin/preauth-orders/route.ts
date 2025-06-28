@@ -66,25 +66,23 @@ async function getPreAuthOrders() {
       
       console.log(`[PREAUTH_DEBUG] 找到預授權訂單: ${orderId}, 狀態: ${depositStatus}, 交易編號: ${depositTransactionNo}`);
       
-      // 只返回狀態不是VOID的預授權
-      if (depositStatus !== 'VOID') {
-        orders.push({
+      // 返回所有預授權訂單（包括VOID狀態，讓用戶看到完整狀況）
+      orders.push({
+        orderId,
+        customerName,
+        phoneModel,
+        paymentStatus,
+        preAuthInfo: {
           orderId,
-          customerName,
-          phoneModel,
-          paymentStatus,
-          preAuthInfo: {
-            orderId,
-            depositTransactionNo,
-            ecpayTradeNo,
-            depositAmount,
-            depositStatus,
-            captureAmount
-          }
-        });
-      } else {
-        console.log(`[PREAUTH_DEBUG] 跳過已取消的預授權: ${orderId}`);
-      }
+          depositTransactionNo,
+          ecpayTradeNo,
+          depositAmount,
+          depositStatus,
+          captureAmount
+        }
+      });
+      
+      console.log(`[PREAUTH_DEBUG] 找到預授權訂單: ${orderId}, 狀態: ${depositStatus}, 交易編號: ${depositTransactionNo}`);
     }
   }
 

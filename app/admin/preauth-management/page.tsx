@@ -143,8 +143,9 @@ export default function PreAuthManagementPage() {
       case 'CAPTURED': return '已請款';
       case 'PARTIAL_CAPTURED': return '部分請款';
       case 'VOID': return '已取消';
+      case 'VOID_FAILED': return '取消失敗';
       case 'CAPTURE_FAILED': return '請款失敗';
-      default: return status;
+      default: return status || '狀態未知';
     }
   };
 
@@ -156,6 +157,7 @@ export default function PreAuthManagementPage() {
       case 'CAPTURED': return 'text-green-600';
       case 'PARTIAL_CAPTURED': return 'text-yellow-600';
       case 'VOID': return 'text-gray-600';
+      case 'VOID_FAILED': return 'text-red-600';
       case 'CAPTURE_FAILED': return 'text-red-600';
       default: return 'text-gray-600';
     }
@@ -289,6 +291,20 @@ export default function PreAuthManagementPage() {
                         >
                           取消預授權
                         </button>
+                      )}
+                      {preAuth?.depositStatus === 'VOID_FAILED' && (
+                        <button
+                          onClick={() => handleVoidPreAuth(order.orderId)}
+                          className="text-red-600 hover:text-red-900 bg-red-50 px-2 py-1 rounded border border-red-200"
+                        >
+                          重試取消
+                        </button>
+                      )}
+                      {preAuth?.depositStatus === 'VOID' && (
+                        <span className="text-gray-500 text-sm">已取消</span>
+                      )}
+                      {preAuth?.depositStatus === 'CAPTURED' && (
+                        <span className="text-green-500 text-sm">已完成</span>
                       )}
                     </div>
                   </td>
