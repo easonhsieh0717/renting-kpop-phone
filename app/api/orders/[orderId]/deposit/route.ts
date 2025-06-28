@@ -225,15 +225,20 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
       merchantName
     });
 
-    console.log('Payment params:', paymentParams);
-
-    // 更新Google Sheet記錄保證金預授權交易號
-    await updateDepositTransactionInSheet(orderId, preAuthOrderId, finalAmount);
-
     // 準備ECPay表單URL
     const ecpayUrl = isProductionEnv 
       ? 'https://payment.ecpay.com.tw/Cashier/AioCheckOut/V5'
       : 'https://payment-stage.ecpay.com.tw/Cashier/AioCheckOut/V5';
+
+    // --- 日誌記錄：發送給 ECPay 的最終參數 ---
+    console.log('[ECPAY_REQUEST]', JSON.stringify({
+      message: `Sending pre-auth request for order ${orderId}`,
+      url: ecpayUrl,
+      params: paymentParams
+    }, null, 2));
+
+    // 更新Google Sheet記錄保證金預授權交易號
+    await updateDepositTransactionInSheet(orderId, preAuthOrderId, finalAmount);
 
     return NextResponse.json({
       success: true,

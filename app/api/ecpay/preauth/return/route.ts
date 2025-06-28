@@ -114,38 +114,49 @@ export async function POST(req: NextRequest) {
       data[key] = value;
     });
 
-    console.log('Received ECPay preauth return data:', data);
+    // --- 日誌記錄：收到 ECPay 的回調資料 ---
+    console.log('[ECPAY_CALLBACK_RECEIVED]', JSON.stringify({
+      message: 'Received callback data from ECPay.',
+      data
+    }, null, 2));
 
     // 验证必要参数
     if (!data.MerchantID || !data.MerchantTradeNo || !data.RtnCode) {
-      console.error('Missing required parameters');
+      console.error('[ECPAY_CALLBACK_ERROR] Missing required parameters.', data);
       return new NextResponse('0|Missing required parameters', { status: 400 });
     }
 
-    // --- 關鍵修正：動態選擇驗證金鑰 ---
     let hashKey: string;
     let hashIV: string;
     const receivedMerchantID = data.MerchantID;
+    let verificationEnv: string;
 
     if (receivedMerchantID === '2000132') {
       // 平台商的子廠商測試金鑰
-      console.log('Verifying callback for sub-merchant test transaction.');
+      verificationEnv = 'Sub-merchant Test';
       hashKey = '5294y06JbISpM5x9';
       hashIV = 'v77hoKGq4kWxNNIS';
     } else if (receivedMerchantID === '3002607') {
       // 標準測試金鑰
-      console.log('Verifying callback for standard test transaction.');
+      verificationEnv = 'Standard Test';
       hashKey = 'pwFHCqoQZGmho4w6';
       hashIV = 'EkRm7iFT261dpevs';
     } else {
       // 正式環境金鑰
-      console.log('Verifying callback for production transaction.');
+      verificationEnv = 'Production';
       hashKey = process.env.ECPAY_HASH_KEY!;
       hashIV = process.env.ECPAY_HASH_IV!;
     }
     
+    // --- 日誌記錄：驗證資訊 ---
+    console.log('[ECPAY_CALLBACK_VERIFICATION]', JSON.stringify({
+      message: 'Verifying callback CheckMacValue.',
+      verificationEnv,
+      merchantId: receivedMerchantID
+    }, null, 2));
+
     if (!hashKey || !hashIV) {
-      console.error('ECPay credentials for verification not found.');
+      console.error('[ECPAY_CALLBACK_ERROR] ECPay credentials for verification not found for MerchantID:', receivedMerchantID);
       return new NextResponse('0|ECPay credentials not configured', { status: 500 });
     }
 
@@ -153,31 +164,31 @@ export async function POST(req: NextRequest) {
     const isValid = verifyCheckMacValue(data, hashKey, hashIV, false); // isTest=false 進行實際驗證
     
     if (!isValid) {
-      console.error('CheckMacValue verification failed');
+      console.error('[ECPAY_CALLBACK_ERROR] CheckMacValue verification failed.');
       return new NextResponse('0|CheckMacValue verification failed', { status: 400 });
     }
 
-    const { MerchantTradeNo: orderId, RtnCode, TradeNo: ecpayTradeNo } = data;
+    const { MerchantTradeNo: orderId, RtnCode, RtnMsg, TradeNo: ecpayTradeNo } = data;
     
     // 确认是预授权交易
     if (!orderId.includes('P')) {
-      console.error('Not a preauth transaction');
+      console.error(`[ECPAY_CALLBACK_ERROR] Not a preauth transaction. OrderID: ${orderId}`);
       return new NextResponse('0|Not a preauth transaction', { status: 400 });
     }
 
     if (RtnCode === '1') {
-      // 预授权成功，保存 ECPay 交易编号并设置为 HELD 状态
+      // 预授权成功
+      console.log(`[ECPAY_CALLBACK_SUCCESS] Pre-authorization successful for transaction ${orderId}.`);
       await updatePreAuthStatus(orderId, 'HELD', ecpayTradeNo);
-      console.log(`Pre-authorization successful for transaction ${orderId}, ECPay TradeNo: ${ecpayTradeNo}, status updated.`);
     } else {
       // 预授权失败
+      console.error(`[ECPAY_CALLBACK_FAILURE] Pre-authorization failed for transaction ${orderId}. RtnCode: ${RtnCode}, RtnMsg: ${RtnMsg}`);
       await updatePreAuthStatus(orderId, 'PREAUTH_FAILED');
-      console.log(`Pre-authorization failed for transaction ${orderId}. RtnCode: ${RtnCode}`);
     }
 
     return new NextResponse('1|OK');
   } catch (error) {
-    console.error('Error handling ECPay preauth return:', error);
+    console.error('[ECPAY_CALLBACK_FATAL] Error handling ECPay preauth return:', error);
     return new NextResponse('0|Error', { status: 500 });
   }
 } 
