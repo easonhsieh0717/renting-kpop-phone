@@ -293,19 +293,19 @@ export function getECPayPreAuthParams({
   const tradeDate = new Date();
   const formattedDate = `${tradeDate.getFullYear()}/${String(tradeDate.getMonth() + 1).padStart(2, '0')}/${String(tradeDate.getDate()).padStart(2, '0')} ${String(tradeDate.getHours()).padStart(2, '0')}:${String(tradeDate.getMinutes()).padStart(2, '0')}:${String(tradeDate.getSeconds()).padStart(2, '0')}`;
 
-  const params = {
+  const params: any = {
     MerchantID: merchantID,
     MerchantTradeNo: merchantTradeNo,
     MerchantTradeDate: formattedDate,
     PaymentType: 'aio',
     TotalAmount: totalAmount,
-    TradeDesc: sanitizeForECPay('Mobile Rental Deposit PreAuth'),
+    TradeDesc: sanitizeForECPay('Mobile Rental Service'),
     ItemName: sanitizeForECPay(itemName),
     ReturnURL: `${process.env.NEXT_PUBLIC_SITE_URL}/api/ecpay/return`,
     ChoosePayment: 'Credit',
     EncryptType: 1,
     ClientBackURL: `${process.env.NEXT_PUBLIC_SITE_URL}`,
-    HoldTradeAMT: 1,  // 1=啟用預授權，0=一般刷卡
+    HoldTradeAMT: 1 // 設定為1表示要進行預授權
   };
 
   const checkMacValue = generateCheckMacValue(params as Omit<ECPayPaymentData, 'CheckMacValue'>, hashKey, hashIV);
