@@ -292,7 +292,7 @@ export function getECPayPreAuthParams({
   hashKey: string;
   hashIV: string;
   holdTradeAmount?: number;
-  merchantName: string;
+  merchantName?: string; // 改為可選參數
   platformID?: string;
 }) {
   const tradeDate = new Date();
@@ -302,9 +302,7 @@ export function getECPayPreAuthParams({
     throw new Error('NEXT_PUBLIC_SITE_URL environment variable is not set');
   }
 
-  if (!merchantName) {
-    throw new Error('MerchantName is required');
-  }
+  // MerchantName 暫時設為可選參數
 
   const params: any = {
     MerchantID: merchantID,
@@ -318,8 +316,8 @@ export function getECPayPreAuthParams({
     ChoosePayment: 'Credit',
     EncryptType: 1,
     ClientBackURL: `${process.env.NEXT_PUBLIC_SITE_URL}`,
-    HoldTradeAMT: 1,
-    MerchantName: sanitizeForECPay(merchantName).substring(0, 10) // 限制10個字符，不進行URL編碼
+    HoldTradeAMT: 1
+    // 暫時移除 MerchantName 參數來測試
   };
 
   if (platformID) {
