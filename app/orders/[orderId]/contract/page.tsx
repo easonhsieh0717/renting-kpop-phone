@@ -418,6 +418,7 @@ export default function ContractPage() {
   const [depositAmount, setDepositAmount] = useState(30000);
   const [depositPaid, setDepositPaid] = useState(false);
   const [depositProcessing, setDepositProcessing] = useState(false);
+  const [preauthLoading, setPreauthLoading] = useState(false);
 
   // 身分證格式驗證
   const validateIdNumber = (id: string) => {
@@ -602,9 +603,9 @@ export default function ContractPage() {
 
   // 預授權處理
   const handlePreauth = async () => {
-    if (!orderId) return;
-    
-    setDepositProcessing(true);
+    if (preauthLoading) return;
+    setPreauthLoading(true);
+
     try {
       const response = await fetch(`/api/orders/${orderId}/deposit`, {
         method: 'POST',
@@ -612,12 +613,11 @@ export default function ContractPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          amount: depositAmount
+          depositAmount: depositAmount // 修正：傳入正確的金額
         })
       });
-
       const result = await response.json();
-      
+
       if (result.success) {
         // 創建ECPay表單並自動提交
         const form = document.createElement('form');
@@ -651,6 +651,8 @@ export default function ContractPage() {
     } catch (error) {
       setDepositProcessing(false);
       alert(`預授權失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
+    } finally {
+      setPreauthLoading(false);
     }
   };
   // 證件拍照（正面）
