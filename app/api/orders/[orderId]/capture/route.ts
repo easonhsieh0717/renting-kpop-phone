@@ -18,7 +18,11 @@ async function getGoogleSheetsClient() {
 // 獲取訂單的預授權交易資訊
 async function getPreAuthTransactionInfo(orderId: string) {
   const sheets = await getGoogleSheetsClient();
-  const spreadsheetId = process.env.GOOGLE_SHEETS_SPREADSHEET_ID;
+  const spreadsheetId = process.env.GOOGLE_SHEET_ID;
+
+  if (!spreadsheetId) {
+    throw new Error('GOOGLE_SHEET_ID is not configured');
+  }
 
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId,
@@ -48,7 +52,11 @@ async function getPreAuthTransactionInfo(orderId: string) {
 // 更新預授權請款狀態
 async function updateCaptureStatus(orderId: string, captureAmount: number, status: string) {
   const sheets = await getGoogleSheetsClient();
-  const spreadsheetId = process.env.GOOGLE_SHEETS_SPREADSHEET_ID;
+  const spreadsheetId = process.env.GOOGLE_SHEET_ID;
+
+  if (!spreadsheetId) {
+    throw new Error('GOOGLE_SHEET_ID is not configured');
+  }
 
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId,

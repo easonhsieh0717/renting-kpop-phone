@@ -16,11 +16,15 @@ async function getGoogleSheetsClient() {
 // 獲取所有有預授權的訂單
 async function getPreAuthOrders() {
   const sheets = await getGoogleSheetsClient();
-  const spreadsheetId = process.env.GOOGLE_SHEETS_SPREADSHEET_ID;
+  const spreadsheetId = process.env.GOOGLE_SHEET_ID;
+
+  if (!spreadsheetId) {
+    throw new Error('GOOGLE_SHEET_ID is not configured');
+  }
 
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId,
-    range: 'A:BB', // 擴展到BB欄以包含新的預授權欄位
+    range: 'A:Z', // 使用標準的 A:Z 範圍
   });
 
   const rows = response.data.values || [];

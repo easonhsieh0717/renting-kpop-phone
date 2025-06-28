@@ -111,11 +111,11 @@ async function updateDepositStatus(transactionNo: string, status: 'PAID' | 'FAIL
 async function updatePreAuthStatus(transactionNo: string, status: 'PREAUTH' | 'PREAUTH_FAILED', ecpayTradeNo?: string) {
   try {
     const sheets = await getGoogleSheetsClient();
-    const spreadsheetId = process.env.GOOGLE_SHEETS_SPREADSHEET_ID;
-    
-    if (!spreadsheetId) {
-      throw new Error('GOOGLE_SHEETS_SPREADSHEET_ID is not configured');
-    }
+      const spreadsheetId = process.env.GOOGLE_SHEET_ID;
+  
+  if (!spreadsheetId) {
+    throw new Error('GOOGLE_SHEET_ID is not configured');
+  }
 
     // 獲取所有資料來查找預授權交易號
     const response = await sheets.spreadsheets.values.get({
