@@ -95,12 +95,13 @@ async function getOrderInfo(orderId: string) {
       throw new Error('Order not found');
     }
 
+    // 根據實際的Google Sheet欄位順序調整
     return {
-      orderId: orderRow[0],
-      customerName: orderRow[1],
-      phoneModel: orderRow[7], // H欄：手機型號
-      phoneImei: orderRow[8],  // I欄：IMEI
-      paymentStatus: orderRow[13], // N欄：付款狀態
+      orderId: orderRow[0],     // A欄：訂單編號
+      customerName: orderRow[5], // F欄：客戶姓名
+      phoneModel: orderRow[1],   // B欄：手機型號/IMEI (需要進一步處理)
+      phoneImei: orderRow[1],    // B欄：IMEI
+      paymentStatus: orderRow[8], // I欄：付款狀態
       depositTransactionNo: orderRow[18], // S欄：保證金交易號
       depositAmount: parseInt(orderRow[19]) || 0, // T欄：保證金金額
       depositStatus: orderRow[20] || '', // U欄：保證金狀態
@@ -158,11 +159,16 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
 
     // 改善商品明細，明確標示為保證金預授權
     const phoneImei = orderInfo.phoneImei;
-    const actualPhoneModel = orderInfo.phoneModel || 'Samsung Galaxy S25 Ultra';
     
-    // 簡化商品名稱：押金預授權
-    const phoneModelShort = actualPhoneModel.replace('Samsung Galaxy ', '').replace(' Ultra', 'U');
-    const itemName = `${phoneModelShort}押金預授權-IMEI:${phoneImei}`;
+    // 根據IMEI判斷手機型號（因為phoneModel欄位目前是IMEI）
+    let phoneModelName = 'S25U'; // 預設值
+    if (phoneImei.startsWith('356789') || phoneImei.startsWith('867530')) {
+      phoneModelName = 'S24U';
+    } else if (phoneImei.startsWith('456789') || phoneImei.startsWith('654321')) {
+      phoneModelName = 'S23U';
+    }
+    
+    const itemName = `${phoneModelName}押金預授權-IMEI:${phoneImei}`;
 
     // 使用新的預授權函數（包含HoldTradeAMT參數）
     const paymentParams = getECPayPreAuthParams({
