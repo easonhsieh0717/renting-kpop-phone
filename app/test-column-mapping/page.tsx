@@ -157,16 +157,16 @@ export default function TestColumnMappingPage() {
                       <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                           <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-800 uppercase tracking-wider">
                               欄位名稱
                             </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-800 uppercase tracking-wider">
                               欄位位置
                             </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-800 uppercase tracking-wider">
                               目前標題
                             </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-800 uppercase tracking-wider">
                               狀態
                             </th>
                           </tr>
@@ -177,10 +177,10 @@ export default function TestColumnMappingPage() {
                               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                 {item.fieldName}
                               </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                 {item.columnLetter} ({item.columnIndex})
                               </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                 {item.currentHeader}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm">
@@ -208,10 +208,10 @@ export default function TestColumnMappingPage() {
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                         {mappingData.currentHeaders.map((header, index) => (
                           <div key={index} className="text-sm">
-                            <span className="font-mono text-gray-600">
+                            <span className="font-mono text-gray-900">
                               {String.fromCharCode(65 + index)}:
                             </span>
-                            <span className="ml-2">{header || '(空白)'}</span>
+                            <span className="ml-2 text-gray-900">{header || '(空白)'}</span>
                           </div>
                         ))}
                       </div>

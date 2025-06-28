@@ -143,7 +143,7 @@ function Stepper({ step, setStep }: { step: number; setStep: (n: number) => void
       {steps.map((s, i) => (
         <div key={i} className="flex items-center">
           <div className={`rounded-full w-8 h-8 flex items-center justify-center font-bold text-white ${step === i + 1 ? 'bg-blue-600' : 'bg-gray-400'}`}>{i + 1}</div>
-          <div className="ml-2 mr-4 text-sm font-medium" style={{ color: step === i + 1 ? '#2563eb' : '#888' }}>{s}</div>
+          <div className="ml-2 mr-4 text-sm font-medium" style={{ color: step === i + 1 ? '#2563eb' : '#374151' }}>{s}</div>
           {i < steps.length - 1 && <div className="w-8 h-1 bg-gray-300" />}
         </div>
       ))}
