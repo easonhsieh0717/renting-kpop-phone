@@ -85,9 +85,22 @@ export async function POST(req: NextRequest) {
     const currentStatus = currentStatusResponse.data.values?.[0]?.[0] || '';
     console.log(`[DIRECT_UPDATE] 當前狀態: ${currentStatus}`);
 
-    // 3. 直接更新U欄和W欄
+    // 3. 讀取當前預授權金額作為退刷金額
+    const currentAmountResponse = await sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: `reservations!T${targetRow}`, // T欄：保證金金額
+    });
+
+    const refundAmount = currentAmountResponse.data.values?.[0]?.[0] || '0';
+    console.log(`[DIRECT_UPDATE] 預授權金額: ${refundAmount}`);
+
+    // 4. 直接更新多個相關欄位
     const updateTime = formatDateTimeInTaipei(new Date());
-    console.log(`[DIRECT_UPDATE] 準備更新 U${targetRow} = ${statusToUpdate}, W${targetRow} = ${updateTime}`);
+    console.log(`[DIRECT_UPDATE] 準備更新:`);
+    console.log(`[DIRECT_UPDATE] - U${targetRow} (保證金狀態) = ${statusToUpdate}`);
+    console.log(`[DIRECT_UPDATE] - V${targetRow} (已退刷金額) = ${refundAmount}`);
+    console.log(`[DIRECT_UPDATE] - W${targetRow} (退刷時間) = ${updateTime}`);
+    console.log(`[DIRECT_UPDATE] - X${targetRow} (損壞費用) = 0`);
 
     const updateResult = await sheets.spreadsheets.values.batchUpdate({
       spreadsheetId,
@@ -99,8 +112,16 @@ export async function POST(req: NextRequest) {
             values: [[statusToUpdate]]
           },
           {
-            range: `reservations!W${targetRow}`, // W欄：取消時間
+            range: `reservations!V${targetRow}`, // V欄：已退刷金額
+            values: [[refundAmount]]
+          },
+          {
+            range: `reservations!W${targetRow}`, // W欄：退刷時間
             values: [[updateTime]]
+          },
+          {
+            range: `reservations!X${targetRow}`, // X欄：損壞費用
+            values: [['0']]
           }
         ]
       }
@@ -109,31 +130,54 @@ export async function POST(req: NextRequest) {
     console.log(`[DIRECT_UPDATE] 更新結果狀態碼: ${updateResult.status}`);
     console.log(`[DIRECT_UPDATE] 更新的儲存格數量: ${updateResult.data.totalUpdatedCells}`);
 
-    // 4. 驗證更新結果
+    // 5. 驗證更新結果
     const verifyResponse = await sheets.spreadsheets.values.get({
       spreadsheetId,
-      range: `reservations!U${targetRow}:W${targetRow}`,
+      range: `reservations!U${targetRow}:X${targetRow}`, // U到X欄位
     });
 
     const verifyData = verifyResponse.data.values?.[0] || [];
-    const actualStatus = verifyData[0] || '';
-    const actualTime = verifyData[1] || '';
+    const actualStatus = verifyData[0] || '';        // U欄：狀態
+    const actualRefundAmount = verifyData[1] || '';  // V欄：退刷金額
+    const actualTime = verifyData[2] || '';          // W欄：時間
+    const actualDamage = verifyData[3] || '';        // X欄：損壞費用
 
-    console.log(`[DIRECT_UPDATE] 驗證結果 - 狀態: ${actualStatus}, 時間: ${actualTime}`);
+    console.log(`[DIRECT_UPDATE] 驗證結果:`);
+    console.log(`[DIRECT_UPDATE] - 狀態: ${actualStatus}`);
+    console.log(`[DIRECT_UPDATE] - 退刷金額: ${actualRefundAmount}`);
+    console.log(`[DIRECT_UPDATE] - 時間: ${actualTime}`);
+    console.log(`[DIRECT_UPDATE] - 損壞費用: ${actualDamage}`);
 
     return NextResponse.json({
       success: true,
-      message: `成功更新訂單 ${orderId} 的狀態`,
+      message: `成功更新訂單 ${orderId} 的狀態和相關欄位`,
       data: {
         orderId,
         targetRow,
-        oldStatus: currentStatus,
-        newStatus: statusToUpdate,
-        actualStatus,
-        updateTime,
-        actualTime,
-        updateSuccess: actualStatus === statusToUpdate,
-        updatedCells: updateResult.data.totalUpdatedCells
+        updates: {
+          status: {
+            old: currentStatus,
+            new: statusToUpdate,
+            actual: actualStatus,
+            success: actualStatus === statusToUpdate
+          },
+          refundAmount: {
+            expected: refundAmount,
+            actual: actualRefundAmount,
+            success: actualRefundAmount === refundAmount
+          },
+          time: {
+            expected: updateTime,
+            actual: actualTime
+          },
+          damageAmount: {
+            expected: '0',
+            actual: actualDamage,
+            success: actualDamage === '0'
+          }
+        },
+        updatedCells: updateResult.data.totalUpdatedCells,
+        allUpdatesSuccess: actualStatus === statusToUpdate && actualRefundAmount === refundAmount && actualDamage === '0'
       }
     });
 
