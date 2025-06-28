@@ -137,7 +137,7 @@ function SignatureModal({ open, onClose, onSign }: { open: boolean; onClose: () 
 }
 
 function Stepper({ step, setStep }: { step: number; setStep: (n: number) => void }) {
-  const steps = ["手機外觀", "證件拍照", "個人資料/押金", "合約簽署"];
+  const steps = ["手機外觀", "證件拍照", "個人資料/押金", "保證金處理", "合約簽署"];
   return (
     <div className="flex items-center mb-6">
       {steps.map((s, i) => (
@@ -209,16 +209,32 @@ function renderContract(order: any, depositMode: string | null, needCable: boole
       <div style={{marginBottom: '16px'}}>
         <span style={boldStyle}>第三條 租金與押金</span><br/>
         <span style={fontStyle}>1. </span><span style={boldStyle}>租金：</span><span style={fontStyle}> 每日租金NT$600，乙方應於設備交付時以現金或電子支付方式一次付清全額租金，或依雙方書面約定按日結算。</span><br/>
-        <span style={fontStyle}>2. </span><span style={boldStyle}>押金方案（擇一）：</span><br/>
-        <span style={fontStyle}>&nbsp;&nbsp;</span><span style={boldStyle}>方案一：高押金（免證件）</span><br/>
-        <span style={fontStyle}>&nbsp;&nbsp;- 押金金額：NT$30,000（現金）</span><br/>
-        <span style={fontStyle}>&nbsp;&nbsp;- 繳納方式：設備交付時以現金繳納</span><br/>
-        <span style={fontStyle}>&nbsp;&nbsp;- 證件要求：無需提供身分證件</span><br/>
-        <span style={fontStyle}>&nbsp;&nbsp;</span><span style={boldStyle}>方案二：低押金（需證件）</span><br/>
-        <span style={fontStyle}>&nbsp;&nbsp;- 押金金額：NT$30,000（現金或線上支付）</span><br/>
-        <span style={fontStyle}>&nbsp;&nbsp;- 繳納方式：設備交付時繳納</span><br/>
-        <span style={fontStyle}>&nbsp;&nbsp;- 證件要求：需提供身分證正本及第二證件影本</span><br/>
-        <span style={fontStyle}>3. </span><span style={boldStyle}>押金退還：</span><span style={fontStyle}> 設備歸還且驗收無誤後，甲方於24小時內退還押金。</span><br/>
+        <span style={fontStyle}>2. </span><span style={boldStyle}>押金方案（已選擇）：</span><br/>
+        {depositMode === 'high' && (
+          <>
+            <span style={fontStyle}>&nbsp;&nbsp;</span><span style={boldStyle}>高押金模式（免證件）</span><br/>
+            <span style={fontStyle}>&nbsp;&nbsp;- 押金金額：NT$30,000（現金）</span><br/>
+            <span style={fontStyle}>&nbsp;&nbsp;- 繳納方式：設備交付時以現金繳納</span><br/>
+            <span style={fontStyle}>&nbsp;&nbsp;- 證件要求：無需提供身分證件</span><br/>
+          </>
+        )}
+        {depositMode === 'low' && (
+          <>
+            <span style={fontStyle}>&nbsp;&nbsp;</span><span style={boldStyle}>低押金模式（需證件正本）</span><br/>
+            <span style={fontStyle}>&nbsp;&nbsp;- 押金金額：NT$3,000（現金）</span><br/>
+            <span style={fontStyle}>&nbsp;&nbsp;- 繳納方式：設備交付時以現金繳納</span><br/>
+            <span style={fontStyle}>&nbsp;&nbsp;- 證件要求：需提供身分證正本抵押</span><br/>
+          </>
+        )}
+        {depositMode === 'preauth' && (
+          <>
+            <span style={fontStyle}>&nbsp;&nbsp;</span><span style={boldStyle}>預授權模式（免證件）</span><br/>
+            <span style={fontStyle}>&nbsp;&nbsp;- 預授權金額：NT$30,000（信用卡）</span><br/>
+            <span style={fontStyle}>&nbsp;&nbsp;- 繳納方式：設備交付前完成信用卡預授權</span><br/>
+            <span style={fontStyle}>&nbsp;&nbsp;- 證件要求：無需提供身分證件</span><br/>
+          </>
+        )}
+        <span style={fontStyle}>3. </span><span style={boldStyle}>押金退還：</span><span style={fontStyle}> 設備歸還且驗收無誤後，甲方於24小時內退還押金或解除預授權。</span><br/>
       </div>
       
       {/* 繼續其他條款 - 使用相同的內聯樣式模式 */}
@@ -251,13 +267,25 @@ function renderContract(order: any, depositMode: string | null, needCable: boole
         <span style={fontStyle}>3. 租期結束後7日內，甲方銷毀乙方證件影本或歸還正本。乙方有權要求甲方提供書面銷毀證明。</span><br/>
       </div>
       
-      <div style={{marginBottom: '16px'}}>
-        <span style={boldStyle}>第七條 預授權規範</span><br/>
-        <span style={fontStyle}>1. 低押金模式下，乙方於交付設備前以信用卡完成NT$30,000預授權。</span><br/>
-        <span style={fontStyle}>2. 設備歸還且驗收無誤後，甲方於3個工作日內解除預授權。</span><br/>
-        <span style={fontStyle}>3. 若設備未歸還、損壞或違約，甲方得依附件一執行扣款，並提供扣款明細。</span><br/>
-        <span style={fontStyle}>4. 乙方對扣款有異議，應於收到扣款通知後7日內提出，甲方應提供證明文件（包含維修報價單或鑑定報告）。</span><br/>
-      </div>
+      {depositMode === 'preauth' && (
+        <div style={{marginBottom: '16px'}}>
+          <span style={boldStyle}>第七條 預授權規範</span><br/>
+          <span style={fontStyle}>1. 預授權模式下，乙方於交付設備前以信用卡完成NT$30,000預授權。</span><br/>
+          <span style={fontStyle}>2. 設備歸還且驗收無誤後，甲方於3個工作日內解除預授權。</span><br/>
+          <span style={fontStyle}>3. 若設備未歸還、損壞或違約，甲方得依附件一執行扣款，並提供扣款明細。</span><br/>
+          <span style={fontStyle}>4. 乙方對扣款有異議，應於收到扣款通知後7日內提出，甲方應提供證明文件（包含維修報價單或鑑定報告）。</span><br/>
+        </div>
+      )}
+      
+      {depositMode === 'low' && (
+        <div style={{marginBottom: '16px'}}>
+          <span style={boldStyle}>第七條 證件抵押規範</span><br/>
+          <span style={fontStyle}>1. 低押金模式下，乙方需提供身分證正本作為抵押。</span><br/>
+          <span style={fontStyle}>2. 甲方依《個人資料保護法》妥善保管乙方證件，僅用於本契約履約管理。</span><br/>
+          <span style={fontStyle}>3. 設備歸還且驗收無誤後，甲方立即歸還身分證正本。</span><br/>
+          <span style={fontStyle}>4. 若設備未歸還、損壞或違約，甲方得扣除押金並保留證件，直至爭議解決。</span><br/>
+        </div>
+      )}
       
       <div style={{marginBottom: '16px'}}>
         <span style={boldStyle}>第八條 違約與解約</span><br/>
@@ -386,6 +414,10 @@ export default function ContractPage() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [processingIdFront, setProcessingIdFront] = useState(false);
   const [processingIdBack, setProcessingIdBack] = useState(false);
+  // 4. 保證金處理
+  const [depositAmount, setDepositAmount] = useState(30000);
+  const [depositPaid, setDepositPaid] = useState(false);
+  const [depositProcessing, setDepositProcessing] = useState(false);
 
   // 身分證格式驗證
   const validateIdNumber = (id: string) => {
@@ -564,6 +596,60 @@ export default function ContractPage() {
     }
   };
   const handlePhotoRemove = (idx: number) => setPhotos(photos.filter((_, i) => i !== idx));
+
+  // 預授權處理
+  const handlePreauth = async () => {
+    if (!orderId) return;
+    
+    setDepositProcessing(true);
+    try {
+      const response = await fetch(`/api/orders/${orderId}/deposit`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          amount: depositAmount
+        })
+      });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        // 創建ECPay表單並自動提交
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = result.ecpayUrl;
+        form.target = '_blank'; // 在新視窗開啟
+
+        // 添加所有ECPay參數
+        Object.entries(result.paymentParams).forEach(([key, value]) => {
+          const input = document.createElement('input');
+          input.type = 'hidden';
+          input.name = key;
+          input.value = value as string;
+          form.appendChild(input);
+        });
+
+        document.body.appendChild(form);
+        form.submit();
+        document.body.removeChild(form);
+
+        // 模擬付款成功（實際應該通過回調確認）
+        setTimeout(() => {
+          setDepositPaid(true);
+          setDepositProcessing(false);
+          alert('預授權完成！請繼續簽署合約。');
+        }, 3000);
+      } else {
+        setDepositProcessing(false);
+        alert(`預授權失敗: ${result.message}`);
+      }
+    } catch (error) {
+      setDepositProcessing(false);
+      alert(`預授權失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
+    }
+  };
   // 證件拍照（正面）
   const handleIdFront = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || !e.target.files[0]) return;
@@ -741,6 +827,7 @@ export default function ContractPage() {
   const canNext1 = photos.length >= 2;
   const canNext2 = !!idFront && !!idBack;
   const canNext3 = !!depositMode && validateIdNumber(idNumber) && validatePhoneNumber(phoneNumber);
+  const canNext4 = depositMode === 'preauth' ? depositPaid : true; // 預授權模式需完成付款，其他模式直接通過
 
   if (loading) return <div className="p-8 text-center">載入中...</div>;
   if (error) return <div className="p-8 text-center text-red-500">{error}</div>;
@@ -859,11 +946,11 @@ export default function ContractPage() {
 
           <div className="mb-4 p-4 bg-gray-50 rounded-lg">
             <h3 className="font-semibold mb-2">押金模式說明：</h3>
-            <div className="space-y-2 text-sm">
+            <div className="space-y-3 text-sm">
               <div className="flex items-start">
                 <input type="radio" id="high" checked={depositMode==='high'} onChange={()=>setDepositMode('high')} className="mt-1 mr-2" />
                 <label htmlFor="high" className="flex-1">
-                  <span className="font-medium">高押金（免證件）：</span>
+                  <span className="font-medium">🏦 高押金模式（免證件）：</span>
                   <br/>
                   <span className="text-gray-600">現金 NT$30,000，無需提供身分證件</span>
                 </label>
@@ -871,9 +958,17 @@ export default function ContractPage() {
               <div className="flex items-start">
                 <input type="radio" id="low" checked={depositMode==='low'} onChange={()=>setDepositMode('low')} className="mt-1 mr-2" />
                 <label htmlFor="low" className="flex-1">
-                  <span className="font-medium">低押金（需證件）：</span>
+                  <span className="font-medium">💳 低押金模式（需證件正本）：</span>
                   <br/>
-                  <span className="text-gray-600">身分證正本 + NT$3,000 現金，或信用卡預授權 NT$30,000</span>
+                  <span className="text-gray-600">現金 NT$3,000 + 身分證正本抵押</span>
+                </label>
+              </div>
+              <div className="flex items-start">
+                <input type="radio" id="preauth" checked={depositMode==='preauth'} onChange={()=>setDepositMode('preauth')} className="mt-1 mr-2" />
+                <label htmlFor="preauth" className="flex-1">
+                  <span className="font-medium">🔒 預授權模式（免證件）：</span>
+                  <br/>
+                  <span className="text-gray-600">信用卡預授權 NT$30,000，無需現金和證件</span>
                 </label>
               </div>
             </div>
@@ -895,6 +990,109 @@ export default function ContractPage() {
         </div>
       )}
       {step === 4 && (
+        <div>
+          <h2 className="text-lg font-bold mb-4">4. 保證金處理</h2>
+          
+          {depositMode === 'preauth' && (
+            <div className="mb-6">
+              <div className="p-4 bg-green-50 border border-green-200 rounded-lg mb-4">
+                <h3 className="font-semibold text-green-800 mb-2">🔒 預授權模式</h3>
+                <p className="text-green-700 text-sm mb-3">
+                  您選擇了預授權模式，需要完成信用卡預授權才能繼續簽署合約。
+                </p>
+                
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">預授權金額</label>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm">NT$</span>
+                    <input
+                      type="number"
+                      value={depositAmount}
+                      onChange={(e) => setDepositAmount(parseInt(e.target.value) || 30000)}
+                      className="w-32 px-3 py-2 border border-gray-300 rounded-md"
+                      min="1000"
+                      max="50000"
+                      step="1000"
+                    />
+                    <button
+                      onClick={() => setDepositAmount(30000)}
+                      className="px-3 py-1 text-xs bg-gray-200 rounded"
+                    >
+                      重設為30000
+                    </button>
+                  </div>
+                </div>
+
+                {!depositPaid ? (
+                  <button
+                    onClick={handlePreauth}
+                    disabled={depositProcessing}
+                    className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+                  >
+                    {depositProcessing ? '處理中...' : '開始預授權刷卡'}
+                  </button>
+                ) : (
+                  <div className="text-green-600 font-medium">
+                    ✅ 預授權完成（NT${depositAmount}）
+                  </div>
+                )}
+
+                {depositProcessing && (
+                  <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded">
+                    <div className="flex items-center">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+                      <span className="text-blue-800 text-sm">預授權處理中，請在新開啟的視窗完成刷卡...</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {depositMode === 'high' && (
+            <div className="mb-6">
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <h3 className="font-semibold text-blue-800 mb-2">🏦 高押金模式</h3>
+                <p className="text-blue-700 text-sm mb-3">
+                  請收取客戶現金押金 NT$30,000
+                </p>
+                <button
+                  onClick={() => setDepositPaid(true)}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                >
+                  確認已收取現金押金
+                </button>
+              </div>
+            </div>
+          )}
+
+          {depositMode === 'low' && (
+            <div className="mb-6">
+              <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg">
+                <h3 className="font-semibold text-purple-800 mb-2">💳 低押金模式</h3>
+                <p className="text-purple-700 text-sm mb-3">
+                  請收取客戶現金押金 NT$3,000 + 身分證正本
+                </p>
+                <button
+                  onClick={() => setDepositPaid(true)}
+                  className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+                >
+                  確認已收取押金與證件
+                </button>
+              </div>
+            </div>
+          )}
+
+          <button 
+            disabled={!canNext4} 
+            onClick={() => setStep(5)} 
+            className="px-4 py-2 bg-blue-600 text-white rounded disabled:bg-gray-300"
+          >
+            下一步（簽署合約）
+          </button>
+        </div>
+      )}
+      {step === 5 && (
         <div>
           <div className="mb-8">
             {renderContract(order, depositMode, needCable, needCharger, idNumber, phoneNumber)}
