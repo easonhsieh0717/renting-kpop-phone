@@ -969,9 +969,9 @@ export default function ContractPage() {
               <div className="flex items-start">
                 <input type="radio" id="preauth" checked={depositMode==='preauth'} onChange={()=>setDepositMode('preauth')} className="mt-1 mr-2" />
                 <label htmlFor="preauth" className="flex-1">
-                  <span className="font-medium">🔒 預授權模式（免證件）：</span>
+                  <span className="font-medium">🔒 預授權模式（需證件正本核對）：</span>
                   <br/>
-                  <span className="text-gray-900">信用卡預授權 NT$30,000，無需現金和證件</span>
+                  <span className="text-gray-900">信用卡預授權 NT$30,000，需核對證件正本</span>
                 </label>
               </div>
             </div>

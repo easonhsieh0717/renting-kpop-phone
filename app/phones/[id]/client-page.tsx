@@ -361,7 +361,11 @@ export default function PhoneDetailClient({ phone, vercelEnv, bookedDates }: Pho
                 <ul className="space-y-1 text-brand-gray-light">
                   <li className="flex justify-between">
                     <span>低押金 (需抵押證件正本)</span>
-                    <span className="font-bold text-white">$30,000</span>
+                    <span className="font-bold text-white">$3,000</span>
+                  </li>
+                  <li className="flex justify-between">
+                    <span>免押金 (需證件正本核對)</span>
+                    <span className="font-bold text-white">信用卡預授權$30,000</span>
                   </li>
                   <li className="flex justify-between">
                     <span>高押金 (免抵押證件)</span>
