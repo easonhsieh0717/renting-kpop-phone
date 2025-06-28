@@ -193,20 +193,16 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
       throw new Error('ECPay credentials not configured');
     }
 
-    // 生成取消訂單編號
-    const voidOrderId = `${orderId}_VOID_${Date.now()}`;
-
-    // 呼叫ECPay取消預授權API (使用N=放棄)
+    // 呼叫ECPay取消預授權API - 使用原始預授權交易編號作為MerchantTradeNo
     console.log('[VOID_PREAUTH_DEBUG] 嘗試取消預授權，訂單:', orderId);
-    console.log('[VOID_PREAUTH_DEBUG] 方案1 - 使用ECPay交易編號:', {
-      merchantTradeNo: voidOrderId,
+    console.log('[VOID_PREAUTH_DEBUG] 使用原始預授權交易編號作為MerchantTradeNo:', {
+      merchantTradeNo: preAuthInfo.depositTransactionNo,
       tradeNo: preAuthInfo.ecpayTradeNo,
       totalAmount: preAuthInfo.depositAmount
     });
 
-    // 先嘗試使用ECPay交易編號
     let ecpayResult = await callECPayRefundAPI({
-      merchantTradeNo: voidOrderId,
+      merchantTradeNo: preAuthInfo.depositTransactionNo, // 使用原始預授權交易編號
       tradeNo: preAuthInfo.ecpayTradeNo,
       action: 'N', // N=放棄(取消預授權)
       totalAmount: preAuthInfo.depositAmount,
@@ -216,19 +212,19 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
       isProduction
     });
 
-    console.log('[VOID_PREAUTH_DEBUG] 方案1結果:', ecpayResult);
+    console.log('[VOID_PREAUTH_DEBUG] 結果:', ecpayResult);
 
-    // 如果使用ECPay交易編號失敗，嘗試使用預授權交易編號
+    // 如果還是失敗，嘗試使用預授權交易編號作為TradeNo
     if (!ecpayResult.success && ecpayResult.RtnMsg === '訂單不存在') {
-      console.log('[VOID_PREAUTH_DEBUG] 方案2 - 使用預授權交易編號:', {
-        merchantTradeNo: voidOrderId,
+      console.log('[VOID_PREAUTH_DEBUG] 備用方案 - 使用預授權交易編號作為TradeNo:', {
+        merchantTradeNo: preAuthInfo.depositTransactionNo,
         tradeNo: preAuthInfo.depositTransactionNo,
         totalAmount: preAuthInfo.depositAmount
       });
 
       ecpayResult = await callECPayRefundAPI({
-        merchantTradeNo: voidOrderId,
-        tradeNo: preAuthInfo.depositTransactionNo,
+        merchantTradeNo: preAuthInfo.depositTransactionNo,
+        tradeNo: preAuthInfo.depositTransactionNo, // 兩個都使用預授權交易編號
         action: 'N', // N=放棄(取消預授權)
         totalAmount: preAuthInfo.depositAmount,
         merchantID,
@@ -237,7 +233,7 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
         isProduction
       });
 
-      console.log('[VOID_PREAUTH_DEBUG] 方案2結果:', ecpayResult);
+      console.log('[VOID_PREAUTH_DEBUG] 備用方案結果:', ecpayResult);
     }
 
     console.log('ECPay void result:', ecpayResult);
