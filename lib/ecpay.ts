@@ -29,11 +29,10 @@ function ecpayUrlEncode(data: string): string {
 
 // 修正中文字符編碼問題的輔助函數
 function sanitizeForECPay(str: string): string {
-  // 移除或替換可能造成編碼問題的字符
+  // 只替換可能影響參數解析的特殊字符
   return str
-    .replace(/[^\x00-\x7F]/g, '') // 移除非ASCII字符
     .replace(/[&=]/g, '_') // 替換可能影響參數解析的字符
-    .substring(0, 200); // 限制長度
+    .substring(0, 20); // 限制長度以符合ECPay規範
 }
 
 function generateCheckMacValue(data: Omit<ECPayPaymentData, 'CheckMacValue'>, hashKey: string, hashIV: string): string {
