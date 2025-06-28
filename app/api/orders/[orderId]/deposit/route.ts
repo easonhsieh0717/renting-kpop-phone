@@ -95,14 +95,14 @@ async function getOrderInfo(orderId: string) {
       throw new Error('Order not found');
     }
 
-    // 根據實際的Google Sheet欄位順序調整
+    // 根據更新後的Google Sheet欄位對應
     return {
-      orderId: orderRow[0],     // A欄：訂單編號
-      customerName: orderRow[5], // F欄：客戶姓名
-      phoneModel: orderRow[1],   // B欄：手機型號/IMEI (需要進一步處理)
-      phoneImei: orderRow[1],    // B欄：IMEI
-      paymentStatus: orderRow[8], // I欄：付款狀態
-      depositTransactionNo: orderRow[18], // S欄：保證金交易號
+      orderId: orderRow[0],       // A欄：訂單編號
+      customerName: orderRow[1],  // B欄：客戶姓名
+      phoneModel: orderRow[7],    // H欄：手機型號
+      phoneImei: orderRow[8],     // I欄：IMEI
+      paymentStatus: orderRow[13], // N欄：付款狀態
+      depositTransactionNo: orderRow[18], // S欄：保證金交易編號
       depositAmount: parseInt(orderRow[19]) || 0, // T欄：保證金金額
       depositStatus: orderRow[20] || '', // U欄：保證金狀態
     };
