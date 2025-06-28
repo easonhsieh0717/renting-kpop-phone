@@ -885,15 +885,26 @@ async function addWatermark(base64: string, text: string): Promise<string> {
         // 繪製原始圖片
         ctx.drawImage(img, 0, 0);
         
-        // 判斷是否為電腦版本（大螢幕設備通常拍攝的照片解析度較高）
-        // 如果圖片寬度大於1200px，認為是電腦版本，字體大小除以4
+        // 判斷設備類型並設定字體大小
         let fontSize;
-        if (img.width > 1200) {
-          // 電腦版本：字體大小除以4
-          fontSize = Math.max(18, Math.min(36, img.width / 20));
+        
+        // 檢查 User Agent 來判斷設備類型
+        const userAgent = navigator.userAgent.toLowerCase();
+        const isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
+        const isTablet = /ipad|android(?!.*mobile)/i.test(userAgent);
+        
+        console.log('設備判斷 - User Agent:', userAgent);
+        console.log('設備判斷 - isMobile:', isMobile, 'isTablet:', isTablet);
+        console.log('圖片尺寸:', img.width, 'x', img.height);
+        
+        if (isMobile && !isTablet) {
+          // 手機拍攝：字體大小除以4
+          fontSize = Math.max(18, Math.min(36, Math.max(img.width, img.height) / 20));
+          console.log('判斷為手機設備，使用小字體:', fontSize);
         } else {
-          // 手機版本：保持原來的大小
-          fontSize = Math.max(72, Math.min(144, img.width / 5));
+          // 電腦/平板：保持較大字體
+          fontSize = Math.max(72, Math.min(144, Math.max(img.width, img.height) / 5));
+          console.log('判斷為電腦/平板設備，使用大字體:', fontSize);
         }
         
         ctx.font = `bold ${fontSize}px Arial`;
