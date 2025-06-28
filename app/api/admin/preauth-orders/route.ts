@@ -32,18 +32,6 @@ async function getPreAuthOrders() {
 
   console.log(`Found ${rows.length} rows in total`);
   
-  // 先檢查是否能找到目標訂單
-  for (let i = 1; i < rows.length; i++) {
-    const row = rows[i];
-    const orderId = row[0] || '';
-    if (orderId === 'RENT1750990100151') {
-      console.log(`Found target order at row ${i}:`, row);
-      console.log(`S column (18): ${row[18]}`);
-      console.log(`T column (19): ${row[19]}`);
-      console.log(`U column (20): ${row[20]}`);
-    }
-  }
-  
   // 跳過標題行，從第二行開始  
   for (let i = 1; i < rows.length; i++) {
     const row = rows[i];
@@ -52,10 +40,7 @@ async function getPreAuthOrders() {
     const depositTransactionNo = row[18] || ''; // S欄：保證金交易編號
     const orderId = row[0] || '';
     
-    console.log(`Row ${i}: OrderId=${orderId}, DepositTxnNo=${depositTransactionNo}`);
-    
     if (depositTransactionNo && depositTransactionNo.includes('P')) { // P代表PreAuth
-      console.log(`Found preauth order: ${orderId}`);
       const customerName = row[5] || ''; // F欄：客戶姓名
       const phoneModel = row[1] || ''; // B欄：手機ID
       const paymentStatus = row[8] || ''; // I欄：付款狀態

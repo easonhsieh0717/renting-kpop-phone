@@ -126,6 +126,7 @@ export default function PreAuthManagementPage() {
   // 獲取狀態顯示文字
   const getStatusText = (status: string) => {
     switch (status) {
+      case 'HELD': return '預授權成功';
       case 'PREAUTH': return '預授權成功';
       case 'CAPTURED': return '已請款';
       case 'PARTIAL_CAPTURED': return '部分請款';
@@ -138,6 +139,7 @@ export default function PreAuthManagementPage() {
   // 獲取狀態顏色
   const getStatusColor = (status: string) => {
     switch (status) {
+      case 'HELD': return 'text-blue-600';
       case 'PREAUTH': return 'text-blue-600';
       case 'CAPTURED': return 'text-green-600';
       case 'PARTIAL_CAPTURED': return 'text-yellow-600';
@@ -236,7 +238,7 @@ export default function PreAuthManagementPage() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex gap-2">
-                      {preAuth?.depositStatus === 'PREAUTH' && remainingAmount > 0 && (
+                      {preAuth?.depositStatus === 'HELD' && remainingAmount > 0 && (
                         <button
                           onClick={() => openCaptureModal(order)}
                           className="text-green-600 hover:text-green-900"
@@ -252,7 +254,7 @@ export default function PreAuthManagementPage() {
                           繼續請款
                         </button>
                       )}
-                      {(preAuth?.depositStatus === 'PREAUTH' || preAuth?.depositStatus === 'PARTIAL_CAPTURED') && (
+                      {(preAuth?.depositStatus === 'HELD' || preAuth?.depositStatus === 'PARTIAL_CAPTURED') && (
                         <button
                           onClick={() => handleVoidPreAuth(order.orderId)}
                           className="text-red-600 hover:text-red-900"
