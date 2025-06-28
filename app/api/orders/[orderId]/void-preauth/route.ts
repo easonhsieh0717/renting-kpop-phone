@@ -30,11 +30,27 @@ async function getPreAuthTransactionInfo(orderId: string) {
   });
 
   const rows = response.data.values || [];
+  console.log(`[VOID_PREAUTH_DEBUG] 總共有 ${rows.length} 行資料，正在查找訂單: ${orderId}`);
+  
+  // 先找所有可能包含預授權的行
+  const preAuthRows = [];
+  for (let i = 1; i < rows.length; i++) {
+    const row = rows[i];
+    if (row[18] && row[18].includes('P')) { // S欄包含P的預授權交易
+      preAuthRows.push({
+        rowIndex: i + 1,
+        orderId: row[0],
+        depositTransactionNo: row[18]
+      });
+    }
+  }
+  console.log(`[VOID_PREAUTH_DEBUG] 找到 ${preAuthRows.length} 個預授權交易:`, preAuthRows);
   
   // 找到對應的訂單
   for (let i = 1; i < rows.length; i++) {
     const row = rows[i];
-    console.log(`檢查第${i}行: 訂單編號=${row[0]}, 查找=${orderId}, 匹配=${row[0] === orderId}`);
+    console.log(`[VOID_PREAUTH_DEBUG] 檢查第${i}行: 訂單編號="${row[0]}", 查找="${orderId}", 匹配=${row[0] === orderId}`);
+    console.log(`[VOID_PREAUTH_DEBUG] 第${i}行預授權交易編號: "${row[18]}"`);
     
     if (row[0] === orderId) { // A欄是訂單編號
       const result = {
@@ -42,18 +58,28 @@ async function getPreAuthTransactionInfo(orderId: string) {
         depositTransactionNo: row[18] || '', // S欄：保證金交易編號
         ecpayTradeNo: row[24] || '', // Y欄：ECPay交易編號（第25欄，索引24）
         depositAmount: parseInt(row[19]) || 0, // T欄：保證金金額
-        depositStatus: row[20] || '', // U欄：保證金狀態
+        depositStatus: row[20] || '', // U欄：保證金狀態  
         captureAmount: parseInt(row[21]) || 0, // V欄：已請款金額
       };
       
-      console.log(`找到匹配行，讀取到的資料:`, result);
-      console.log(`完整行資料:`, row);
+      console.log(`[VOID_PREAUTH_DEBUG] 找到匹配行 ${i+1}，讀取到的資料:`, result);
+      console.log(`[VOID_PREAUTH_DEBUG] 完整行資料 (前30欄):`, row.slice(0, 30));
       
       return result;
     }
   }
   
-  throw new Error('找不到訂單資訊');
+  console.log(`[VOID_PREAUTH_DEBUG] 未找到訂單 ${orderId}，將檢查所有包含此訂單ID的行`);
+  
+  // 如果直接匹配失敗，嘗試查找包含該訂單ID的行
+  for (let i = 1; i < rows.length; i++) {
+    const row = rows[i];
+    if (row[0] && row[0].includes(orderId)) {
+      console.log(`[VOID_PREAUTH_DEBUG] 找到包含訂單ID的行 ${i+1}: "${row[0]}"`);
+    }
+  }
+  
+  throw new Error(`找不到訂單資訊: ${orderId}`);
 }
 
 // 更新預授權取消狀態
