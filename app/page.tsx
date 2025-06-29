@@ -40,7 +40,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           {/* 副標語 */}
           <div className="mt-6 text-2xl md:text-4xl lg:text-5xl font-bold">
             <span className="bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent drop-shadow-lg">
-              （演唱會神機）
+              （追星神機）
             </span>
           </div>
           
