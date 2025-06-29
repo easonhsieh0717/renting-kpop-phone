@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { Phone } from '../types'
 
 interface PhoneCardProps {
-  phone: Phone;
+  phone: Phone
 }
 
 export default function PhoneCard({ phone }: PhoneCardProps) {
@@ -19,9 +19,11 @@ export default function PhoneCard({ phone }: PhoneCardProps) {
       <div className="relative w-full h-64">
         <Image
           src={imageUrl}
-          alt={name}
+          alt={`${name} 手機租借 - 好星機好心情演唱會追星專用 ${spec}`}
           fill
           className="object-cover"
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+          loading="lazy"
         />
         {isBooked && (
           <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center">
