@@ -20,6 +20,40 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
   return (
     <main className="container mx-auto px-4 py-8">
+      {/* 超級顯眼的標語區塊 */}
+      <div className="text-center mb-16 py-12 relative overflow-hidden">
+        {/* 背景光暈效果 */}
+        <div className="absolute inset-0 bg-gradient-to-r from-purple-600/20 via-pink-600/20 to-yellow-400/20 blur-3xl"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-brand-yellow/10 to-transparent"></div>
+        
+        {/* 主標語 */}
+        <div className="relative z-10">
+          <div className="text-8xl md:text-9xl lg:text-[12rem] font-black leading-none">
+            <div className="bg-gradient-to-r from-yellow-300 via-pink-500 to-purple-600 bg-clip-text text-transparent drop-shadow-2xl animate-pulse">
+              好星機
+            </div>
+            <div className="bg-gradient-to-r from-purple-600 via-pink-500 to-yellow-300 bg-clip-text text-transparent drop-shadow-2xl animate-pulse delay-150">
+              好心情
+            </div>
+          </div>
+          
+          {/* 副標語 */}
+          <div className="mt-6 text-2xl md:text-4xl lg:text-5xl font-bold">
+            <span className="bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent drop-shadow-lg">
+              （演唱會神機）
+            </span>
+          </div>
+          
+          {/* 閃爍特效 */}
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full h-full">
+            <div className="absolute top-0 left-0 w-4 h-4 bg-yellow-400 rounded-full animate-ping opacity-75"></div>
+            <div className="absolute top-1/4 right-0 w-3 h-3 bg-pink-500 rounded-full animate-ping opacity-75 delay-300"></div>
+            <div className="absolute bottom-0 left-1/4 w-5 h-5 bg-purple-500 rounded-full animate-ping opacity-75 delay-700"></div>
+            <div className="absolute bottom-1/4 right-1/4 w-2 h-2 bg-yellow-300 rounded-full animate-ping opacity-75 delay-1000"></div>
+          </div>
+        </div>
+      </div>
+
       <div className="text-center mb-12">
         <h1 className="text-5xl font-bold text-brand-yellow drop-shadow-lg">
           追星神器
