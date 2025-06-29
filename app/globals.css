@@ -40,20 +40,33 @@
 .day-range-selected {
   @apply bg-brand-yellow !important;
   @apply text-brand-black !important;
+  @apply rounded-full !important;
+  @apply font-bold !important;
+  @apply text-base !important;
 }
 .day-range-start {
   @apply bg-brand-yellow !important;
   @apply text-brand-black !important;
   @apply rounded-full !important;
+  @apply font-bold !important;
+  @apply text-base !important;
+  @apply ring-2 !important;
+  @apply ring-brand-yellow/80 !important;
 }
 .day-range-end {
   @apply bg-brand-yellow !important;
   @apply text-brand-black !important;
   @apply rounded-full !important;
+  @apply font-bold !important;
+  @apply text-base !important;
+  @apply ring-2 !important;
+  @apply ring-brand-yellow/80 !important;
 }
 .day-range-middle {
   @apply bg-brand-yellow/30 !important;
   @apply text-white !important;
+  @apply rounded-full !important;
+  @apply text-base !important;
 }
 .day-today {
   @apply text-brand-yellow !important;

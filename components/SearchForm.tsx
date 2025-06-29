@@ -91,7 +91,7 @@ const SearchForm = ({ models, searchParams }: SearchFormProps) => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2 flex justify-center">
           <div>
-            <label className="block text-sm font-bold text-brand-gray-light mb-2">租借日期</label>
+            <label className="block text-base font-bold text-brand-gray-light mb-2 text-center">租借日期</label>
             <div className="bg-brand-gray-dark p-4 sm:p-6 rounded-lg shadow-inner border border-white/10">
             <DayPicker
               {...dayPickerProps}
