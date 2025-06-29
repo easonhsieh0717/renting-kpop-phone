@@ -113,6 +113,19 @@ export default function RootLayout({
 }) {
   return (
     <html lang="zh-TW" className={`${inter.variable} ${maShangZheng.variable} ${zhiMangXing.variable}`}>
+      <head>
+        {/* 字體預載入 - 手機優化 */}
+        <link
+          rel="preload"
+          href="/fonts/JasonHandwriting1.ttf"
+          as="font"
+          type="font/ttf"
+          crossOrigin="anonymous"
+        />
+        {/* Google Fonts 預載入作為後備 */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+      </head>
       <body className="bg-brand-gray-dark text-brand-gray-light">
         {children}
         <Analytics />

@@ -20,6 +20,8 @@
   font-weight: 400;
   font-style: normal;
   font-display: swap;
+  /* 手機優化 */
+  unicode-range: U+4E00-9FFF, U+3400-4DBF, U+20000-2A6DF, U+2A700-2B73F, U+2B740-2B81F, U+2B820-2CEAF, U+F900-FAFF, U+2F800-2FA1F;
 }
 
 @font-face {
@@ -43,7 +45,7 @@
     --font-ma-shan-zheng: 'Ma Shan Zheng', cursive;
     --font-zhi-mang-xing: 'Zhi Mang Xing', cursive;
     --font-liu-jian-mao-cao: 'Liu Jian Mao Cao', cursive;
-    --font-jason-handwriting: 'JasonHandwriting1', cursive;
+    --font-jason-handwriting: 'JasonHandwriting1', 'Ma Shan Zheng', 'Zhi Mang Xing', cursive, sans-serif;
   }
   
   html {
@@ -58,7 +60,7 @@
     @apply bg-brand-gray-dark text-brand-white;
   }
   
-  /* 手寫風格標題類 */
+  /* 手寫風格標題類 - 手機優化版本 */
   .handwriting-title {
     font-family: var(--font-ma-shan-zheng), cursive;
   }
@@ -72,7 +74,20 @@
   }
   
   .handwriting-jason {
-    font-family: var(--font-jason-handwriting), cursive;
+    font-family: var(--font-jason-handwriting);
+    /* 手機優化：如果字體載入失敗，使用後備字體 */
+    font-feature-settings: "kern" 1;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  /* 手機專用優化 */
+  @media (max-width: 768px) {
+    .handwriting-jason {
+      /* 手機上如果載入太慢，優先使用 Google Fonts */
+      font-family: 'Ma Shan Zheng', 'JasonHandwriting1', cursive, sans-serif;
+    }
   }
 }
 
