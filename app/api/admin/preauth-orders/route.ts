@@ -23,7 +23,7 @@ async function getPreAuthOrders() {
   }
 
   console.log('[PREAUTH_API] 直接從Google Sheets讀取預授權訂單...');
-  
+
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId,
     range: 'reservations!A:Z',

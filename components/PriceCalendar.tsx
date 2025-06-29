@@ -74,6 +74,14 @@ export default function PriceCalendar({ phone, onDateChange, disabledDates }: Pr
   
   const hasBufferDay = rentalDays >= 3;
 
+  const rentalPrice = useMemo(() => {
+    if (rentalDays > 0) {
+      const rate = rentalDays >= 3 ? phone.daily_rate_3_plus : phone.daily_rate_1_2;
+      return rentalDays * rate;
+    }
+    return 0;
+  }, [rentalDays, phone]);
+
   const returnDate = useMemo(() => {
     if (!range?.to) return null;
     const lastDay = startOfDay(range.to);
@@ -106,8 +114,8 @@ export default function PriceCalendar({ phone, onDateChange, disabledDates }: Pr
             <span className="font-bold text-white">{rentalDays > 0 ? `${rentalDays} 天` : '-'}</span>
           </div>
           <div className="flex justify-between">
-            <span>押金 (現場支付):</span>
-            <span className="font-bold text-white">NT$ {phone.deposit.toLocaleString()}</span>
+            <span>租金:</span>
+            <span className="font-bold text-white">NT$ {rentalPrice.toLocaleString()}</span>
           </div>
           <div className="flex justify-between items-center">
             <span className="flex items-center">

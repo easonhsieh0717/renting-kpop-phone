@@ -20,7 +20,6 @@
 .env*.local
 
 # Secrets and Keyfiles - DO NOT COMMIT
-# *.json # Temporarily disabled to allow tsconfig.json
 renting-*.json
 
 # Log files
@@ -37,6 +36,7 @@ pnpm-debug.log*
 *.ntvs*
 *.njsproj
 *.sln
+*.sw?
 
 # misc
 .DS_Store
@@ -49,24 +49,8 @@ pnpm-debug.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# JSON key files
-# *.json # This line was causing issues by ignoring essential files like package.json and tsconfig.json
-renting-*.json
-
-# Editor directories and files
-.vscode
-.idea
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-
-# Local
+# Local Environment Variables
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
-
-# pnpm
-pnpm-debug.log* 

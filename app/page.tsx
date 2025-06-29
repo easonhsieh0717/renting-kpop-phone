@@ -45,6 +45,10 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         <div className="rounded-2xl overflow-hidden shadow-2xl">
           <video
             className="w-full h-auto object-cover"
+            autoPlay
+            muted
+            loop
+            playsInline
             controls
             preload="metadata"
             poster="/images/DEMO.jpg"

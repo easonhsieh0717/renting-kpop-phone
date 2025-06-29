@@ -59,7 +59,7 @@ async function getPreAuthTransactionInfo(orderId: string) {
         depositTransactionNo: row[18] || '', // S欄：保證金交易編號
         ecpayTradeNo: row[24] || '', // Y欄：ECPay交易編號（第25欄，索引24）
         depositAmount: parseInt(row[19]) || 0, // T欄：保證金金額
-        depositStatus: row[20] || '', // U欄：保證金狀態  
+        depositStatus: row[20] || '', // U欄：保證金狀態
         captureAmount: parseInt(row[21]) || 0, // V欄：已請款金額
       };
       

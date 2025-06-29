@@ -1,5 +1,20 @@
 import { google } from 'googleapis';
 
+export type PaidReservation = {
+  phoneId: string;
+  from: Date;
+  to: Date;
+}
+
+// 簡單的內存緩存，減少 Google Sheets API 調用
+interface ReservationCacheEntry {
+  data: PaidReservation[]
+  timestamp: number
+}
+
+let reservationCache: ReservationCacheEntry | null = null
+const RESERVATION_CACHE_DURATION = 2 * 60 * 1000 // 2分鐘緩存（預約數據更新頻率較高）
+
 async function getGoogleSheetsClient() {
   const auth = new google.auth.GoogleAuth({
     credentials: {
@@ -52,17 +67,17 @@ export async function updateReservationStatus(orderId: string, status: string): 
   console.log(`Order ${orderId} status updated to ${status}`);
 }
 
-export type PaidReservation = {
-  phoneId: string;
-  from: Date;
-  to: Date;
-}
-
 /**
  * 從 Google Sheets 獲取所有已付款的預約紀錄
  * @returns A promise that resolves to an array of all paid reservations.
  */
 export async function getAllPaidReservations(): Promise<PaidReservation[]> {
+    // 檢查緩存是否有效
+    if (reservationCache && (Date.now() - reservationCache.timestamp) < RESERVATION_CACHE_DURATION) {
+        console.log('--- Returning cached reservation data ---');
+        return reservationCache.data;
+    }
+
     const sheets = await getGoogleSheetsClient();
     const spreadsheetId = process.env.GOOGLE_SHEET_ID;
 
@@ -99,6 +114,12 @@ export async function getAllPaidReservations(): Promise<PaidReservation[]> {
                 };
             })
             .filter(r => r.phoneId && !isNaN(r.from.getTime()) && !isNaN(r.to.getTime())); // Filter out invalid data
+
+        // 更新緩存
+        reservationCache = {
+            data: paidReservations,
+            timestamp: Date.now()
+        };
 
         return paidReservations;
     } catch (error: any) {

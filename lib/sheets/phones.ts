@@ -2,6 +2,15 @@ import { google } from 'googleapis'
 import { Phone } from '../../types'
 import { safeParseInt, safeParseBoolean } from '../utils'
 
+// 簡單的內存緩存，減少 Google Sheets API 調用
+interface CacheEntry {
+  data: Phone[]
+  timestamp: number
+}
+
+let phoneCache: CacheEntry | null = null
+const CACHE_DURATION = 5 * 60 * 1000 // 5分鐘緩存
+
 // 封裝 Google Sheets API 客戶端
 async function getGoogleSheetsClient() {
   console.log('Attempting to create Google Sheets client...');
@@ -42,6 +51,13 @@ async function getGoogleSheetsClient() {
 // 從 Google Sheet 獲取所有手機資料
 export async function getPhones(): Promise<Phone[]> {
   console.log('--- getPhones function started ---');
+  
+  // 檢查緩存是否有效
+  if (phoneCache && (Date.now() - phoneCache.timestamp) < CACHE_DURATION) {
+    console.log('--- Returning cached phone data ---');
+    return phoneCache.data;
+  }
+  
   try {
     const sheets = await getGoogleSheetsClient();
     console.log('Attempting to fetch data from spreadsheet...');
@@ -80,6 +96,13 @@ export async function getPhones(): Promise<Phone[]> {
 
         return phone;
       }).filter(phone => phone.active); // 只返回可用的手機
+      
+      // 更新緩存
+      phoneCache = {
+        data: phones,
+        timestamp: Date.now()
+      };
+      
       console.log('--- getPhones function finished successfully ---');
       return phones;
     } else {
