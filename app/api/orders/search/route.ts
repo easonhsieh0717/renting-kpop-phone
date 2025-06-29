@@ -43,14 +43,30 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ message: '查無訂單' }, { status: 404 });
     }
 
-    // 搜尋手機號碼（H欄，索引7）
-    const order = rows.find(row => row[7] === phone);
+    // 搜尋手機號碼（H欄，索引7）- 修改為返回所有匹配的訂單
+    const matchingOrders = rows.slice(1).filter(row => row[7] === phone).map(row => ({
+      orderId: row[0] || '',
+      phoneModel: row[1] || '', // 機器型號/序號
+      startDate: row[2] || '', // 開始日期
+      endDate: row[3] || '', // 結束日期
+      customerName: row[5] || '',
+      customerPhone: row[7] || '',
+      paymentStatus: row[8] || '',
+      documentStatus: row[13] || '', // 租賃文件簽署狀態
+      createdAt: row[9] || '' // 建立時間
+    }));
     
-    if (!order) {
+    if (matchingOrders.length === 0) {
       return NextResponse.json({ message: '查無此手機號碼的訂單' }, { status: 404 });
     }
 
-    return NextResponse.json({ order });
+    // 如果只有一筆訂單，保持原有格式相容性
+    if (matchingOrders.length === 1) {
+      return NextResponse.json({ order: [matchingOrders[0].orderId] });
+    }
+
+    // 多筆訂單時返回完整資訊
+    return NextResponse.json({ orders: matchingOrders });
   } catch (e) {
     console.error('Search order error:', e);
     return NextResponse.json({ message: '查詢失敗' }, { status: 500 });
