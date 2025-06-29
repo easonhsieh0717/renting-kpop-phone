@@ -249,7 +249,7 @@ export default function PhoneDetailClient({ phone, vercelEnv, bookedDates }: Pho
                 </h3>
                 <ul className="text-base text-brand-gray-light space-y-2">
                   <li>• 採用階梯式計價，租越久越便宜</li>
-                  <li>• 歸還日後會自動加上1天緩衝日</li>
+                  <li>• 首創滿三天歸還日後會送加上1天緩衝日</li>
                   <li>• 現場取機時需支付押金並檢查證件</li>
                   <li>• 請準時歸還，逾期每日加收租金</li>
                   <li>• 確認租借後不予退款</li>
