@@ -43,25 +43,31 @@ export const metadata: Metadata = {
     type: 'website',
     images: [
       {
-        url: '/images/S25U.png',
+        url: 'https://renting-kpop-phone.vercel.app/images/DEMO.jpg',
+        width: 1200,
+        height: 630,
+        alt: '好星機好心情 - 演唱會追星手機租借服務',
+        type: 'image/jpeg',
+      },
+      {
+        url: 'https://renting-kpop-phone.vercel.app/images/S25U.png',
         width: 1200,
         height: 630,
         alt: '好星機好心情 - Samsung S25 Ultra 手機租借',
-      },
-      {
-        url: '/images/DEMO.jpg',
-        width: 1200,
-        height: 630,
-        alt: '演唱會追星手機租借服務',
+        type: 'image/png',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
+    site: '@itimes_repair',
+    creator: '@itimes_repair',
     title: '好星機好心情｜演唱會追星手機租借｜Samsung iPhone',
     description: '專業手機租借服務，Samsung S25U/S24U/S23U、iPhone等旗艦手機。演唱會追星、出國旅遊首選！',
-    images: ['/images/S25U.png'],
-    creator: '@itimes_repair',
+    images: {
+      url: 'https://renting-kpop-phone.vercel.app/images/DEMO.jpg',
+      alt: '好星機好心情 - 演唱會追星手機租借服務',
+    },
   },
   robots: {
     index: true,

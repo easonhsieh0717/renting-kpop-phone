@@ -158,6 +158,21 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
       
+      {/* 額外的 Open Graph meta 標籤 */}
+      <head>
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:image:type" content="image/jpeg" />
+        <meta property="og:image:secure_url" content="https://renting-kpop-phone.vercel.app/images/DEMO.jpg" />
+        <meta name="twitter:image" content="https://renting-kpop-phone.vercel.app/images/DEMO.jpg" />
+        <meta name="twitter:image:alt" content="好星機好心情 - 演唱會追星手機租借服務" />
+        
+        {/* LINE 特殊支援 */}
+        <meta property="line:title" content="好星機好心情｜演唱會追星手機租借" />
+        <meta property="line:description" content="Samsung S25U/S24U/S23U等旗艦手機租借，演唱會追星首選！板橋門市現場取機。" />
+        <meta property="line:image" content="https://renting-kpop-phone.vercel.app/images/DEMO.jpg" />
+      </head>
+      
       <main className="container mx-auto px-4 py-8">
         {/* 超級顯眼的標語區塊 */}
         <div className="text-center mb-16 py-12 relative overflow-hidden">
