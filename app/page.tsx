@@ -183,10 +183,10 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           {/* 主標語 */}
           <div className="relative z-10">
             <div className="text-8xl md:text-9xl lg:text-[12rem] font-black leading-none">
-              <div className="bg-gradient-to-r from-yellow-300 via-pink-500 to-purple-600 bg-clip-text text-transparent drop-shadow-2xl animate-pulse">
+              <div className="handwriting-brush bg-gradient-to-r from-yellow-300 via-pink-500 to-purple-600 bg-clip-text text-transparent drop-shadow-2xl animate-pulse transform rotate-1">
                 好星機
               </div>
-              <div className="bg-gradient-to-r from-purple-600 via-pink-500 to-yellow-300 bg-clip-text text-transparent drop-shadow-2xl animate-pulse delay-150">
+              <div className="handwriting-playful bg-gradient-to-r from-purple-600 via-pink-500 to-yellow-300 bg-clip-text text-transparent drop-shadow-2xl animate-pulse delay-150 transform -rotate-1">
                 好心情
               </div>
             </div>
@@ -208,7 +208,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         </div>
 
         <div className="text-center mb-12">
-          <h1 className="text-5xl font-bold text-brand-yellow drop-shadow-lg">
+          <h1 className="handwriting-title text-5xl font-bold text-brand-yellow drop-shadow-lg transform rotate-1">
             追星神器
           </h1>
           <h2 className="text-xl text-brand-gray-light mt-2">
@@ -252,7 +252,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           
           {/* SEO 內容區塊 */}
           <section className="bg-brand-gray-dark/30 backdrop-blur-sm p-8 rounded-2xl shadow-xl border border-brand-gray-dark">
-            <h2 className="text-3xl font-bold text-center mb-6 text-brand-yellow">
+            <h2 className="handwriting-title text-3xl font-bold text-center mb-6 text-brand-yellow transform -rotate-1">
               為什麼選擇好星機好心情？
             </h2>
             <div className="grid md:grid-cols-3 gap-6 text-brand-gray-light">
@@ -272,7 +272,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           </section>
           
           <div className="bg-brand-gray-dark/50 backdrop-blur-sm p-8 rounded-2xl shadow-2xl border border-brand-gray-dark">
-            <h2 className="text-3xl font-bold text-center mb-6 text-brand-yellow">
+            <h2 className="handwriting-playful text-3xl font-bold text-center mb-6 text-brand-yellow transform rotate-1">
               尋找你的追星神器
             </h2>
             <SearchForm models={models} searchParams={searchParams} />
@@ -280,7 +280,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         </div>
 
         <section>
-          <h2 className="text-2xl font-bold mb-6 text-brand-yellow text-center">
+          <h2 className="handwriting-title text-2xl font-bold mb-6 text-brand-yellow text-center transform -rotate-1">
             {model ? `${model} 手機租借 - 搜尋結果` : '熱門手機租借方案'}
           </h2>
           

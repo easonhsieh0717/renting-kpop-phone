@@ -1,16 +1,36 @@
 import type { Metadata } from 'next'
-import { Inter, Noto_Sans_TC } from 'next/font/google'
+import { Inter } from 'next/font/google'
 import './globals.css'
 import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import FloatingButtons from '@/components/FloatingButtons'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
-const notoSansTC = Noto_Sans_TC({
-  subsets: ['latin'],
-  weight: ['400', '500', '700', '900'],
-  variable: '--font-noto-sans-tc',
-})
+
+// 手寫風格中文字體
+const maShangZheng = {
+  src: [
+    {
+      path: 'https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&display=swap',
+      weight: '400',
+      style: 'normal',
+    },
+  ],
+  variable: '--font-ma-shan-zheng',
+  display: 'swap',
+}
+
+const zhiMangXing = {
+  src: [
+    {
+      path: 'https://fonts.googleapis.com/css2?family=Zhi+Mang+Xing&display=swap',
+      weight: '400', 
+      style: 'normal',
+    },
+  ],
+  variable: '--font-zhi-mang-xing',
+  display: 'swap',
+}
 
 export const metadata: Metadata = {
   title: '好星機好心情｜手機租借｜演唱會追星神器｜Samsung iPhone 短期租借｜板橋',
@@ -92,7 +112,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="zh-TW" className={`${inter.variable} ${notoSansTC.variable}`}>
+    <html lang="zh-TW" className={`${inter.variable} ${maShangZheng.variable} ${zhiMangXing.variable}`}>
       <body className="bg-brand-gray-dark text-brand-gray-light">
         {children}
         <Analytics />

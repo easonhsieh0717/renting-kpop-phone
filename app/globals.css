@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+@import url('https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Zhi+Mang+Xing&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Liu+Jian+Mao+Cao&display=swap');
+
 @font-face {
   font-family: 'Noto Sans TC';
   src: url('/NotoSansTC-Regular.otf') format('opentype');
@@ -11,14 +15,35 @@
 }
 
 @layer base {
+  :root {
+    --font-ma-shan-zheng: 'Ma Shan Zheng', cursive;
+    --font-zhi-mang-xing: 'Zhi Mang Xing', cursive;
+    --font-liu-jian-mao-cao: 'Liu Jian Mao Cao', cursive;
+  }
+  
   html {
     font-family: 'Noto Sans TC', 'Inter', system-ui, sans-serif !important;
   }
+  
   h1, h2, h3, h4, h5, h6 {
     @apply font-bold;
   }
+  
   body {
     @apply bg-brand-gray-dark text-brand-white;
+  }
+  
+  /* 手寫風格標題類 */
+  .handwriting-title {
+    font-family: var(--font-ma-shan-zheng), cursive;
+  }
+  
+  .handwriting-playful {
+    font-family: var(--font-zhi-mang-xing), cursive;
+  }
+  
+  .handwriting-brush {
+    font-family: var(--font-liu-jian-mao-cao), cursive;
   }
 }
 
