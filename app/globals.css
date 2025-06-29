@@ -22,6 +22,22 @@
   font-display: swap;
 }
 
+@font-face {
+  font-family: 'Liu Jian Mao Cao';
+  src: url('/fonts/LiuJianMaoCao.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Zhi Mang Xing';
+  src: url('/fonts/ZhiMangXing.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 @layer base {
   :root {
     --font-ma-shan-zheng: 'Ma Shan Zheng', cursive;
