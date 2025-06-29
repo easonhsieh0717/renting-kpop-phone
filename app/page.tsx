@@ -183,10 +183,10 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           {/* 主標語 */}
           <div className="relative z-10">
             <div className="text-8xl md:text-9xl lg:text-[12rem] font-black leading-none">
-              <div className="handwriting-brush bg-gradient-to-r from-yellow-300 via-pink-500 to-purple-600 bg-clip-text text-transparent drop-shadow-2xl animate-pulse transform rotate-1">
+              <div className="handwriting-jason bg-gradient-to-r from-yellow-300 via-pink-500 to-purple-600 bg-clip-text text-transparent drop-shadow-2xl animate-pulse transform rotate-2">
                 好星機
               </div>
-              <div className="handwriting-playful bg-gradient-to-r from-purple-600 via-pink-500 to-yellow-300 bg-clip-text text-transparent drop-shadow-2xl animate-pulse delay-150 transform -rotate-1">
+              <div className="handwriting-jason bg-gradient-to-r from-purple-600 via-pink-500 to-yellow-300 bg-clip-text text-transparent drop-shadow-2xl animate-pulse delay-150 transform -rotate-2">
                 好心情
               </div>
             </div>

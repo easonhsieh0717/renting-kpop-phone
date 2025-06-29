@@ -14,11 +14,20 @@
   font-display: swap;
 }
 
+@font-face {
+  font-family: 'JasonHandwriting1';
+  src: url('/fonts/JasonHandwriting1.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 @layer base {
   :root {
     --font-ma-shan-zheng: 'Ma Shan Zheng', cursive;
     --font-zhi-mang-xing: 'Zhi Mang Xing', cursive;
     --font-liu-jian-mao-cao: 'Liu Jian Mao Cao', cursive;
+    --font-jason-handwriting: 'JasonHandwriting1', cursive;
   }
   
   html {
@@ -44,6 +53,10 @@
   
   .handwriting-brush {
     font-family: var(--font-liu-jian-mao-cao), cursive;
+  }
+  
+  .handwriting-jason {
+    font-family: var(--font-jason-handwriting), cursive;
   }
 }
 
