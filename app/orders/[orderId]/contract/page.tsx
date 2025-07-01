@@ -220,15 +220,15 @@ function renderContract(order: any, depositMode: string | null, needCable: boole
         )}
         {depositMode === 'low' && (
           <>
-            <span style={fontStyle}>&nbsp;&nbsp;</span><span style={boldStyle}>低押金模式（需證件正本）</span><br/>
+            <span style={fontStyle}>&nbsp;&nbsp;</span><span style={boldStyle}>低押金模式（需證件正本）：</span><br/>
             <span style={fontStyle}>&nbsp;&nbsp;- 押金金額：NT$3,000（現金）</span><br/>
             <span style={fontStyle}>&nbsp;&nbsp;- 繳納方式：設備交付時以現金繳納</span><br/>
-            <span style={fontStyle}>&nbsp;&nbsp;- 證件要求：需提供身分證正本抵押</span><br/>
+            <span style={fontStyle}>&nbsp;&nbsp;- 證件要求：需提供身分證/護照/駕照正本，三選一</span><br/>
           </>
         )}
         {depositMode === 'preauth' && (
           <>
-            <span style={fontStyle}>&nbsp;&nbsp;</span><span style={boldStyle}>預授權模式（免證件）</span><br/>
+            <span style={fontStyle}>&nbsp;&nbsp;</span><span style={boldStyle}>預授權模式（需證件正本核對）：</span><br/>
             <span style={fontStyle}>&nbsp;&nbsp;- 預授權金額：NT${depositAmount.toLocaleString()}（信用卡）</span><br/>
             <span style={fontStyle}>&nbsp;&nbsp;- 繳納方式：設備交付前完成信用卡預授權</span><br/>
             <span style={fontStyle}>&nbsp;&nbsp;- 證件要求：無需提供身分證件</span><br/>
@@ -280,9 +280,9 @@ function renderContract(order: any, depositMode: string | null, needCable: boole
       {depositMode === 'low' && (
         <div style={{marginBottom: '16px'}}>
           <span style={boldStyle}>第七條 證件抵押規範</span><br/>
-          <span style={fontStyle}>1. 低押金模式下，乙方需提供身分證正本作為抵押。</span><br/>
+          <span style={fontStyle}>1. 低押金模式下，乙方需提供身分證/護照/駕照正本作為抵押。</span><br/>
           <span style={fontStyle}>2. 甲方依《個人資料保護法》妥善保管乙方證件，僅用於本契約履約管理。</span><br/>
-          <span style={fontStyle}>3. 設備歸還且驗收無誤後，甲方立即歸還身分證正本。</span><br/>
+          <span style={fontStyle}>3. 設備歸還且驗收無誤後，甲方立即歸還身分證/護照/駕照正本。</span><br/>
           <span style={fontStyle}>4. 若設備未歸還、損壞或違約，甲方得扣除押金並保留證件，直至爭議解決。</span><br/>
         </div>
       )}
@@ -1108,7 +1108,7 @@ export default function ContractPage() {
                 <label htmlFor="low" className="flex-1">
                   <span className="font-medium">💳 低押金模式（需證件正本）：</span>
                   <br/>
-                  <span className="text-gray-900">現金 NT$3,000 + 身分證正本抵押</span>
+                  <span className="text-gray-900">現金 NT$3,000 + 身分證/護照/駕照正本，三選一</span>
                 </label>
               </div>
               <div className="flex items-start">
@@ -1126,11 +1126,11 @@ export default function ContractPage() {
             <div className="space-y-2">
               <label className="flex items-center">
                 <input type="checkbox" checked={needCable} onChange={e=>setNeedCable(e.target.checked)} className="mr-2" />
-                <span>需要傳輸線（NT$800）</span>
+                <span className="text-gray-900">需要傳輸線（如損壞NT$800）</span>
               </label>
               <label className="flex items-center">
                 <input type="checkbox" checked={needCharger} onChange={e=>setNeedCharger(e.target.checked)} className="mr-2" />
-                <span>需要充電頭（NT$1,000）</span>
+                <span className="text-gray-900">需要充電頭（如損壞NT$800）</span>
               </label>
             </div>
           </div>
@@ -1219,7 +1219,7 @@ export default function ContractPage() {
               <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg">
                 <h3 className="font-semibold text-purple-800 mb-2">💳 低押金模式</h3>
                 <p className="text-purple-700 text-sm mb-3">
-                  請收取客戶現金押金 NT$3,000 + 身分證正本
+                  請收取客戶現金押金 NT$3,000 + 身分證/護照/駕照正本
                 </p>
                 <button
                   onClick={() => setDepositPaid(true)}
