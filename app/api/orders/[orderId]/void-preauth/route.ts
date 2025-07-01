@@ -26,7 +26,7 @@ async function getPreAuthTransactionInfo(orderId: string) {
 
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId,
-    range: 'reservations!A:Z',
+    range: 'reservations!A:BB', // 擴大讀取範圍到BB欄
   });
 
   const rows = response.data.values || [];
@@ -54,17 +54,34 @@ async function getPreAuthTransactionInfo(orderId: string) {
     console.log(`[VOID_PREAUTH_DEBUG] 陣列索引${i}行預授權交易編號: "${row[18]}"`);
     
     if (row[0] === orderId) { // A欄是訂單編號
+      // 檢查多個可能的ECPay交易編號位置
+      const possibleEcpayPositions = [24, 25, 26, 27]; // Y, Z, AA, BB欄
+      let ecpayTradeNo = '';
+      
+      for (const pos of possibleEcpayPositions) {
+        if (row[pos] && row[pos].toString().length > 10) {
+          console.log(`[VOID_PREAUTH_DEBUG] 在位置${pos}找到可能的ECPay交易編號: "${row[pos]}"`);
+          ecpayTradeNo = row[pos].toString();
+          break;
+        }
+      }
+      
       const result = {
         orderId: row[0],
         depositTransactionNo: row[18] || '', // S欄：保證金交易編號
-        ecpayTradeNo: row[24] || '', // Y欄：ECPay交易編號（第25欄，索引24）
+        ecpayTradeNo: ecpayTradeNo || row[24] || '', // Y欄或其他位置：ECPay交易編號
         depositAmount: parseInt(row[19]) || 0, // T欄：保證金金額
         depositStatus: row[20] || '', // U欄：保證金狀態
         captureAmount: parseInt(row[21]) || 0, // V欄：已請款金額
       };
       
       console.log(`[VOID_PREAUTH_DEBUG] 找到匹配行 ${i+1}，讀取到的資料:`, result);
-      console.log(`[VOID_PREAUTH_DEBUG] 完整行資料 (前30欄):`, row.slice(0, 30));
+      console.log(`[VOID_PREAUTH_DEBUG] 完整行資料 (所有欄位):`, row);
+      console.log(`[VOID_PREAUTH_DEBUG] 檢查ECPay交易編號相關欄位:`);
+      console.log(`[VOID_PREAUTH_DEBUG] - 位置24 (Y欄): "${row[24] || ''}"`);
+      console.log(`[VOID_PREAUTH_DEBUG] - 位置25 (Z欄): "${row[25] || ''}"`);
+      console.log(`[VOID_PREAUTH_DEBUG] - 位置26 (AA欄): "${row[26] || ''}"`);
+      console.log(`[VOID_PREAUTH_DEBUG] - 位置27 (BB欄): "${row[27] || ''}"`);
       
       return result;
     }

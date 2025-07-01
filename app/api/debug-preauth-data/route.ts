@@ -15,93 +15,101 @@ async function getGoogleSheetsClient() {
 
 export async function GET(req: NextRequest) {
   try {
+    const { searchParams } = new URL(req.url);
+    const orderId = searchParams.get('orderId');
+
+    if (!orderId) {
+      return NextResponse.json({
+        success: false,
+        message: '請提供訂單編號 (orderId)'
+      }, { status: 400 });
+    }
+
     const sheets = await getGoogleSheetsClient();
     const spreadsheetId = process.env.GOOGLE_SHEET_ID;
 
     if (!spreadsheetId) {
-      return NextResponse.json({
-        error: 'GOOGLE_SHEET_ID is not configured'
-      }, { status: 500 });
+      throw new Error('GOOGLE_SHEET_ID is not configured');
     }
 
-    // 強制不使用緩存，直接從Google Sheets讀取
+    // 讀取完整的資料範圍
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId,
-      range: 'reservations!A:Z',
-      dateTimeRenderOption: 'FORMATTED_STRING',
-      valueRenderOption: 'UNFORMATTED_VALUE'
+      range: 'reservations!A:BB',
     });
 
     const rows = response.data.values || [];
-    const targetOrderId = 'RENT1750815760740';
     
-    let foundRow = null;
-    let rowIndex = -1;
-
+    // 查找指定訂單
+    let targetRow = null;
+    let targetRowIndex = -1;
+    
     for (let i = 1; i < rows.length; i++) {
       const row = rows[i];
-      if (row[0] === targetOrderId) {
-        foundRow = row;
-        rowIndex = i + 1;
+      if (row[0] === orderId) {
+        targetRow = row;
+        targetRowIndex = i + 1; // Google Sheets 行號
         break;
       }
     }
 
-    if (!foundRow) {
+    if (!targetRow) {
       return NextResponse.json({
-        error: `未找到訂單 ${targetOrderId}`,
-        totalRows: rows.length,
-        timestamp: new Date().toISOString()
+        success: false,
+        message: `找不到訂單 ${orderId}`
+      }, { status: 404 });
+    }
+
+    // 分析每個欄位
+    const columnAnalysis = [];
+    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    
+    for (let i = 0; i < targetRow.length; i++) {
+      const columnLetter = i < 26 ? alphabet[i] : `A${alphabet[i - 26]}`;
+      columnAnalysis.push({
+        index: i,
+        column: columnLetter,
+        value: targetRow[i] || '',
+        dataType: typeof targetRow[i],
+        length: (targetRow[i] || '').toString().length
       });
     }
 
-    const result = {
-      找到訂單: targetOrderId,
-      Google_Sheets行號: rowIndex,
-      讀取時間: new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' }),
-      原始數據: {
-        A欄_訂單編號: foundRow[0],
-        B欄_手機ID: foundRow[1],
-        F欄_客戶姓名: foundRow[5],
-        S欄_保證金交易編號: foundRow[18],
-        T欄_保證金金額_原始值: foundRow[19],
-        T欄_保證金金額_類型: typeof foundRow[19],
-        T欄_保證金金額_轉換後: parseInt(foundRow[19]) || 0,
-        U欄_保證金狀態: foundRow[20],
-        V欄_已請款金額_原始值: foundRow[21],
-        V欄_已請款金額_類型: typeof foundRow[21],
-        V欄_已請款金額_轉換後: parseInt(foundRow[21]) || 0,
-        W欄_退刷時間: foundRow[22],
-        X欄_損壞費用: foundRow[23],
-        Y欄_ECPay交易編號: foundRow[24],
-        Z欄_備註: foundRow[25]
-      },
-      完整行資料: foundRow.slice(0, 30),
-      API構建的預授權對象: {
-        orderId: foundRow[0],
-        customerName: foundRow[5] || '',
-        phoneModel: foundRow[1] || '',
-        depositAmount: parseInt(foundRow[19]) || 0,
-        depositStatus: foundRow[20] || '',
-        captureAmount: parseInt(foundRow[21]) || 0,
-        ecpayTradeNo: foundRow[24] || '',
-        depositTransactionNo: foundRow[18] || ''
-      }
-    };
+    // 特別檢查可能的 ECPay 交易編號
+    const possibleEcpayColumns = columnAnalysis.filter(col => 
+      col.value && 
+      col.value.toString().length >= 10 && 
+      /^\d+$/.test(col.value.toString())
+    );
 
-    return NextResponse.json(result, {
-      headers: {
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0'
+    return NextResponse.json({
+      success: true,
+      data: {
+        orderId,
+        rowIndex: targetRowIndex,
+        totalColumns: targetRow.length,
+        columnAnalysis,
+        possibleEcpayColumns,
+        specificColumns: {
+          S_column: { index: 18, value: targetRow[18] || '', description: '預授權交易編號' },
+          T_column: { index: 19, value: targetRow[19] || '', description: '預授權金額' },
+          U_column: { index: 20, value: targetRow[20] || '', description: '預授權狀態' },
+          V_column: { index: 21, value: targetRow[21] || '', description: '已請款金額' },
+          W_column: { index: 22, value: targetRow[22] || '', description: '退刷時間' },
+          X_column: { index: 23, value: targetRow[23] || '', description: '損壞費用' },
+          Y_column: { index: 24, value: targetRow[24] || '', description: 'ECPay交易編號(預期位置)' },
+          Z_column: { index: 25, value: targetRow[25] || '', description: 'Z欄' },
+          AA_column: { index: 26, value: targetRow[26] || '', description: 'AA欄' },
+          BB_column: { index: 27, value: targetRow[27] || '', description: 'BB欄' }
+        }
       }
     });
 
   } catch (error: any) {
+    console.error('Debug preauth data error:', error);
     return NextResponse.json({
-      error: error.message,
-      stack: error.stack,
-      timestamp: new Date().toISOString()
+      success: false,
+      message: error.message || '調試失敗'
     }, { status: 500 });
   }
 } 
