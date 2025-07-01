@@ -6,12 +6,21 @@ export async function GET(req: NextRequest) {
     // 測試email配置
     const configTest = await testEmailConfiguration();
     
+    // 檢查環境變數狀態
+    const emailUserExists = !!process.env.EMAIL_USER;
+    const emailPasswordExists = !!process.env.EMAIL_PASSWORD;
+    
     return NextResponse.json({
       success: configTest.success,
       message: configTest.success 
         ? 'Email configuration is valid' 
         : `Email configuration error: ${configTest.error}`,
-      emailConfigured: !!process.env.EMAIL_USER && !!process.env.EMAIL_PASSWORD
+      emailConfigured: emailUserExists && emailPasswordExists,
+      environmentVariables: {
+        EMAIL_USER: emailUserExists ? '✅ 已設定' : '❌ 未設定',
+        EMAIL_PASSWORD: emailPasswordExists ? '✅ 已設定' : '❌ 未設定'
+      },
+      timestamp: new Date().toISOString()
     });
   } catch (error) {
     return NextResponse.json({
