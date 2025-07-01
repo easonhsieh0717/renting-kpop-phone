@@ -57,7 +57,7 @@ async function updateDepositTransactionInSheet(
           },
           {
             range: `reservations!U${rowIndex + 1}`, // U欄：保證金狀態
-            values: [['HELD']]
+            values: [['PENDING']]
           }
         ]
       }
@@ -288,4 +288,4 @@ export async function GET(req: NextRequest, { params }: { params: { orderId: str
       message: error.message || '查詢保證金狀態失敗'
     }, { status: 500 });
   }
-} 
+}
