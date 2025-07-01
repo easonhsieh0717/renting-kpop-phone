@@ -292,7 +292,8 @@ export function getECPayPreAuthParams({
   hashIV,
   holdTradeAmount,
   merchantName,
-  platformID
+  platformID,
+  clientBackURL
 }: {
   merchantTradeNo: string;
   totalAmount: number;
@@ -303,6 +304,7 @@ export function getECPayPreAuthParams({
   holdTradeAmount?: number;
   merchantName?: string; // 改為可選參數
   platformID?: string;
+  clientBackURL?: string; // 新增：自定義返回URL
 }) {
   const tradeDate = new Date();
   const formattedDate = `${tradeDate.getFullYear()}/${String(tradeDate.getMonth() + 1).padStart(2, '0')}/${String(tradeDate.getDate()).padStart(2, '0')} ${String(tradeDate.getHours()).padStart(2, '0')}:${String(tradeDate.getMinutes()).padStart(2, '0')}:${String(tradeDate.getSeconds()).padStart(2, '0')}`;
@@ -324,7 +326,7 @@ export function getECPayPreAuthParams({
     ReturnURL: `${process.env.NEXT_PUBLIC_SITE_URL}/api/ecpay/preauth/return`,
     ChoosePayment: 'Credit',
     EncryptType: 1,
-    ClientBackURL: `${process.env.NEXT_PUBLIC_SITE_URL}`,
+    ClientBackURL: clientBackURL || `${process.env.NEXT_PUBLIC_SITE_URL}`,
     HoldTradeAMT: 1
     // 暫時移除 MerchantName，檢查是否是預授權功能問題
   };

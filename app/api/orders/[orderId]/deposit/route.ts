@@ -116,7 +116,7 @@ async function getOrderInfo(orderId: string) {
 export async function POST(req: NextRequest, { params }: { params: { orderId: string } }) {
   try {
     const orderId = params.orderId;
-    const { depositAmount, isTest } = await req.json();
+    const { depositAmount, isTest, clientBackURL } = await req.json();
 
     // --- 防禦性修正：確保金額為純整數 ---
     const finalAmount = Math.round(Number(depositAmount));
@@ -222,7 +222,8 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
       hashKey,
       hashIV,
       holdTradeAmount: finalAmount,
-      merchantName
+      merchantName,
+      clientBackURL: clientBackURL // 使用前端傳來的合約頁面URL
     });
 
     // 準備ECPay表單URL

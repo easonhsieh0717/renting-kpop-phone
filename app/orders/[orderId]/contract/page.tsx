@@ -448,6 +448,18 @@ export default function ContractPage() {
         // 從Google Sheet讀取預授權金額（第19欄，索引19）
         const sheetDepositAmount = parseInt(data[19]) || 30000;
         setDepositAmount(sheetDepositAmount);
+        
+        // 檢查預授權狀態（第20欄，索引20）
+        const depositStatus = data[20];
+        if (depositStatus === 'HELD') {
+          // 預授權已完成
+          setDepositPaid(true);
+          setDepositProcessing(false);
+        } else if (data[18]) {
+          // 有預授權交易號但狀態未確定，開始檢查狀態
+          checkDepositStatusAfterReturn();
+        }
+        
         setLoading(false);
       })
       .catch(() => {
@@ -456,11 +468,105 @@ export default function ContractPage() {
       });
   }, [orderId]);
 
+  // 檢查預授權狀態（用於頁面載入或返回時）
+  const checkDepositStatusAfterReturn = async () => {
+    try {
+      setDepositProcessing(true);
+      
+      const statusResponse = await fetch(`/api/orders/${orderId}/deposit-status`);
+      const statusResult = await statusResponse.json();
+      
+      if (statusResult.success && statusResult.status === 'HELD') {
+        // 預授權成功
+        setDepositPaid(true);
+        setDepositProcessing(false);
+        alert('🎉 預授權已完成！您現在可以繼續簽署合約。');
+      } else if (statusResult.success && statusResult.status === 'PREAUTH_FAILED') {
+        // 預授權失敗
+        setDepositProcessing(false);
+        alert('❌ 預授權失敗，請重新嘗試。');
+      } else if (statusResult.data?.hasPreAuthTransaction) {
+        // 有預授權交易但狀態不明，開始定期檢查
+        alert('正在檢查您的預授權狀態，請稍候...');
+        startPaymentStatusChecker();
+      } else {
+        setDepositProcessing(false);
+      }
+    } catch (error) {
+      console.error('檢查預授權狀態失敗:', error);
+      setDepositProcessing(false);
+    }
+  };
+
+  // 開始付款狀態檢查器（提取為獨立函數）
+  const startPaymentStatusChecker = () => {
+    const checkPaymentStatus = async () => {
+      try {
+        const statusResponse = await fetch(`/api/orders/${orderId}/deposit-status`);
+        const statusResult = await statusResponse.json();
+        
+        if (statusResult.success && statusResult.status === 'HELD') {
+          // 預授權成功
+          setDepositPaid(true);
+          setDepositProcessing(false);
+          setPreauthLoading(false);
+          alert('🎉 預授權完成！您現在可以繼續簽署合約。');
+          return true; // 停止檢查
+        } else if (statusResult.success && statusResult.status === 'PREAUTH_FAILED') {
+          // 預授權失敗
+          setDepositProcessing(false);
+          setPreauthLoading(false);
+          alert('❌ 預授權失敗，請重新嘗試。');
+          return true; // 停止檢查
+        }
+        return false; // 繼續檢查
+      } catch (error) {
+        console.error('檢查付款狀態失敗:', error);
+        return false; // 繼續檢查
+      }
+    };
+
+    // 立即檢查一次，然後每10秒檢查一次，最多檢查30次（5分鐘）
+    let checkCount = 0;
+    const maxChecks = 30;
+    
+    const statusChecker = setInterval(async () => {
+      checkCount++;
+      const shouldStop = await checkPaymentStatus();
+      
+      if (shouldStop || checkCount >= maxChecks) {
+        clearInterval(statusChecker);
+        if (checkCount >= maxChecks) {
+          setDepositProcessing(false);
+          setPreauthLoading(false);
+          alert('⏰ 付款狀態檢查超時。\n\n如果您已完成付款，請重新整理頁面檢查狀態。\n如果仍有問題，請聯繫客服。');
+        }
+      }
+    }, 10000); // 每10秒檢查一次
+
+    // 立即檢查一次
+    setTimeout(async () => {
+      const shouldStop = await checkPaymentStatus();
+      if (shouldStop) {
+        clearInterval(statusChecker);
+      }
+    }, 2000); // 2秒後進行第一次檢查
+  };
+
   useEffect(() => {
     // 進入合約頁即隱藏浮動按鈕，離開時恢復
     if (typeof window !== 'undefined') {
       const fb = document.querySelector('.fixed.bottom-6.right-6.z-50');
       if (fb) (fb as HTMLElement).style.display = 'none';
+      
+      // 檢查是否從付款頁面返回
+      const savedUrl = sessionStorage.getItem('contractPageUrl');
+      if (savedUrl && savedUrl === window.location.href) {
+        // 清除保存的URL
+        sessionStorage.removeItem('contractPageUrl');
+        // 如果有預授權交易，會在頁面載入時自動檢查狀態
+      }
+      
       return () => { if (fb) (fb as HTMLElement).style.display = ''; };
     }
   }, []);
@@ -613,7 +719,8 @@ export default function ContractPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          depositAmount: depositAmount // 修正：傳入正確的金額
+          depositAmount: depositAmount, // 修正：傳入正確的金額
+          clientBackURL: window.location.href // 傳送當前頁面URL
         })
       });
       const result = await response.json();
@@ -623,12 +730,17 @@ export default function ContractPage() {
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         
         if (isMobile) {
-          // 手機版：顯示付款說明，然後在新視窗開啟
-          if (confirm('即將開啟付款頁面，付款完成後請回到此頁面。\n\n建議：\n1. 付款前記住此頁面網址\n2. 付款完成後點選「回到商店」\n3. 或重新開啟此合約頁面\n\n確定要繼續嗎？')) {
+          // 手機版：顯示付款說明，然後直接跳轉
+          if (confirm('即將跳轉到付款頁面，付款完成後請點選「回到商店」回到此頁面。\n\n重要提醒：\n1. 請記住目前的網址以便返回\n2. 付款完成後點選「回到商店」\n3. 或直接開啟新分頁保存此頁面\n\n確定要繼續嗎？')) {
+            // 儲存當前頁面URL到sessionStorage，方便用戶返回
+            const currentUrl = window.location.href;
+            sessionStorage.setItem('contractPageUrl', currentUrl);
+            
+            // 手機版：直接在同一視窗跳轉到ECPay
             const form = document.createElement('form');
             form.method = 'POST';
             form.action = result.ecpayUrl;
-            form.target = '_blank'; // 手機版也使用新視窗，避免失去原頁面
+            // 不設定target，直接在同一視窗跳轉
 
             // 添加所有ECPay參數
             Object.entries(result.paymentParams).forEach(([key, value]) => {
@@ -643,9 +755,7 @@ export default function ContractPage() {
             form.submit();
             document.body.removeChild(form);
             
-            // 顯示等待付款狀態
-            setDepositProcessing(true);
-            alert('付款頁面已開啟，請完成付款後回到此頁面。\n\n頁面將開始檢查付款狀態...');
+            // 注意：這裡不能設定setDepositProcessing(true)，因為頁面會跳轉
           } else {
             setPreauthLoading(false);
             return;
@@ -673,60 +783,10 @@ export default function ContractPage() {
           // 顯示等待付款狀態
           setDepositProcessing(true);
           alert('付款頁面已在新分頁開啟，請完成付款。\n\n此頁面將開始檢查付款狀態...');
-        }
-
-        // 開始檢查付款狀態（每10秒檢查一次）
-        const checkPaymentStatus = async () => {
-          try {
-            const statusResponse = await fetch(`/api/orders/${orderId}/deposit-status`);
-            const statusResult = await statusResponse.json();
-            
-            if (statusResult.success && statusResult.status === 'HELD') {
-              // 預授權成功
-              setDepositPaid(true);
-              setDepositProcessing(false);
-              setPreauthLoading(false);
-              alert('🎉 預授權完成！您現在可以繼續簽署合約。');
-              return true; // 停止檢查
-            } else if (statusResult.success && statusResult.status === 'PREAUTH_FAILED') {
-              // 預授權失敗
-              setDepositProcessing(false);
-              setPreauthLoading(false);
-              alert('❌ 預授權失敗，請重新嘗試。');
-              return true; // 停止檢查
-            }
-            return false; // 繼續檢查
-          } catch (error) {
-            console.error('檢查付款狀態失敗:', error);
-            return false; // 繼續檢查
-          }
-        };
-
-        // 立即檢查一次，然後每10秒檢查一次，最多檢查30次（5分鐘）
-        let checkCount = 0;
-        const maxChecks = 30;
-        
-        const statusChecker = setInterval(async () => {
-          checkCount++;
-          const shouldStop = await checkPaymentStatus();
           
-          if (shouldStop || checkCount >= maxChecks) {
-            clearInterval(statusChecker);
-            if (checkCount >= maxChecks) {
-              setDepositProcessing(false);
-              setPreauthLoading(false);
-              alert('⏰ 付款狀態檢查超時。\n\n如果您已完成付款，請重新整理頁面檢查狀態。\n如果仍有問題，請聯繫客服。');
-            }
-          }
-        }, 10000); // 每10秒檢查一次
-
-        // 立即檢查一次
-        setTimeout(async () => {
-          const shouldStop = await checkPaymentStatus();
-          if (shouldStop) {
-            clearInterval(statusChecker);
-          }
-        }, 2000); // 2秒後進行第一次檢查
+          // 開始檢查付款狀態
+          startPaymentStatusChecker();
+        }
       } else {
         setDepositProcessing(false);
         alert(`預授權失敗: ${result.message}`);
