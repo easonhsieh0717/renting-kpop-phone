@@ -623,24 +623,33 @@ export default function ContractPage() {
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         
         if (isMobile) {
-          // 手機版：直接跳轉到同一分頁
-          const form = document.createElement('form');
-          form.method = 'POST';
-          form.action = result.ecpayUrl;
-          // 不設定target，在同一分頁開啟
+          // 手機版：顯示付款說明，然後在新視窗開啟
+          if (confirm('即將開啟付款頁面，付款完成後請回到此頁面。\n\n建議：\n1. 付款前記住此頁面網址\n2. 付款完成後點選「回到商店」\n3. 或重新開啟此合約頁面\n\n確定要繼續嗎？')) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = result.ecpayUrl;
+            form.target = '_blank'; // 手機版也使用新視窗，避免失去原頁面
 
-          // 添加所有ECPay參數
-          Object.entries(result.paymentParams).forEach(([key, value]) => {
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = key;
-            input.value = value as string;
-            form.appendChild(input);
-          });
+            // 添加所有ECPay參數
+            Object.entries(result.paymentParams).forEach(([key, value]) => {
+              const input = document.createElement('input');
+              input.type = 'hidden';
+              input.name = key;
+              input.value = value as string;
+              form.appendChild(input);
+            });
 
-          document.body.appendChild(form);
-          form.submit();
-          document.body.removeChild(form);
+            document.body.appendChild(form);
+            form.submit();
+            document.body.removeChild(form);
+            
+            // 顯示等待付款狀態
+            setDepositProcessing(true);
+            alert('付款頁面已開啟，請完成付款後回到此頁面。\n\n頁面將開始檢查付款狀態...');
+          } else {
+            setPreauthLoading(false);
+            return;
+          }
         } else {
           // 電腦版：在新分頁開啟
           const form = document.createElement('form');
@@ -660,14 +669,64 @@ export default function ContractPage() {
           document.body.appendChild(form);
           form.submit();
           document.body.removeChild(form);
+          
+          // 顯示等待付款狀態
+          setDepositProcessing(true);
+          alert('付款頁面已在新分頁開啟，請完成付款。\n\n此頁面將開始檢查付款狀態...');
         }
 
-        // 模擬付款成功（實際應該通過回調確認）
-        setTimeout(() => {
-          setDepositPaid(true);
-          setDepositProcessing(false);
-          alert('預授權完成！請繼續簽署合約。');
-        }, 3000);
+        // 開始檢查付款狀態（每10秒檢查一次）
+        const checkPaymentStatus = async () => {
+          try {
+            const statusResponse = await fetch(`/api/orders/${orderId}/deposit-status`);
+            const statusResult = await statusResponse.json();
+            
+            if (statusResult.success && statusResult.status === 'HELD') {
+              // 預授權成功
+              setDepositPaid(true);
+              setDepositProcessing(false);
+              setPreauthLoading(false);
+              alert('🎉 預授權完成！您現在可以繼續簽署合約。');
+              return true; // 停止檢查
+            } else if (statusResult.success && statusResult.status === 'PREAUTH_FAILED') {
+              // 預授權失敗
+              setDepositProcessing(false);
+              setPreauthLoading(false);
+              alert('❌ 預授權失敗，請重新嘗試。');
+              return true; // 停止檢查
+            }
+            return false; // 繼續檢查
+          } catch (error) {
+            console.error('檢查付款狀態失敗:', error);
+            return false; // 繼續檢查
+          }
+        };
+
+        // 立即檢查一次，然後每10秒檢查一次，最多檢查30次（5分鐘）
+        let checkCount = 0;
+        const maxChecks = 30;
+        
+        const statusChecker = setInterval(async () => {
+          checkCount++;
+          const shouldStop = await checkPaymentStatus();
+          
+          if (shouldStop || checkCount >= maxChecks) {
+            clearInterval(statusChecker);
+            if (checkCount >= maxChecks) {
+              setDepositProcessing(false);
+              setPreauthLoading(false);
+              alert('⏰ 付款狀態檢查超時。\n\n如果您已完成付款，請重新整理頁面檢查狀態。\n如果仍有問題，請聯繫客服。');
+            }
+          }
+        }, 10000); // 每10秒檢查一次
+
+        // 立即檢查一次
+        setTimeout(async () => {
+          const shouldStop = await checkPaymentStatus();
+          if (shouldStop) {
+            clearInterval(statusChecker);
+          }
+        }, 2000); // 2秒後進行第一次檢查
       } else {
         setDepositProcessing(false);
         alert(`預授權失敗: ${result.message}`);
