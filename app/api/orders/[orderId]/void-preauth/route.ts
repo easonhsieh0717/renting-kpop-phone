@@ -59,17 +59,31 @@ async function getPreAuthTransactionInfo(orderId: string) {
       let ecpayTradeNo = '';
       
       for (const pos of possibleEcpayPositions) {
-        if (row[pos] && row[pos].toString().length > 10) {
-          console.log(`[VOID_PREAUTH_DEBUG] 在位置${pos}找到可能的ECPay交易編號: "${row[pos]}"`);
-          ecpayTradeNo = row[pos].toString();
-          break;
+        if (row[pos] && row[pos].toString().trim().length >= 10) {
+          const potentialTradeNo = row[pos].toString().trim();
+          // 檢查是否為純數字且長度合理
+          if (/^\d{10,}$/.test(potentialTradeNo)) {
+            console.log(`[VOID_PREAUTH_DEBUG] 在位置${pos}找到可能的ECPay交易編號: "${potentialTradeNo}"`);
+            ecpayTradeNo = potentialTradeNo;
+            break;
+          }
+        }
+      }
+      
+      // 如果上面沒找到，直接檢查Y欄（最常見位置）
+      if (!ecpayTradeNo && row[24]) {
+        const yColumnValue = row[24].toString().trim();
+        console.log(`[VOID_PREAUTH_DEBUG] 直接檢查Y欄值: "${yColumnValue}"`);
+        if (yColumnValue.length >= 10) {
+          ecpayTradeNo = yColumnValue;
+          console.log(`[VOID_PREAUTH_DEBUG] 使用Y欄值作為ECPay交易編號: "${ecpayTradeNo}"`);
         }
       }
       
       const result = {
         orderId: row[0],
         depositTransactionNo: row[18] || '', // S欄：保證金交易編號
-        ecpayTradeNo: ecpayTradeNo || row[24] || '', // Y欄或其他位置：ECPay交易編號
+        ecpayTradeNo: ecpayTradeNo || row[24] || '', // 使用檢測到的ECPay交易編號
         depositAmount: parseInt(row[19]) || 0, // T欄：保證金金額
         depositStatus: row[20] || '', // U欄：保證金狀態
         captureAmount: parseInt(row[21]) || 0, // V欄：已請款金額
@@ -82,6 +96,7 @@ async function getPreAuthTransactionInfo(orderId: string) {
       console.log(`[VOID_PREAUTH_DEBUG] - 位置25 (Z欄): "${row[25] || ''}"`);
       console.log(`[VOID_PREAUTH_DEBUG] - 位置26 (AA欄): "${row[26] || ''}"`);
       console.log(`[VOID_PREAUTH_DEBUG] - 位置27 (BB欄): "${row[27] || ''}"`);
+      console.log(`[VOID_PREAUTH_DEBUG] - 最終選擇的ECPay交易編號: "${result.ecpayTradeNo}"`);
       
       return result;
     }
