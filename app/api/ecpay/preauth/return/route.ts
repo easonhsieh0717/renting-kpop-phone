@@ -42,6 +42,103 @@ async function getGoogleSheetsClient() {
   return google.sheets({ version: 'v4', auth });
 }
 
+// 🎯 預授權成功後的自動化處理
+async function triggerPreAuthSuccessActions(preauthTransactionNo: string, ecpayTradeNo: string) {
+  try {
+    console.log(`[PREAUTH_SUCCESS_AUTOMATION] Starting automation for transaction: ${preauthTransactionNo}`);
+    
+    const sheets = await getGoogleSheetsClient();
+    const spreadsheetId = process.env.GOOGLE_SHEET_ID;
+    
+    if (!spreadsheetId) {
+      throw new Error('GOOGLE_SHEET_ID is not configured');
+    }
+
+    // 獲取訂單資料
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: 'reservations!A:BB',
+    });
+
+    const rows = response.data.values;
+    if (!rows) return;
+
+    // 查找對應的訂單
+    const rowIndex = rows.findIndex((row: any) => row[18] === preauthTransactionNo);
+    if (rowIndex === -1) {
+      console.log(`[PREAUTH_SUCCESS_AUTOMATION] Order not found for transaction: ${preauthTransactionNo}`);
+      return;
+    }
+
+    const orderRow = rows[rowIndex];
+    const originalOrderId = orderRow[0]; // A欄：原始訂單編號
+    
+    // 準備通知資料
+    const orderData = {
+      orderId: originalOrderId,
+      customerName: orderRow[5] || '',
+      customerEmail: orderRow[6] || '',
+      phoneModel: orderRow[2] || '',
+      imei: orderRow[1] || '',
+      startDate: orderRow[3] || '',
+      endDate: orderRow[4] || '',
+      finalAmount: parseFloat(orderRow[12]) || 0,
+      preauthAmount: parseFloat(orderRow[19]) || 30000, // T欄：預授權金額
+      carrierNumber: orderRow[14] || ''
+    };
+
+    console.log(`[PREAUTH_SUCCESS_AUTOMATION] Processing order data:`, {
+      orderId: orderData.orderId,
+      customerEmail: orderData.customerEmail,
+      preauthAmount: orderData.preauthAmount
+    });
+
+    // 🎯 1. 發送預授權成功通知email（如果有email）
+    if (orderData.customerEmail) {
+      try {
+        const emailResponse = await fetch(`${process.env.VERCEL_URL || 'https://renting-kpop-phone.vercel.app'}/api/send-preauth-success-email`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            orderData,
+            preauthTransactionNo,
+            ecpayTradeNo
+          })
+        });
+        
+        if (emailResponse.ok) {
+          console.log(`[PREAUTH_SUCCESS_AUTOMATION] Email notification sent successfully to: ${orderData.customerEmail}`);
+        } else {
+          console.error(`[PREAUTH_SUCCESS_AUTOMATION] Email notification failed:`, await emailResponse.text());
+        }
+      } catch (emailError) {
+        console.error(`[PREAUTH_SUCCESS_AUTOMATION] Email notification error:`, emailError);
+      }
+    }
+
+    // 🎯 2. 記錄預授權成功的時間戳記
+    const timestamp = new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' });
+    try {
+      await sheets.spreadsheets.values.update({
+        spreadsheetId,
+        range: `reservations!Z${rowIndex + 1}`, // Z欄：預授權成功時間
+        valueInputOption: 'USER_ENTERED',
+        requestBody: {
+          values: [[timestamp]]
+        }
+      });
+      console.log(`[PREAUTH_SUCCESS_AUTOMATION] Timestamp recorded: ${timestamp}`);
+    } catch (timestampError) {
+      console.error(`[PREAUTH_SUCCESS_AUTOMATION] Failed to record timestamp:`, timestampError);
+    }
+
+    console.log(`[PREAUTH_SUCCESS_AUTOMATION] Automation completed for transaction: ${preauthTransactionNo}`);
+    
+  } catch (error) {
+    console.error(`[PREAUTH_SUCCESS_AUTOMATION] Failed for transaction ${preauthTransactionNo}:`, error);
+  }
+}
+
 // 更新预授权状态
 async function updatePreAuthStatus(transactionNo: string, status: 'HELD' | 'PREAUTH_FAILED', ecpayTradeNo?: string) {
   try {
@@ -180,6 +277,9 @@ export async function POST(req: NextRequest) {
       // 预授权成功
       console.log(`[ECPAY_CALLBACK_SUCCESS] Pre-authorization successful for transaction ${orderId}.`);
       await updatePreAuthStatus(orderId, 'HELD', ecpayTradeNo);
+      
+      // 🎯 新增：預授權成功後觸發自動化功能
+      await triggerPreAuthSuccessActions(orderId, ecpayTradeNo);
     } else {
       // 预授权失败
       console.error(`[ECPAY_CALLBACK_FAILURE] Pre-authorization failed for transaction ${orderId}. RtnCode: ${RtnCode}, RtnMsg: ${RtnMsg}`);

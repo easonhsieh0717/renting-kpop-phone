@@ -1,4 +1,5 @@
 import { google } from 'googleapis';
+import { sendPaymentSuccessEmail } from '../email';
 
 export type PaidReservation = {
   phoneId: string;
@@ -34,7 +35,8 @@ export async function updateReservationStatus(orderId: string, status: string): 
     throw new Error('GOOGLE_SHEET_ID is not configured');
   }
 
-  const range = 'reservations!A:J';
+  // 先獲取完整的訂單資料（擴展範圍以取得所有必要資訊）
+  const range = 'reservations!A:R';
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId,
     range,
@@ -52,9 +54,12 @@ export async function updateReservationStatus(orderId: string, status: string): 
     return;
   }
 
-  // Column I is the 9th column (status) after adding phone number
-  const targetCell = `reservations!I${rowIndex + 1}`;
+  // 獲取當前付款狀態
+  const currentRow = rows[rowIndex];
+  const currentStatus = currentRow[8]; // I欄：付款狀態
 
+  // 更新付款狀態
+  const targetCell = `reservations!I${rowIndex + 1}`;
   await sheets.spreadsheets.values.update({
     spreadsheetId,
     range: targetCell,
@@ -65,6 +70,127 @@ export async function updateReservationStatus(orderId: string, status: string): 
   });
 
   console.log(`Order ${orderId} status updated to ${status}`);
+
+  // 如果狀態變為PAID且之前不是PAID，觸發自動化流程
+  if (status === 'PAID' && currentStatus !== 'PAID') {
+    console.log(`Triggering automation for newly paid order: ${orderId}`);
+    
+    // 並行執行發票開立和email通知
+    try {
+      const orderData = {
+        orderId: currentRow[0],
+        phoneModel: currentRow[1],
+        startDate: currentRow[2],
+        endDate: currentRow[3],
+        originalAmount: parseFloat(currentRow[4]) || 0,
+        customerName: currentRow[5] || '',
+        customerEmail: currentRow[6] || '',
+        customerPhone: currentRow[7] || '',
+        finalAmount: parseFloat(currentRow[12]) || 0,
+        carrierNumber: currentRow[14] || '',
+        invoiceStatus: currentRow[16] || '' // Q欄：發票狀態
+      };
+
+      // 並行處理：同時執行發票開立和email通知
+      const [invoiceResult, emailResult] = await Promise.allSettled([
+        // 觸發發票開立
+        triggerInvoiceCreation(orderData),
+        // 發送付款成功email
+        sendPaymentSuccessNotification(orderData)
+      ]);
+
+      // 記錄結果
+      if (invoiceResult.status === 'fulfilled') {
+        console.log(`Invoice creation result for ${orderId}:`, invoiceResult.value);
+      } else {
+        console.error(`Invoice creation failed for ${orderId}:`, invoiceResult.reason);
+      }
+
+      if (emailResult.status === 'fulfilled') {
+        console.log(`Email notification result for ${orderId}:`, emailResult.value);
+      } else {
+        console.error(`Email notification failed for ${orderId}:`, emailResult.reason);
+      }
+
+    } catch (error) {
+      console.error(`Automation error for order ${orderId}:`, error);
+      // 不拋出錯誤，避免影響付款狀態更新
+    }
+  }
+}
+
+// 觸發發票開立
+async function triggerInvoiceCreation(orderData: any): Promise<any> {
+  try {
+    // 檢查是否已有發票
+    const invoiceStatus = orderData.invoiceStatus;
+    if (invoiceStatus && !invoiceStatus.includes('失敗')) {
+      console.log(`Order ${orderData.orderId} already has invoice: ${invoiceStatus}`);
+      return { success: true, message: 'Invoice already exists' };
+    }
+
+    // 檢查必要資料
+    if (!orderData.finalAmount || orderData.finalAmount <= 0) {
+      throw new Error(`Invalid amount: ${orderData.finalAmount}`);
+    }
+
+    // 呼叫發票API
+    const invoiceApiUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/invoice/create`;
+    
+    const response = await fetch(invoiceApiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        orderId: orderData.orderId
+      }),
+    });
+
+    const result = await response.json();
+    
+    if (result.success) {
+      console.log(`Invoice created successfully for order ${orderData.orderId}: ${result.invoiceNumber}`);
+      return result;
+    } else {
+      throw new Error(`Invoice creation failed: ${result.message}`);
+    }
+    
+  } catch (error) {
+    console.error(`Failed to create invoice for order ${orderData.orderId}:`, error);
+    throw error;
+  }
+}
+
+// 發送付款成功通知
+async function sendPaymentSuccessNotification(orderData: any): Promise<any> {
+  try {
+    if (!orderData.customerEmail) {
+      console.log(`No email address for order ${orderData.orderId}, skipping email notification`);
+      return { success: true, message: 'No email address provided' };
+    }
+
+    const emailResult = await sendPaymentSuccessEmail({
+      orderId: orderData.orderId,
+      customerName: orderData.customerName,
+      customerEmail: orderData.customerEmail,
+      phoneModel: orderData.phoneModel,
+      startDate: orderData.startDate,
+      endDate: orderData.endDate,
+      finalAmount: orderData.finalAmount,
+    });
+
+    if (emailResult.success) {
+      console.log(`Payment success email sent for order ${orderData.orderId}: ${emailResult.messageId}`);
+      return emailResult;
+    } else {
+      throw new Error(`Email sending failed: ${emailResult.error}`);
+    }
+    
+  } catch (error) {
+    console.error(`Failed to send email for order ${orderData.orderId}:`, error);
+    throw error;
+  }
 }
 
 /**

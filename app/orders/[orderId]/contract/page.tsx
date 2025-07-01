@@ -619,24 +619,48 @@ export default function ContractPage() {
       const result = await response.json();
 
       if (result.success) {
-        // 創建ECPay表單並自動提交
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = result.ecpayUrl;
-        form.target = '_blank'; // 在新視窗開啟
+        // 檢測是否為手機裝置
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
+        if (isMobile) {
+          // 手機版：直接跳轉到同一分頁
+          const form = document.createElement('form');
+          form.method = 'POST';
+          form.action = result.ecpayUrl;
+          // 不設定target，在同一分頁開啟
 
-        // 添加所有ECPay參數
-        Object.entries(result.paymentParams).forEach(([key, value]) => {
-          const input = document.createElement('input');
-          input.type = 'hidden';
-          input.name = key;
-          input.value = value as string;
-          form.appendChild(input);
-        });
+          // 添加所有ECPay參數
+          Object.entries(result.paymentParams).forEach(([key, value]) => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = key;
+            input.value = value as string;
+            form.appendChild(input);
+          });
 
-        document.body.appendChild(form);
-        form.submit();
-        document.body.removeChild(form);
+          document.body.appendChild(form);
+          form.submit();
+          document.body.removeChild(form);
+        } else {
+          // 電腦版：在新分頁開啟
+          const form = document.createElement('form');
+          form.method = 'POST';
+          form.action = result.ecpayUrl;
+          form.target = '_blank';
+
+          // 添加所有ECPay參數
+          Object.entries(result.paymentParams).forEach(([key, value]) => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = key;
+            input.value = value as string;
+            form.appendChild(input);
+          });
+
+          document.body.appendChild(form);
+          form.submit();
+          document.body.removeChild(form);
+        }
 
         // 模擬付款成功（實際應該通過回調確認）
         setTimeout(() => {

@@ -8,3 +8,8 @@ GOOGLE_SHEET_ID=1qe4xnFyeIwnPOmYHDYFkqorXT4Axzy-jfL5Lrrj9Ht4
 
 # Google Drive 目錄ID（自動上傳檔案的資料夾）
 GOOGLE_DRIVE_FOLDER_ID=1p3RP52myfNfPLG0fLOvXUApIAFkgY_lb
+
+# Email notification settings（付款成功通知email設定）
+# 使用Gmail的話需要設定應用程式密碼，不是一般密碼
+EMAIL_USER=your_email@gmail.com
+EMAIL_PASSWORD=your_app_specific_password_here
