@@ -119,11 +119,63 @@ export default function AINoCodeLandingPage() {
               </div>
             </div>
           </div>
-        </div>
-      </section>
+                 </div>
+       </section>
 
-      {/* CTA Section */}
-      <section id="contact" className="py-20 px-6 bg-gradient-to-r from-purple-800/50 to-blue-800/50">
+       {/* Success Case Section */}
+       <section className="py-20 px-6 bg-gradient-to-r from-blue-900/30 to-purple-900/30">
+         <div className="container mx-auto">
+           <h2 className="text-4xl md:text-5xl font-bold text-center text-white mb-16">
+             🎯 成功案例展示
+           </h2>
+           <div className="max-w-4xl mx-auto">
+             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
+               <div className="text-center mb-8">
+                 <h3 className="text-3xl font-bold text-white mb-4">好星機好心情 - 演唱會手機租借平台</h3>
+                 <p className="text-xl text-gray-300">3天內完成，零代碼開發的完整商業網站</p>
+               </div>
+               
+               <div className="grid md:grid-cols-2 gap-8 mb-8">
+                 <div className="space-y-4">
+                   <h4 className="text-xl font-bold text-white">✨ 實現功能</h4>
+                   <ul className="space-y-2 text-gray-300">
+                     <li>• 手機租借預約系統</li>
+                     <li>• 智能價格計算器</li>
+                     <li>• 線上支付整合</li>
+                     <li>• 訂單管理系統</li>
+                     <li>• 客戶合約簽署</li>
+                     <li>• 庫存管理系統</li>
+                   </ul>
+                 </div>
+                 
+                 <div className="space-y-4">
+                   <h4 className="text-xl font-bold text-white">📊 成果數據</h4>
+                   <ul className="space-y-2 text-gray-300">
+                     <li>• <span className="text-green-300 font-bold">3天</span> 完成開發</li>
+                     <li>• <span className="text-green-300 font-bold">零代碼</span> 純AI生成</li>
+                     <li>• <span className="text-green-300 font-bold">100%</span> 功能完整</li>
+                     <li>• <span className="text-green-300 font-bold">響應式</span> 設計</li>
+                     <li>• <span className="text-green-300 font-bold">SEO優化</span> 完整</li>
+                     <li>• <span className="text-green-300 font-bold">自動部署</span> 上線</li>
+                   </ul>
+                 </div>
+               </div>
+               
+               <div className="text-center">
+                 <a href="https://renting-kpop-phone.vercel.app/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-8 py-4 rounded-lg text-lg font-semibold transition transform hover:scale-105">
+                   🚀 查看實際案例
+                   <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                   </svg>
+                 </a>
+               </div>
+             </div>
+           </div>
+         </div>
+       </section>
+
+       {/* CTA Section */}
+       <section id="contact" className="py-20 px-6 bg-gradient-to-r from-purple-800/50 to-blue-800/50">
         <div className="container mx-auto text-center">
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-8">
             準備好開始您的無代碼之旅了嗎？

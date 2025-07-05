@@ -6,7 +6,7 @@ import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 // import '../../../../../public/NotoSansTC-normal.js'; // 改為動態載入
 import FloatingButtons from '@/components/FloatingButtons';
-import { getPhoneById } from '@/lib/sheets/phones';
+// import { getPhoneById } from '@/lib/sheets/phones'; // 改為API調用
 
 function SignatureModal({ open, onClose, onSign }: { open: boolean; onClose: () => void; onSign: (dataUrl: string) => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -444,9 +444,10 @@ export default function ContractPage() {
         const phoneModel = data[1]; // 手機型號在第2欄（索引1）
         if (phoneModel) {
           try {
-            const phoneData = await getPhoneById(phoneModel);
-            if (phoneData && phoneData.deposit) {
-              setPhoneDepositAmount(phoneData.deposit);
+            const phoneResponse = await fetch(`/api/phones/${encodeURIComponent(phoneModel)}`);
+            const phoneResult = await phoneResponse.json();
+            if (phoneResult.success && phoneResult.data && phoneResult.data.deposit) {
+              setPhoneDepositAmount(phoneResult.data.deposit);
             }
           } catch (error) {
             console.error('讀取手機押金金額失敗:', error);

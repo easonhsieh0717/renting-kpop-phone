@@ -2,7 +2,6 @@
 const nextConfig = {
   experimental: {
     esmExternals: 'loose',
-    appDir: true,
   },
   webpack: (config, { isServer }) => {
     if (!isServer) {
@@ -11,6 +10,24 @@ const nextConfig = {
         fs: false,
         net: false,
         tls: false,
+        child_process: false,
+        http2: false,
+        'node:events': false,
+        'node:process': false,
+        'node:crypto': false,
+        'node:stream': false,
+        'node:util': false,
+        'node:path': false,
+        'node:os': false,
+        'node:url': false,
+        'node:buffer': false,
+        crypto: false,
+        stream: false,
+        util: false,
+        path: false,
+        os: false,
+        url: false,
+        buffer: false,
       };
     }
     return config;
