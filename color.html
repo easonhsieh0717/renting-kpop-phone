@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎯 三天打造專屬接單網站 - 伊森不累</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        coral: '#FF6B6B',
+                        customBlue: '#4ECDC4',
+                        customYellow: '#FFE66D'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 50%, #FFE66D 100%);
+        }
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+        .bounce-animation {
+            animation: bounce 2s infinite;
+        }
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-10px);
+            }
+            60% {
+                transform: translateY(-5px);
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Hero Section -->
+    <section class="gradient-bg min-h-screen flex items-center justify-center px-4">
+        <div class="max-w-4xl mx-auto text-center text-white">
+            <div class="mb-8">
+                <h1 class="text-5xl md:text-7xl font-bold mb-4">
+                    🎯 三天打造
+                    <span class="block">專屬接單網站</span>
+                </h1>
+                <p class="text-xl md:text-2xl mb-6 opacity-90">
+                    只需三天、一人開發 × AI 工具 × No-Code 流程
+                </p>
+                <div class="flex flex-wrap justify-center gap-4 mb-8">
+                    <span class="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full">⚡ 極致速度</span>
+                    <span class="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full">🧩 人人可客製</span>
+                    <span class="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full">💰 高效低成本</span>
+                    <span class="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full">🔧 彈性擴充</span>
+                </div>
+            </div>
+            <div class="bounce-animation">
+                <a href="#features" class="inline-block bg-white text-gray-800 px-8 py-4 rounded-full font-semibold text-lg hover:bg-gray-100 transition-all">
+                    立即了解更多 →
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="py-20 bg-white">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-gray-800 mb-4">🚀 為什麼比傳統網站更強？</h2>
+                <p class="text-xl text-gray-600">完全顛覆傳統建站流程，實現快速建置、高度客製化</p>
+            </div>
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div class="card-hover bg-gradient-to-br from-coral to-red-400 p-8 rounded-xl text-white text-center">
+                    <div class="text-4xl mb-4">⚡</div>
+                    <h3 class="text-xl font-semibold mb-2">極致速度</h3>
+                    <p class="opacity-90">幾天完成，不再等待幾週開發</p>
+                </div>
+                <div class="card-hover bg-gradient-to-br from-customBlue to-teal-400 p-8 rounded-xl text-white text-center">
+                    <div class="text-4xl mb-4">🧩</div>
+                    <h3 class="text-xl font-semibold mb-2">人人都能客製化</h3>
+                    <p class="opacity-90">不需寫程式，邏輯模組可視化設定</p>
+                </div>
+                <div class="card-hover bg-gradient-to-br from-customYellow to-yellow-400 p-8 rounded-xl text-white text-center">
+                    <div class="text-4xl mb-4">💰</div>
+                    <h3 class="text-xl font-semibold mb-2">高效低成本</h3>
+                    <p class="opacity-90">只需一人＋AI 工具，節省人力與維運支出</p>
+                </div>
+                <div class="card-hover bg-gradient-to-br from-purple-500 to-pink-500 p-8 rounded-xl text-white text-center">
+                    <div class="text-4xl mb-4">🔧</div>
+                    <h3 class="text-xl font-semibold mb-2">彈性高可擴充</h3>
+                    <p class="opacity-90">日後修改流程、功能都非常容易</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Process Section -->
+    <section class="py-20 bg-gray-100">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-gray-800 mb-4">💡 一人 × AI × No-Code 流程</h2>
+                <p class="text-xl text-gray-600">只需三天，從零到完整網站系統</p>
+            </div>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="card-hover bg-white p-8 rounded-xl shadow-lg text-center">
+                    <div class="bg-coral text-white w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">1</div>
+                    <h3 class="text-xl font-semibold mb-2 text-gray-800">第一天</h3>
+                    <p class="text-gray-600">製作前台網站：顯示商品、租借時間、FAQ 等</p>
+                </div>
+                <div class="card-hover bg-white p-8 rounded-xl shadow-lg text-center">
+                    <div class="bg-customBlue text-white w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">2</div>
+                    <h3 class="text-xl font-semibold mb-2 text-gray-800">第二天</h3>
+                    <p class="text-gray-600">發布廣告、開始接單（串 LINE / IG 等渠道）</p>
+                </div>
+                <div class="card-hover bg-white p-8 rounded-xl shadow-lg text-center">
+                    <div class="bg-customYellow text-white w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">3</div>
+                    <h3 class="text-xl font-semibold mb-2 text-gray-800">第三天</h3>
+                    <p class="text-gray-600">完成後台系統、串接電子合約與信用卡付款</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tech Stack Section -->
+    <section class="py-20 bg-white">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-gray-800 mb-4">🔧 技術工具建議</h2>
+                <p class="text-xl text-gray-600">現代化技術棧，確保高效開發</p>
+            </div>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="bg-gray-50 p-6 rounded-lg">
+                    <h4 class="font-semibold text-gray-800 mb-2">前端</h4>
+                    <p class="text-gray-600">Next.js + Tailwind CSS</p>
+                </div>
+                <div class="bg-gray-50 p-6 rounded-lg">
+                    <h4 class="font-semibold text-gray-800 mb-2">後端</h4>
+                    <p class="text-gray-600">Vercel / Firebase / Supabase</p>
+                </div>
+                <div class="bg-gray-50 p-6 rounded-lg">
+                    <h4 class="font-semibold text-gray-800 mb-2">AI 工具</h4>
+                    <p class="text-gray-600">Cursor</p>
+                </div>
+                <div class="bg-gray-50 p-6 rounded-lg">
+                    <h4 class="font-semibold text-gray-800 mb-2">金流串接</h4>
+                    <p class="text-gray-600">TapPay / Stripe</p>
+                </div>
+                <div class="bg-gray-50 p-6 rounded-lg">
+                    <h4 class="font-semibold text-gray-800 mb-2">電子合約</h4>
+                    <p class="text-gray-600">DottedSign / HelloSign</p>
+                </div>
+                <div class="bg-gray-50 p-6 rounded-lg">
+                    <h4 class="font-semibold text-gray-800 mb-2">後台管理</h4>
+                    <p class="text-gray-600">自製 admin 頁面 + Google Sheet</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Use Cases Section -->
+    <section class="py-20 bg-gray-100">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-gray-800 mb-4">🎯 使用場景建議</h2>
+                <p class="text-xl text-gray-600">適合多種行業與商業模式</p>
+            </div>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="card-hover bg-white p-6 rounded-lg shadow-md">
+                    <h4 class="font-semibold text-gray-800 mb-2">📱 設備租借</h4>
+                    <p class="text-gray-600">活動現場設備租借（手機、平板）</p>
+                </div>
+                <div class="card-hover bg-white p-6 rounded-lg shadow-md">
+                    <h4 class="font-semibold text-gray-800 mb-2">📅 預約系統</h4>
+                    <p class="text-gray-600">教學／醫美／健身預約系統</p>
+                </div>
+                <div class="card-hover bg-white p-6 rounded-lg shadow-md">
+                    <h4 class="font-semibold text-gray-800 mb-2">🎓 課程報名</h4>
+                    <p class="text-gray-600">課程報名＋付款＋簽約整合頁</p>
+                </div>
+                <div class="card-hover bg-white p-6 rounded-lg shadow-md">
+                    <h4 class="font-semibold text-gray-800 mb-2">🎵 商品預購</h4>
+                    <p class="text-gray-600">演唱會週邊商品預購系統</p>
+                </div>
+                <div class="card-hover bg-white p-6 rounded-lg shadow-md">
+                    <h4 class="font-semibold text-gray-800 mb-2">🏢 企業接單</h4>
+                    <p class="text-gray-600">中小企業短期接單頁</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="py-20 gradient-bg">
+        <div class="max-w-4xl mx-auto px-4 text-center text-white">
+            <h2 class="text-4xl font-bold mb-4">準備好開始了嗎？</h2>
+            <p class="text-xl mb-8 opacity-90">
+                立即聯繫我們，讓我們幫您在三天內打造專屬的接單網站
+            </p>
+            <div class="bg-white/20 backdrop-blur-sm p-8 rounded-xl mb-8">
+                <h3 class="text-2xl font-semibold mb-4">📌 聯絡資訊</h3>
+                <div class="grid md:grid-cols-2 gap-4 text-left">
+                    <div>
+                        <strong>品牌名稱：</strong>伊森不累
+                    </div>
+                    <div>
+                        <strong>聯絡信箱：</strong>easor0717@gmail.com
+                    </div>
+                    <div>
+                        <strong>服務區域：</strong>台北市或新北市
+                    </div>
+                    <div>
+                        <strong>設計風格：</strong>極簡風 / 活潑繽紛
+                    </div>
+                </div>
+            </div>
+            <a href="mailto:easor0717@gmail.com" class="inline-block bg-white text-gray-800 px-8 py-4 rounded-full font-semibold text-lg hover:bg-gray-100 transition-all">
+                立即聯繫 📧
+            </a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-8">
+        <div class="max-w-6xl mx-auto px-4 text-center">
+            <p>&copy; 2024 伊森不累 - 三天打造專屬接單網站</p>
+            <p class="mt-2 text-gray-400">讓 AI 工具與創意結合，實現快速建站夢想</p>
+        </div>
+    </footer>
+
+    <script>
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+
+        // Add animation on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // Observe all cards
+        document.querySelectorAll('.card-hover').forEach(card => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            observer.observe(card);
+        });
+    </script>
+</body>
+</html> 
