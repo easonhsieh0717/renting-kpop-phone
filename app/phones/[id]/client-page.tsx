@@ -376,7 +376,7 @@ export default function PhoneDetailClient({ phone, vercelEnv, bookedDates }: Pho
                   </div>
                   <div className="flex justify-between items-center">
                     <div>
-                      <div className="font-medium text-white">現金方案：現金 $30,000</div>
+                      <div className="font-medium text-white">現金方案：現金 ${phone.deposit.toLocaleString()}</div>
                       <div className="text-xs text-gray-400">→證件僅供核對，無需抵押</div>
                     </div>
                   </div>

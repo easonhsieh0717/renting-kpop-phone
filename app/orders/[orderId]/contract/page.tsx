@@ -6,6 +6,7 @@ import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 // import '../../../../../public/NotoSansTC-normal.js'; // 改為動態載入
 import FloatingButtons from '@/components/FloatingButtons';
+import { getPhoneById } from '@/lib/sheets/phones';
 
 function SignatureModal({ open, onClose, onSign }: { open: boolean; onClose: () => void; onSign: (dataUrl: string) => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -152,7 +153,7 @@ function Stepper({ step, setStep }: { step: number; setStep: (n: number) => void
 }
 
 // 合約條款渲染（正式版，動態帶入步驟三資訊）
-function renderContract(order: any, depositMode: string | null, needCable: boolean, needCharger: boolean, idNumber: string, phoneNumber: string, depositAmount: number = 30000) {
+function renderContract(order: any, depositMode: string | null, needCable: boolean, needCharger: boolean, idNumber: string, phoneNumber: string, depositAmount: number = 30000, phoneDepositAmount: number = 30000) {
   const today = new Date();
   const formatDate = (d: Date) => `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
   
@@ -419,6 +420,7 @@ export default function ContractPage() {
   const [depositPaid, setDepositPaid] = useState(false);
   const [depositProcessing, setDepositProcessing] = useState(false);
   const [preauthLoading, setPreauthLoading] = useState(false);
+  const [phoneDepositAmount, setPhoneDepositAmount] = useState(30000);
 
   // 身分證格式驗證
   const validateIdNumber = (id: string) => {
@@ -435,8 +437,22 @@ export default function ContractPage() {
     setLoading(true);
     fetch(`/api/orders/${orderId}`)
       .then(res => res.json())
-      .then(data => {
+      .then(async data => {
         setOrder(data);
+        
+        // 讀取手機型號對應的押金金額
+        const phoneModel = data[1]; // 手機型號在第2欄（索引1）
+        if (phoneModel) {
+          try {
+            const phoneData = await getPhoneById(phoneModel);
+            if (phoneData && phoneData.deposit) {
+              setPhoneDepositAmount(phoneData.deposit);
+            }
+          } catch (error) {
+            console.error('讀取手機押金金額失敗:', error);
+          }
+        }
+        
         // 檢查是否已簽署與是否有簽名圖
         if (data[13] === "已簽署" && data[14]) {
           setSigned(true);
@@ -1100,7 +1116,7 @@ export default function ContractPage() {
                 <label htmlFor="high" className="flex-1">
                   <span className="font-medium">🏦 高押金模式（免證件）：</span>
                   <br/>
-                  <span className="text-gray-900">現金 NT$30,000，無需提供身分證件</span>
+                  <span className="text-gray-900">現金 NT${phoneDepositAmount.toLocaleString()}，無需提供身分證件</span>
                 </label>
               </div>
               <div className="flex items-start">
@@ -1243,7 +1259,7 @@ export default function ContractPage() {
       {step === 5 && (
         <div>
           <div className="mb-8">
-            {renderContract(order, depositMode, needCable, needCharger, idNumber, phoneNumber, depositAmount)}
+            {renderContract(order, depositMode, needCable, needCharger, idNumber, phoneNumber, depositAmount, phoneDepositAmount)}
           </div>
           <div className="border-t pt-6">
             <h3 className="text-lg font-semibold mb-4">電子簽署</h3>
