@@ -70,7 +70,7 @@ async function getOrdersWithDeposit() {
 // GET: 查看需要退刷的保證金訂單列表
 export async function GET(req: NextRequest) {
   try {
-    const { searchParams } = new URL(req.url);
+    const { searchParams } = req.nextUrl;
     const status = searchParams.get('status'); // 可選：篩選特定狀態
     
     const depositOrders = await getOrdersWithDeposit();

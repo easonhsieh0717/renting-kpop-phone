@@ -15,7 +15,7 @@ async function getGoogleSheetsClient() {
 
 export async function GET(req: NextRequest) {
   try {
-    const { searchParams } = new URL(req.url);
+    const { searchParams } = req.nextUrl;
     const orderId = searchParams.get('orderId') || 'RENT1750990100151';
     
     const sheets = await getGoogleSheetsClient();

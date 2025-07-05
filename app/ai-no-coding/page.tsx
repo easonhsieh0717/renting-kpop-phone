@@ -213,7 +213,7 @@ export default function AINoCodeLandingPage() {
             <a href="mailto:eason0717@gmail.com" className="bg-white hover:bg-gray-100 px-8 py-4 rounded-lg text-lg font-semibold transition transform hover:scale-105 text-center" style={{color: '#FF6B6B'}}>
               📧 Email 聯繫
             </a>
-            <a href="https://line.me/ti/p/Xi4R5pm6c_" target="_blank" rel="noopener noreferrer" className="border-2 border-white text-white hover:bg-white px-8 py-4 rounded-lg text-lg font-semibold transition text-center" onMouseEnter={(e) => {(e.target as HTMLElement).style.color = '#4ECDC4'}} onMouseLeave={(e) => {(e.target as HTMLElement).style.color = 'white'}}>
+            <a href="https://line.me/ti/p/Xi4R5pm6c_" target="_blank" rel="noopener noreferrer" className="border-2 border-white text-white hover:bg-white hover:text-teal-500 px-8 py-4 rounded-lg text-lg font-semibold transition text-center">
               💬 LINE 聯繫
             </a>
           </div>
