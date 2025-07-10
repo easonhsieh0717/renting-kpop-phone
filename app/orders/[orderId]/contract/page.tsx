@@ -832,26 +832,21 @@ export default function ContractPage() {
     }
     
     setProcessingIdFront(true);
-    setUploadProgress(prev => ({ ...prev, front: 0 }));
-    setUploadStatus(prev => ({ ...prev, front: '开始处理...' }));
     
     try {
       console.log('開始處理證件正面...', `檔案大小: ${(file.size / 1024 / 1024).toFixed(2)}MB`);
       
       // 先轉換為 base64 並壓縮
-      setUploadStatus(prev => ({ ...prev, front: '读取文件...' }));
       let base64 = await toBase64(file);
       console.log('原始 base64 長度:', base64.length);
       
       // 壓縮圖片
-      setUploadStatus(prev => ({ ...prev, front: '壓縮中...' }));
       base64 = await compressImage(base64, 0.7); // 壓縮到 70% 品質
       console.log('壓縮後 base64 長度:', base64.length);
       
       let watermarked;
       try {
         // 嘗試加浮水印
-        setUploadStatus(prev => ({ ...prev, front: '添加浮水印...' }));
         console.log('開始加浮水印...');
         watermarked = await addWatermark(base64, `僅限手機租賃使用 ${new Date().toLocaleString('zh-TW', { hour12: false })}`);
         console.log('浮水印處理完成');
@@ -867,8 +862,6 @@ export default function ContractPage() {
       for (let attempt = 1; attempt <= 3; attempt++) {
         try {
           console.log(`第 ${attempt} 次上傳嘗試...`);
-          setUploadStatus(prev => ({ ...prev, front: `第 ${attempt} 次上傳嘗試...` }));
-          setUploadProgress(prev => ({ ...prev, front: Math.min(20 * attempt, 80) }));
           
           const uploadResponse = await fetch(`/api/orders/${orderId}/upload`, {
             method: 'POST',
@@ -880,29 +873,31 @@ export default function ContractPage() {
             throw new Error(`上傳失敗: ${uploadResponse.status}`);
           }
           
+          console.log('證件正面上傳成功！');
           uploadSuccess = true;
-          setUploadProgress(prev => ({ ...prev, front: 100 }));
           break;
-        } catch (error) {
-          lastError = error;
-          console.warn(`第 ${attempt} 次上傳失敗:`, error);
+          
+        } catch (uploadError) {
+          console.warn(`第 ${attempt} 次上傳失敗:`, uploadError);
+          lastError = uploadError;
+          
           if (attempt < 3) {
+            // 等待後重試
             await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
           }
         }
       }
       
       if (!uploadSuccess) {
-        throw lastError || new Error('上傳失敗');
+        throw lastError;
       }
       
+      // 顯示加浮水印的圖片
       setIdFront(watermarked);
-      setUploadStatus(prev => ({ ...prev, front: '✅ 上传成功' }));
       
     } catch (err) {
       console.error('證件正面處理失敗:', err);
-      setUploadStatus(prev => ({ ...prev, front: '❌ 上传失败' }));
-      alert('證件正面上傳失敗，請重試');
+      alert('證件正面上傳失敗，請檢查網路連線後重新嘗試');
     } finally {
       setProcessingIdFront(false);
     }
@@ -926,26 +921,21 @@ export default function ContractPage() {
     }
     
     setProcessingIdBack(true);
-    setUploadProgress(prev => ({ ...prev, back: 0 }));
-    setUploadStatus(prev => ({ ...prev, back: '开始处理...' }));
     
     try {
       console.log('開始處理證件反面...', `檔案大小: ${(file.size / 1024 / 1024).toFixed(2)}MB`);
       
       // 先轉換為 base64 並壓縮
-      setUploadStatus(prev => ({ ...prev, back: '读取文件...' }));
       let base64 = await toBase64(file);
       console.log('原始 base64 長度:', base64.length);
       
       // 壓縮圖片
-      setUploadStatus(prev => ({ ...prev, back: '壓縮中...' }));
       base64 = await compressImage(base64, 0.7); // 壓縮到 70% 品質
       console.log('壓縮後 base64 長度:', base64.length);
       
       let watermarked;
       try {
         // 嘗試加浮水印
-        setUploadStatus(prev => ({ ...prev, back: '添加浮水印...' }));
         console.log('開始加浮水印...');
         watermarked = await addWatermark(base64, `僅限手機租賃使用 ${new Date().toLocaleString('zh-TW', { hour12: false })}`);
         console.log('浮水印處理完成');
@@ -961,8 +951,6 @@ export default function ContractPage() {
       for (let attempt = 1; attempt <= 3; attempt++) {
         try {
           console.log(`第 ${attempt} 次上傳嘗試...`);
-          setUploadStatus(prev => ({ ...prev, back: `第 ${attempt} 次上傳嘗試...` }));
-          setUploadProgress(prev => ({ ...prev, back: Math.min(20 * attempt, 80) }));
           
           const uploadResponse = await fetch(`/api/orders/${orderId}/upload`, {
             method: 'POST',
@@ -974,29 +962,31 @@ export default function ContractPage() {
             throw new Error(`上傳失敗: ${uploadResponse.status}`);
           }
           
+          console.log('證件反面上傳成功！');
           uploadSuccess = true;
-          setUploadProgress(prev => ({ ...prev, back: 100 }));
           break;
-        } catch (error) {
-          lastError = error;
-          console.warn(`第 ${attempt} 次上傳失敗:`, error);
+          
+        } catch (uploadError) {
+          console.warn(`第 ${attempt} 次上傳失敗:`, uploadError);
+          lastError = uploadError;
+          
           if (attempt < 3) {
+            // 等待後重試
             await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
           }
         }
       }
       
       if (!uploadSuccess) {
-        throw lastError || new Error('上傳失敗');
+        throw lastError;
       }
       
+      // 顯示加浮水印的圖片
       setIdBack(watermarked);
-      setUploadStatus(prev => ({ ...prev, back: '✅ 上传成功' }));
       
     } catch (err) {
       console.error('證件反面處理失敗:', err);
-      setUploadStatus(prev => ({ ...prev, back: '❌ 上传失败' }));
-      alert('證件反面上傳失敗，請重試');
+      alert('證件反面上傳失敗，請檢查網路連線後重新嘗試');
     } finally {
       setProcessingIdBack(false);
     }
