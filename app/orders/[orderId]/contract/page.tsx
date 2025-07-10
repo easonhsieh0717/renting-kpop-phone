@@ -320,7 +320,7 @@ function renderContract(order: any, depositMode: string | null, needCable: boole
         <span style={boldStyle}>第十二條 通知方式</span><br/>
         <span style={fontStyle}>1. 所有通知（包括延租、違約、爭議）以書面（電子郵件或LINE）送達。</span><br/>
         <span style={fontStyle}>2. 乙方聯繫方式變更，應立即通知甲方，否則視為有效送達。</span><br/>
-        <span style={fontStyle}>3. </span><span style={boldStyle}>甲方聯繫方式：</span><span style={fontStyle}> 02-8252-7208，電子郵件：a0970580318@gmail.com，地址：台北市板橋區文化路二段385之3號</span><br/>
+        <span style={fontStyle}>&nbsp;&nbsp;- 甲方聯繫方式：</span><span style={fontStyle}> 02-8252-7208，電子郵件：a0970580318@gmail.com，地址：台北市板橋區文化路二段385之3號</span><br/>
       </div>
       
       <div style={{marginBottom: '16px'}}>
@@ -415,6 +415,8 @@ export default function ContractPage() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [processingIdFront, setProcessingIdFront] = useState(false);
   const [processingIdBack, setProcessingIdBack] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState({ front: 0, back: 0 });
+  const [uploadStatus, setUploadStatus] = useState({ front: '', back: '' });
   // 4. 保證金處理
   const [depositAmount, setDepositAmount] = useState(30000);
   const [depositPaid, setDepositPaid] = useState(false);
@@ -815,174 +817,288 @@ export default function ContractPage() {
       setPreauthLoading(false);
     }
   };
-  // 證件拍照（正面）
-  const handleIdFront = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || !e.target.files[0]) return;
-    const file = e.target.files[0];
+
+  // 改进的文件上传函数 - 支持分片上传和更好的重试策略
+  const uploadFileWithChunks = async (
+    base64Data: string, 
+    type: 'id', 
+    name: string,
+    onProgress: (progress: number) => void,
+    onStatus: (status: string) => void
+  ) => {
+    const maxChunkSize = 1.5 * 1024 * 1024; // 1.5MB 分片大小，降低单次传输量
+    const maxRetries = 5; // 增加重试次数
+    const baseDelay = 1000; // 基础延迟时间
+
+    onStatus('检查文件大小...');
     
-    // 檢查檔案大小（限制 3MB，降低限制）
-    if (file.size > 3 * 1024 * 1024) {
-      alert('檔案太大，請選擇小於 3MB 的圖片');
-      return;
-    }
-    
-    setProcessingIdFront(true);
-    
-    try {
-      console.log('開始處理證件正面...', `檔案大小: ${(file.size / 1024 / 1024).toFixed(2)}MB`);
+    // 如果文件小于分片大小，直接上传
+    if (base64Data.length < maxChunkSize) {
+      onStatus('文件较小，直接上传...');
       
-      // 先轉換為 base64 並壓縮
-      let base64 = await toBase64(file);
-      console.log('原始 base64 長度:', base64.length);
-      
-      // 壓縮圖片
-      base64 = await compressImage(base64, 0.7); // 壓縮到 70% 品質
-      console.log('壓縮後 base64 長度:', base64.length);
-      
-      let watermarked;
-      try {
-        // 嘗試加浮水印
-        console.log('開始加浮水印...');
-        watermarked = await addWatermark(base64, `僅限手機租賃使用 ${new Date().toLocaleString('zh-TW', { hour12: false })}`);
-        console.log('浮水印處理完成');
-      } catch (watermarkError) {
-        console.warn('浮水印處理失敗，使用原圖:', watermarkError);
-        watermarked = base64; // 降級：如果浮水印失敗就用原圖
-      }
-      
-      // 重試上傳機制
-      let uploadSuccess = false;
-      let lastError;
-      
-      for (let attempt = 1; attempt <= 3; attempt++) {
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
-          console.log(`第 ${attempt} 次上傳嘗試...`);
+          onStatus(`第 ${attempt} 次上传尝试...`);
           
-          const uploadResponse = await fetch(`/api/orders/${orderId}/upload`, {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 30000); // 30秒超时
+          
+          const response = await fetch(`/api/orders/${orderId}/upload`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ file: watermarked, type: 'id', name: '證件正面' })
+            body: JSON.stringify({ file: base64Data, type, name }),
+            signal: controller.signal
           });
           
-          if (!uploadResponse.ok) {
-            throw new Error(`上傳失敗: ${uploadResponse.status}`);
+          clearTimeout(timeoutId);
+          
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
           }
           
-          console.log('證件正面上傳成功！');
-          uploadSuccess = true;
+          onProgress(100);
+          onStatus('上传成功！');
+          return true;
+          
+        } catch (error) {
+          console.warn(`第 ${attempt} 次上传失败:`, error);
+          
+          if (attempt < maxRetries) {
+            // 指数退避策略：每次重试等待时间翻倍
+            const delay = baseDelay * Math.pow(2, attempt - 1);
+            onStatus(`上传失败，${delay/1000}秒后重试...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+          } else {
+            throw error;
+          }
+        }
+      }
+    }
+
+    // 大文件分片上传
+    onStatus('文件较大，准备分片上传...');
+    
+    const chunks = splitBase64(base64Data, maxChunkSize);
+    const totalChunks = chunks.length;
+    
+    onStatus(`将分为 ${totalChunks} 个片段上传`);
+    
+    for (let i = 0; i < totalChunks; i++) {
+      let chunkSuccess = false;
+      
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          onStatus(`上传第 ${i + 1}/${totalChunks} 个片段 (第${attempt}次尝试)...`);
+          
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 45000); // 分片上传45秒超时
+          
+          const response = await fetch(`/api/orders/${orderId}/upload?part=${i + 1}&total=${totalChunks}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ file: chunks[i], type, name }),
+            signal: controller.signal
+          });
+          
+          clearTimeout(timeoutId);
+          
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+          
+          chunkSuccess = true;
+          const progress = Math.round(((i + 1) / totalChunks) * 100);
+          onProgress(progress);
+          
+          if (i === totalChunks - 1) {
+            onStatus('所有片段上传完成，正在合并...');
+          }
+          
           break;
           
-        } catch (uploadError) {
-          console.warn(`第 ${attempt} 次上傳失敗:`, uploadError);
-          lastError = uploadError;
+        } catch (error) {
+          console.warn(`第 ${i + 1} 个片段第 ${attempt} 次上传失败:`, error);
           
-          if (attempt < 3) {
-            // 等待後重試
-            await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+          if (attempt < maxRetries) {
+            const delay = baseDelay * Math.pow(2, attempt - 1);
+            onStatus(`片段上传失败，${delay/1000}秒后重试...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
           }
         }
       }
       
-      if (!uploadSuccess) {
-        throw lastError;
+      if (!chunkSuccess) {
+        throw new Error(`第 ${i + 1} 个片段上传失败，已重试 ${maxRetries} 次`);
+      }
+    }
+    
+    onStatus('上传完成！');
+    return true;
+  };
+
+  // 改进的图片压缩函数
+  const smartCompressImage = async (base64: string, targetMaxSize: number = 2 * 1024 * 1024): Promise<string> => {
+    let quality = 0.8;
+    let compressed = base64;
+    let attempts = 0;
+    const maxAttempts = 5;
+
+    while (compressed.length > targetMaxSize && attempts < maxAttempts && quality > 0.3) {
+      compressed = await compressImage(compressed, quality);
+      quality -= 0.1;
+      attempts++;
+      console.log(`压缩第${attempts}次，品质: ${quality}, 大小: ${(compressed.length / 1024 / 1024).toFixed(2)}MB`);
+    }
+
+    return compressed;
+  };
+
+  // 证件拍照（正面）- 优化版本
+  const handleIdFront = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || !e.target.files[0]) return;
+    const file = e.target.files[0];
+    
+    // 放宽文件大小限制到 10MB，但会智能压缩
+    if (file.size > 10 * 1024 * 1024) {
+      alert('文件过大，请选择小于 10MB 的图片');
+      return;
+    }
+    
+    setProcessingIdFront(true);
+    setUploadProgress(prev => ({ ...prev, front: 0 }));
+    setUploadStatus(prev => ({ ...prev, front: '开始处理...' }));
+    
+    try {
+      console.log('开始处理证件正面...', `文件大小: ${(file.size / 1024 / 1024).toFixed(2)}MB`);
+      
+      // 1. 转换为 base64
+      setUploadStatus(prev => ({ ...prev, front: '读取文件...' }));
+      let base64 = await toBase64(file);
+      console.log('原始 base64 长度:', base64.length);
+      
+      // 2. 智能压缩
+      setUploadStatus(prev => ({ ...prev, front: '智能压缩中...' }));
+      base64 = await smartCompressImage(base64);
+      console.log('压缩后 base64 长度:', base64.length);
+      
+      // 3. 加浮水印（降级处理）
+      let watermarked = base64;
+      try {
+        setUploadStatus(prev => ({ ...prev, front: '添加浮水印...' }));
+        watermarked = await addWatermark(base64, `仅限手机租赁使用 ${new Date().toLocaleString('zh-TW', { hour12: false })}`);
+        console.log('浮水印处理完成');
+      } catch (watermarkError) {
+        console.warn('浮水印处理失败，使用原图:', watermarkError);
+        // 降级：浮水印失败不影响上传
       }
       
-      // 顯示加浮水印的圖片
+      // 4. 上传文件
+      await uploadFileWithChunks(
+        watermarked, 
+        'id', 
+        '证件正面',
+        (progress) => setUploadProgress(prev => ({ ...prev, front: progress })),
+        (status) => setUploadStatus(prev => ({ ...prev, front: status }))
+      );
+      
+      // 5. 显示成功
       setIdFront(watermarked);
+      setUploadStatus(prev => ({ ...prev, front: '✅ 上传成功' }));
       
     } catch (err) {
-      console.error('證件正面處理失敗:', err);
-      alert('證件正面上傳失敗，請檢查網路連線後重新嘗試');
+      console.error('证件正面处理失败:', err);
+      setUploadStatus(prev => ({ ...prev, front: '❌ 上传失败' }));
+      
+      // 更友好的错误信息
+      let errorMessage = '证件正面上传失败';
+      if (err instanceof Error) {
+        if (err.message.includes('abort')) {
+          errorMessage += '：上传超时，请检查网络连接后重试';
+        } else if (err.message.includes('Failed to fetch')) {
+          errorMessage += '：网络连接中断，请重试';
+        } else {
+          errorMessage += `：${err.message}`;
+        }
+      }
+      alert(errorMessage);
     } finally {
       setProcessingIdFront(false);
     }
   };
   
-  // 證件拍照（反面）
+  // 证件拍照（反面）- 优化版本  
   const handleIdBack = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || !e.target.files[0]) return;
     
-    // 檢查是否已完成正面拍照
     if (!idFront) {
-      alert('請先完成證件正面拍照');
+      alert('请先完成证件正面拍照');
       return;
     }
     
     const file = e.target.files[0];
     
-    // 檢查檔案大小（限制 3MB，降低限制）
-    if (file.size > 3 * 1024 * 1024) {
-      alert('檔案太大，請選擇小於 3MB 的圖片');
+    if (file.size > 10 * 1024 * 1024) {
+      alert('文件过大，请选择小于 10MB 的图片');
       return;
     }
     
     setProcessingIdBack(true);
+    setUploadProgress(prev => ({ ...prev, back: 0 }));
+    setUploadStatus(prev => ({ ...prev, back: '开始处理...' }));
     
     try {
-      console.log('開始處理證件反面...', `檔案大小: ${(file.size / 1024 / 1024).toFixed(2)}MB`);
+      console.log('开始处理证件反面...', `文件大小: ${(file.size / 1024 / 1024).toFixed(2)}MB`);
       
-      // 先轉換為 base64 並壓縮
+      // 1. 转换为 base64
+      setUploadStatus(prev => ({ ...prev, back: '读取文件...' }));
       let base64 = await toBase64(file);
-      console.log('原始 base64 長度:', base64.length);
+      console.log('原始 base64 长度:', base64.length);
       
-      // 壓縮圖片
-      base64 = await compressImage(base64, 0.7); // 壓縮到 70% 品質
-      console.log('壓縮後 base64 長度:', base64.length);
+      // 2. 智能压缩
+      setUploadStatus(prev => ({ ...prev, back: '智能压缩中...' }));
+      base64 = await smartCompressImage(base64);
+      console.log('压缩后 base64 长度:', base64.length);
       
-      let watermarked;
+      // 3. 加浮水印（降级处理）
+      let watermarked = base64;
       try {
-        // 嘗試加浮水印
-        console.log('開始加浮水印...');
-        watermarked = await addWatermark(base64, `僅限手機租賃使用 ${new Date().toLocaleString('zh-TW', { hour12: false })}`);
-        console.log('浮水印處理完成');
+        setUploadStatus(prev => ({ ...prev, back: '添加浮水印...' }));
+        watermarked = await addWatermark(base64, `仅限手机租赁使用 ${new Date().toLocaleString('zh-TW', { hour12: false })}`);
+        console.log('浮水印处理完成');
       } catch (watermarkError) {
-        console.warn('浮水印處理失敗，使用原圖:', watermarkError);
-        watermarked = base64; // 降級：如果浮水印失敗就用原圖
+        console.warn('浮水印处理失败，使用原图:', watermarkError);
+        // 降级：浮水印失败不影响上传
       }
       
-      // 重試上傳機制
-      let uploadSuccess = false;
-      let lastError;
+      // 4. 上传文件
+      await uploadFileWithChunks(
+        watermarked, 
+        'id', 
+        '证件反面',
+        (progress) => setUploadProgress(prev => ({ ...prev, back: progress })),
+        (status) => setUploadStatus(prev => ({ ...prev, back: status }))
+      );
       
-      for (let attempt = 1; attempt <= 3; attempt++) {
-        try {
-          console.log(`第 ${attempt} 次上傳嘗試...`);
-          
-          const uploadResponse = await fetch(`/api/orders/${orderId}/upload`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ file: watermarked, type: 'id', name: '證件反面' })
-          });
-          
-          if (!uploadResponse.ok) {
-            throw new Error(`上傳失敗: ${uploadResponse.status}`);
-          }
-          
-          console.log('證件反面上傳成功！');
-          uploadSuccess = true;
-          break;
-          
-        } catch (uploadError) {
-          console.warn(`第 ${attempt} 次上傳失敗:`, uploadError);
-          lastError = uploadError;
-          
-          if (attempt < 3) {
-            // 等待後重試
-            await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
-          }
-        }
-      }
-      
-      if (!uploadSuccess) {
-        throw lastError;
-      }
-      
-      // 顯示加浮水印的圖片
+      // 5. 显示成功
       setIdBack(watermarked);
+      setUploadStatus(prev => ({ ...prev, back: '✅ 上传成功' }));
       
     } catch (err) {
-      console.error('證件反面處理失敗:', err);
-      alert('證件反面上傳失敗，請檢查網路連線後重新嘗試');
+      console.error('证件反面处理失败:', err);
+      setUploadStatus(prev => ({ ...prev, back: '❌ 上传失败' }));
+      
+      // 更友好的错误信息
+      let errorMessage = '证件反面上传失败';
+      if (err instanceof Error) {
+        if (err.message.includes('abort')) {
+          errorMessage += '：上传超时，请检查网络连接后重试';
+        } else if (err.message.includes('Failed to fetch')) {
+          errorMessage += '：网络连接中断，请重试';
+        } else {
+          errorMessage += `：${err.message}`;
+        }
+      }
+      alert(errorMessage);
     } finally {
       setProcessingIdBack(false);
     }
@@ -1031,10 +1147,21 @@ export default function ContractPage() {
             />
             {processingIdFront && (
               <div className="mb-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <div className="flex items-center">
+                <div className="flex items-center mb-2">
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600 mr-2"></div>
-                  <span className="text-blue-800 text-sm">正在處理證件正面，請稍候...</span>
+                  <span className="text-blue-800 text-sm">{uploadStatus.front}</span>
                 </div>
+                {uploadProgress.front > 0 && (
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
+                      style={{ width: `${uploadProgress.front}%` }}
+                    ></div>
+                  </div>
+                )}
+                {uploadProgress.front > 0 && (
+                  <div className="text-xs text-gray-600 mt-1">{uploadProgress.front}% 完成</div>
+                )}
               </div>
             )}
             {idFront && <img src={idFront} alt="證件正面" className="w-64 h-40 object-contain border rounded mb-2" />}
@@ -1051,10 +1178,21 @@ export default function ContractPage() {
             />
             {processingIdBack && (
               <div className="mb-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <div className="flex items-center">
+                <div className="flex items-center mb-2">
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600 mr-2"></div>
-                  <span className="text-blue-800 text-sm">正在處理證件反面，請稍候...</span>
+                  <span className="text-blue-800 text-sm">{uploadStatus.back}</span>
                 </div>
+                {uploadProgress.back > 0 && (
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
+                      style={{ width: `${uploadProgress.back}%` }}
+                    ></div>
+                  </div>
+                )}
+                {uploadProgress.back > 0 && (
+                  <div className="text-xs text-gray-600 mt-1">{uploadProgress.back}% 完成</div>
+                )}
               </div>
             )}
             {!idFront && (
@@ -1064,7 +1202,12 @@ export default function ContractPage() {
             )}
             {idBack && <img src={idBack} alt="證件反面" className="w-64 h-40 object-contain border rounded mb-2" />}
           </div>
-          <button onClick={() => { setIdFront(null); setIdBack(null); }} className="px-3 py-1 text-sm bg-gray-200 rounded mr-2">重拍</button>
+          <button onClick={() => { 
+            setIdFront(null); 
+            setIdBack(null); 
+            setUploadProgress({ front: 0, back: 0 });
+            setUploadStatus({ front: '', back: '' });
+          }} className="px-3 py-1 text-sm bg-gray-200 rounded mr-2">重拍</button>
           <button disabled={!canNext2} onClick={() => setStep(3)} className="px-4 py-2 bg-blue-600 text-white rounded disabled:bg-gray-300">下一步</button>
         </div>
       )}

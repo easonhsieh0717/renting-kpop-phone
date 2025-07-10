@@ -23,32 +23,67 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
     else if (type === 'pdf') fileName += '_合約.pdf';
     else fileName += '_其他檔案';
     console.log('UPLOAD', { type, mimeType, fileName, part, total });
-    // PDF 分片處理
-    if (type === 'pdf' && part && total) {
+    // 分片處理（支援 PDF 和所有檔案類型）
+    if (part && total) {
       // 1. 暫存分片
       const tmpDir = path.join('/tmp', orderId);
       await fs.mkdir(tmpDir, { recursive: true });
-      const partPath = path.join(tmpDir, `part${part}`);
+      const partPath = path.join(tmpDir, `${type}_${name}_part${part}`);
       await fs.writeFile(partPath, base64Data, 'utf8');
+      
+      console.log(`收到分片 ${part}/${total}，檔案類型: ${type}，名稱: ${name}`);
+      
       // 2. 若為最後一片，合併所有分片
       if (parseInt(part) === parseInt(total)) {
         let merged = '';
         for (let i = 1; i <= parseInt(total); i++) {
-          const p = path.join(tmpDir, `part${i}`);
+          const p = path.join(tmpDir, `${type}_${name}_part${i}`);
           let chunk = await fs.readFile(p, 'utf8');
-          if (i > 1) chunk = chunk.replace(/^data:application\/pdf;base64,/, '');
-          merged += chunk;
+          // 除了第一片外，移除資料頭
+          if (i > 1) {
+            const headerEnd = chunk.indexOf(',');
+            if (headerEnd !== -1) {
+              chunk = chunk.substring(headerEnd + 1);
+            }
+          }
+          merged += (i === 1) ? chunk : chunk;
         }
-        const buffer = Buffer.from(merged, 'base64');
-        const result = await uploadOrderFile(orderId, fileName, mimeType, buffer);
+        
+        console.log(`合併完成，總大小: ${merged.length}，準備上傳...`);
+        
+        // 重新解析合併後的 base64
+        const mergedMatches = merged.match(/^data:(.+);base64,(.+)$/);
+        if (!mergedMatches) {
+          throw new Error('合併後的檔案格式錯誤');
+        }
+        
+        const mergedMimeType = mergedMatches[1];
+        const mergedBase64Data = mergedMatches[2];
+        const buffer = Buffer.from(mergedBase64Data, 'base64');
+        const result = await uploadOrderFile(orderId, fileName, mergedMimeType, buffer);
+        
         // 刪除暫存分片
         for (let i = 1; i <= parseInt(total); i++) {
-          await fs.unlink(path.join(tmpDir, `part${i}`));
+          try {
+            await fs.unlink(path.join(tmpDir, `${type}_${name}_part${i}`));
+          } catch (unlinkError) {
+            console.warn(`刪除分片 ${i} 失敗:`, unlinkError);
+          }
         }
-        await fs.rmdir(tmpDir);
-        return NextResponse.json({ message: 'PDF 合併上傳成功', ...result });
+        
+        try {
+          await fs.rmdir(tmpDir);
+        } catch (rmdirError) {
+          console.warn('刪除暫存目錄失敗:', rmdirError);
+        }
+        
+        console.log('分片上傳成功！');
+        return NextResponse.json({ message: '分片上傳合併成功', ...result });
       } else {
-        return NextResponse.json({ message: `收到第${part}片，等待其他分片` });
+        return NextResponse.json({ 
+          message: `收到第${part}片，等待其他分片`,
+          progress: Math.round((parseInt(part) / parseInt(total)) * 100)
+        });
       }
     }
     // 其他檔案維持原本邏輯
