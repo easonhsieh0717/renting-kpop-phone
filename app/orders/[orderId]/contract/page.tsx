@@ -423,6 +423,8 @@ export default function ContractPage() {
   const [depositProcessing, setDepositProcessing] = useState(false);
   const [preauthLoading, setPreauthLoading] = useState(false);
   const [phoneDepositAmount, setPhoneDepositAmount] = useState(30000);
+  const [phoneHighDepositAmount, setPhoneHighDepositAmount] = useState(30000); // 新增高押金金額狀態
+  const [agreed, setAgreed] = useState(false);
 
   // 身分證格式驗證
   const validateIdNumber = (id: string) => {
@@ -442,14 +444,25 @@ export default function ContractPage() {
       .then(async data => {
         setOrder(data);
         
+        let phoneResult: any = null;
+        
         // 讀取手機型號對應的押金金額
         const phoneModel = data[1]; // 手機型號在第2欄（索引1）
         if (phoneModel) {
           try {
             const phoneResponse = await fetch(`/api/phones/${encodeURIComponent(phoneModel)}`);
-            const phoneResult = await phoneResponse.json();
-            if (phoneResult.success && phoneResult.data && phoneResult.data.deposit) {
-              setPhoneDepositAmount(phoneResult.data.deposit);
+            phoneResult = await phoneResponse.json();
+            if (phoneResult.success && phoneResult.data) {
+              // 設置一般押金金額
+              if (phoneResult.data.deposit) {
+                setPhoneDepositAmount(phoneResult.data.deposit);
+              }
+              // 設置高押金金額
+              if (phoneResult.data.highDeposit) {
+                setPhoneHighDepositAmount(phoneResult.data.highDeposit);
+                // 同時設置預授權金額為高押金金額
+                setDepositAmount(phoneResult.data.highDeposit);
+              }
             }
           } catch (error) {
             console.error('讀取手機押金金額失敗:', error);
@@ -465,7 +478,7 @@ export default function ContractPage() {
           setSignatureUrl(null);
         }
         // 從Google Sheet讀取預授權金額（第19欄，索引19）
-        const sheetDepositAmount = parseInt(data[19]) || 30000;
+        const sheetDepositAmount = parseInt(data[19]) || phoneResult?.data?.highDeposit || 30000;
         setDepositAmount(sheetDepositAmount);
         
         // 檢查預授權狀態（第20欄，索引20）
@@ -1148,7 +1161,7 @@ export default function ContractPage() {
                 <label htmlFor="high" className="flex-1">
                   <span className="font-medium">🏦 高押金模式（免證件）：</span>
                   <br/>
-                  <span className="text-gray-900">現金 NT${phoneDepositAmount.toLocaleString()}，無需提供身分證件</span>
+                  <span className="text-gray-900">現金 NT${phoneHighDepositAmount.toLocaleString()}，無需提供身分證件</span>
                 </label>
               </div>
               <div className="flex items-start">
@@ -1164,7 +1177,7 @@ export default function ContractPage() {
                 <label htmlFor="preauth" className="flex-1">
                   <span className="font-medium">🔒 預授權模式（需證件正本核對）：</span>
                   <br/>
-                  <span className="text-gray-900">信用卡預授權 NT$30,000，需核對證件正本</span>
+                  <span className="text-gray-900">信用卡預授權 NT${phoneHighDepositAmount.toLocaleString()}，需核對證件正本</span>
                 </label>
               </div>
             </div>
@@ -1290,35 +1303,37 @@ export default function ContractPage() {
       )}
       {step === 5 && (
         <div>
-          <div className="mb-8">
-            {renderContract(order, depositMode, needCable, needCharger, idNumber, phoneNumber, depositAmount, phoneDepositAmount)}
+          <h2 className="text-lg font-bold mb-4">5. 合約簽署</h2>
+          
+          <div className="mb-6">
+            <div className="border rounded-lg p-4 max-h-96 overflow-y-auto bg-white">
+              {renderContract(order, depositMode, needCable, needCharger, idNumber, phoneNumber, phoneHighDepositAmount, phoneHighDepositAmount)}
+            </div>
           </div>
-          <div className="border-t pt-6">
-            <h3 className="text-lg font-semibold mb-4">電子簽署</h3>
-            {isUploading && (
-              <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <div className="flex items-center">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mr-3"></div>
-                  <div>
-                    <div className="text-blue-800 font-medium">上傳作業中...</div>
-                    <div className="text-blue-600 text-sm">請稍候，不要離開畫面</div>
-                  </div>
-                </div>
-              </div>
-            )}
-            {signed && signatureUrl ? (
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">乙方簽名（{order[5]}）</label>
-                <img src={signatureUrl} alt="簽名圖" className="border border-gray-300 rounded bg-white" style={{ width: 400, height: 200 }} />
-                <div className="text-green-600 text-sm mt-2">✅ 已完成簽署</div>
-              </div>
-            ) : (
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">乙方簽名（{order[5]}）</label>
-                <div className="text-gray-400 text-sm mb-2">尚未簽署</div>
-                <button onClick={() => setModalOpen(true)} className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">我要簽名</button>
-              </div>
-            )}
+
+          <div className="mb-6">
+            <label className="flex items-center">
+              <input type="checkbox" className="mr-2" 
+                     checked={agreed} 
+                     onChange={(e) => setAgreed(e.target.checked)} />
+              <span className="text-sm">我已閱讀並同意上述租賃合約條款</span>
+            </label>
+          </div>
+
+          <div className="flex space-x-4">
+            <button 
+              onClick={() => setStep(4)} 
+              className="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50"
+            >
+              上一步
+            </button>
+            <button 
+              onClick={() => setModalOpen(true)} 
+              disabled={!agreed}
+              className="px-4 py-2 bg-blue-600 text-white rounded disabled:bg-gray-300"
+            >
+              開始簽署
+            </button>
           </div>
         </div>
       )}

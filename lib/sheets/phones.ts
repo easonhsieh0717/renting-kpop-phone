@@ -64,7 +64,7 @@ export async function getPhones(): Promise<Phone[]> {
 
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: process.env.GOOGLE_SHEET_ID,
-      range: 'phones!A2:H', // We have 8 columns including active status
+      range: 'phones!A2:I', // 擴展到I欄讀取高押金欄位
     });
     console.log('Successfully fetched data from spreadsheet.');
 
@@ -83,6 +83,7 @@ export async function getPhones(): Promise<Phone[]> {
           daily_rate_3_plus: safeParseInt(row[5], 450),
           deposit: safeParseInt(row[6], 30000),
           active: safeParseBoolean(row[7], true),
+          highDeposit: safeParseInt(row[8], 30000), // 新增高押金欄位
         };
 
         console.log(`Phone ${index + 1}:`, {
@@ -91,6 +92,7 @@ export async function getPhones(): Promise<Phone[]> {
           daily_rate_1_2: phone.daily_rate_1_2,
           daily_rate_3_plus: phone.daily_rate_3_plus,
           deposit: phone.deposit,
+          highDeposit: phone.highDeposit,
           active: phone.active
         });
 

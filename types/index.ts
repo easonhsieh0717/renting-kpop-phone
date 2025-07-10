@@ -9,6 +9,7 @@ export interface Phone {
   daily_rate_3_plus: number
   deposit: number
   active: boolean
+  highDeposit: number; // 新增高押金欄位
   isAvailable?: boolean
 }
 
