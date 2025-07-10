@@ -713,54 +713,15 @@ export default function ContractPage() {
     if (!e.target.files) return;
     const files = Array.from(e.target.files);
     if (photos.length + files.length > 6) return alert('最多6張');
-    
-    try {
-      const arr = await Promise.all(files.map(f => toBase64(f)));
-      setPhotos([...photos, ...arr]);
-      
-      // 使用優化的上傳函數，逐個上傳
-      for (let i = 0; i < files.length; i++) {
-        console.log(`開始上傳第 ${i + 1} 張外觀照片...`);
-        
-        // 超級激進壓縮：目標 150KB（適合行動網路）
-        let compressed = await smartCompressImage(arr[i], 150 * 1024); // 150KB 超小目標
-        
-        // 使用簡單的重試上傳（外觀照片不分片）
-        let uploadSuccess = false;
-        for (let attempt = 1; attempt <= 5; attempt++) { // 增加重試次數
-          try {
-            const response = await fetch(`/api/orders/${orderId}/upload`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ 
-                file: compressed, 
-                type: 'photo', 
-                name: `外觀${photos.length + i + 1}` 
-              })
-            });
-            
-            if (response.ok) {
-              console.log(`第 ${i + 1} 張外觀照片上傳成功`);
-              uploadSuccess = true;
-              break;
-            } else {
-              throw new Error(`HTTP ${response.status}`);
-            }
-          } catch (error) {
-            console.warn(`第 ${i + 1} 張外觀照片第 ${attempt} 次上傳失敗:`, error);
-            if (attempt < 5) {
-              await new Promise(resolve => setTimeout(resolve, 1500 * attempt)); // 延長等待時間
-            }
-          }
-        }
-        
-        if (!uploadSuccess) {
-          alert(`第 ${i + 1} 張外觀照片上傳失敗，請稍後重試`);
-        }
-      }
-    } catch (error) {
-      console.error('外觀照片處理失敗:', error);
-      alert('外觀照片處理失敗，請重新選擇');
+    const arr = await Promise.all(files.map(f => toBase64(f)));
+    setPhotos([...photos, ...arr]);
+    // 自動上傳
+    for (let i = 0; i < files.length; i++) {
+      await fetch(`/api/orders/${orderId}/upload`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ file: arr[i], type: 'photo', name: `外觀${photos.length + i + 1}` })
+      });
     }
   };
   const handlePhotoRemove = (idx: number) => setPhotos(photos.filter((_, i) => i !== idx));
@@ -857,135 +818,16 @@ export default function ContractPage() {
     }
   };
 
-  // 改进的文件上传函数 - 支持分片上传和更好的重试策略
-  const uploadFileWithChunks = async (
-    base64Data: string, 
-    type: 'id', 
-    name: string,
-    onProgress: (progress: number) => void,
-    onStatus: (status: string) => void
-  ) => {
-    const maxChunkSize = 800 * 1024; // 800KB 分片大小，進一步降低傳輸量確保穩定
-    const maxRetries = 5; // 增加重试次数
-    const baseDelay = 1000; // 基础延迟时间
 
-    onStatus('準備上傳檔案...');
-    
-    // 暫時停用分片上傳，直接上傳（已壓縮的檔案）
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      try {
-        onStatus(`第 ${attempt} 次上傳嘗試...`);
-        onProgress(Math.min(20 * attempt, 80)); // 顯示進度
-        
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 60000); // 60秒超時
-        
-        const response = await fetch(`/api/orders/${orderId}/upload`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ file: base64Data, type, name }),
-          signal: controller.signal
-        });
-        
-        clearTimeout(timeoutId);
-        
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(`HTTP ${response.status}: ${errorText}`);
-        }
-        
-        onProgress(100);
-        onStatus('上傳成功！');
-        return true;
-        
-      } catch (error) {
-        console.warn(`第 ${attempt} 次上傳失敗:`, error);
-        
-        if (attempt < maxRetries) {
-          // 指數退避策略：每次重試等待時間翻倍
-          const delay = baseDelay * Math.pow(2, attempt - 1);
-          onStatus(`上傳失敗，${delay/1000}秒後重試...`);
-          await new Promise(resolve => setTimeout(resolve, delay));
-        } else {
-          throw error;
-        }
-      }
-    }
-    
-    throw new Error('上傳失敗，已重試 ' + maxRetries + ' 次');
-  };
 
-  // 改进的图片压缩函数 - 添加解析度調整功能
-  const smartCompressImage = async (base64: string, targetMaxSize: number = 200 * 1024): Promise<string> => {
-    console.log(`開始智能壓縮，原始大小: ${(base64.length / 1024).toFixed(2)}KB，目標: ${(targetMaxSize / 1024).toFixed(2)}KB`);
-    
-    // 第一步：調整解析度（像 LINE App 一樣限制解析度）
-    let resized = await resizeImage(base64, 1200); // 限制最大寬度/高度 1200px
-    console.log(`解析度調整完成，大小: ${(resized.length / 1024).toFixed(2)}KB`);
-    
-    // 第二步：品質壓縮
-    let quality = 0.8;
-    let compressed = resized;
-    let attempts = 0;
-    const maxAttempts = 12; // 增加壓縮嘗試次數
-
-    while (compressed.length > targetMaxSize && attempts < maxAttempts && quality > 0.1) {
-      compressed = await compressImage(compressed, quality);
-      quality -= 0.05; // 更細緻的品質調整
-      attempts++;
-      console.log(`壓縮第${attempts}次，品質: ${quality.toFixed(2)}, 大小: ${(compressed.length / 1024).toFixed(2)}KB`);
-    }
-
-    console.log(`壓縮完成，最終大小: ${(compressed.length / 1024).toFixed(2)}KB，壓縮率: ${((1 - compressed.length / base64.length) * 100).toFixed(1)}%`);
-    return compressed;
-  };
-
-  // 新增：解析度調整函數（模擬 LINE App 的低解析度相機）
-  const resizeImage = async (base64: string, maxSize: number): Promise<string> => {
-    return new Promise((resolve) => {
-      const img = new window.Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return resolve(base64);
-        
-        // 計算新尺寸（保持比例，限制最大邊）
-        let { width, height } = img;
-        if (width > maxSize || height > maxSize) {
-          if (width > height) {
-            height = (height * maxSize) / width;
-            width = maxSize;
-          } else {
-            width = (width * maxSize) / height;
-            height = maxSize;
-          }
-        }
-        
-        canvas.width = width;
-        canvas.height = height;
-        
-        // 使用高品質重採樣
-        ctx.imageSmoothingEnabled = true;
-        ctx.imageSmoothingQuality = 'high';
-        ctx.drawImage(img, 0, 0, width, height);
-        
-        const resized = canvas.toDataURL('image/jpeg', 0.9);
-        console.log(`解析度調整：${img.width}x${img.height} → ${width}x${height}`);
-        resolve(resized);
-      };
-      img.onerror = () => resolve(base64);
-      img.src = base64;
-    });
-  };
-
-  // 证件拍照（正面）- 超級優化版本
+  // 证件拍照（正面）- 簡單版本
   const handleIdFront = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || !e.target.files[0]) return;
     const file = e.target.files[0];
     
-    // 放宽文件大小限制到 10MB，但会超級激進壓縮
-    if (file.size > 10 * 1024 * 1024) {
-      alert('文件过大，请选择小于 10MB 的图片');
+    // 檢查檔案大小（限制 3MB，降低限制）
+    if (file.size > 3 * 1024 * 1024) {
+      alert('檔案太大，請選擇小於 3MB 的圖片');
       return;
     }
     
@@ -994,78 +836,92 @@ export default function ContractPage() {
     setUploadStatus(prev => ({ ...prev, front: '开始处理...' }));
     
     try {
-      console.log('开始处理证件正面...', `文件大小: ${(file.size / 1024 / 1024).toFixed(2)}MB`);
+      console.log('開始處理證件正面...', `檔案大小: ${(file.size / 1024 / 1024).toFixed(2)}MB`);
       
-      // 1. 转换为 base64
+      // 先轉換為 base64 並壓縮
       setUploadStatus(prev => ({ ...prev, front: '读取文件...' }));
       let base64 = await toBase64(file);
-      console.log('原始 base64 长度:', base64.length);
+      console.log('原始 base64 長度:', base64.length);
       
-      // 2. 超級激進壓縮（150KB 目標）
-      setUploadStatus(prev => ({ ...prev, front: '超級壓縮中...' }));
-      base64 = await smartCompressImage(base64, 150 * 1024); // 150KB 目標
-      console.log('压缩后 base64 长度:', base64.length);
+      // 壓縮圖片
+      setUploadStatus(prev => ({ ...prev, front: '壓縮中...' }));
+      base64 = await compressImage(base64, 0.7); // 壓縮到 70% 品質
+      console.log('壓縮後 base64 長度:', base64.length);
       
-      // 3. 加浮水印（降级处理）
-      let watermarked = base64;
+      let watermarked;
       try {
+        // 嘗試加浮水印
         setUploadStatus(prev => ({ ...prev, front: '添加浮水印...' }));
-        watermarked = await addWatermark(base64, `仅限手机租赁使用 ${new Date().toLocaleString('zh-TW', { hour12: false })}`);
-        console.log('浮水印处理完成');
+        console.log('開始加浮水印...');
+        watermarked = await addWatermark(base64, `僅限手機租賃使用 ${new Date().toLocaleString('zh-TW', { hour12: false })}`);
+        console.log('浮水印處理完成');
       } catch (watermarkError) {
-        console.warn('浮水印处理失败，使用原图:', watermarkError);
-        // 降级：浮水印失败不影响上传
+        console.warn('浮水印處理失敗，使用原圖:', watermarkError);
+        watermarked = base64; // 降級：如果浮水印失敗就用原圖
       }
       
-      // 4. 上传文件
-      await uploadFileWithChunks(
-        watermarked, 
-        'id', 
-        '证件正面',
-        (progress) => setUploadProgress(prev => ({ ...prev, front: progress })),
-        (status) => setUploadStatus(prev => ({ ...prev, front: status }))
-      );
+      // 重試上傳機制
+      let uploadSuccess = false;
+      let lastError;
       
-      // 5. 显示成功
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+          console.log(`第 ${attempt} 次上傳嘗試...`);
+          setUploadStatus(prev => ({ ...prev, front: `第 ${attempt} 次上傳嘗試...` }));
+          setUploadProgress(prev => ({ ...prev, front: Math.min(20 * attempt, 80) }));
+          
+          const uploadResponse = await fetch(`/api/orders/${orderId}/upload`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ file: watermarked, type: 'id', name: '證件正面' })
+          });
+          
+          if (!uploadResponse.ok) {
+            throw new Error(`上傳失敗: ${uploadResponse.status}`);
+          }
+          
+          uploadSuccess = true;
+          setUploadProgress(prev => ({ ...prev, front: 100 }));
+          break;
+        } catch (error) {
+          lastError = error;
+          console.warn(`第 ${attempt} 次上傳失敗:`, error);
+          if (attempt < 3) {
+            await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+          }
+        }
+      }
+      
+      if (!uploadSuccess) {
+        throw lastError || new Error('上傳失敗');
+      }
+      
       setIdFront(watermarked);
       setUploadStatus(prev => ({ ...prev, front: '✅ 上传成功' }));
       
     } catch (err) {
-      console.error('证件正面处理失败:', err);
+      console.error('證件正面處理失敗:', err);
       setUploadStatus(prev => ({ ...prev, front: '❌ 上传失败' }));
-      
-      // 更友好的错误信息
-      let errorMessage = '证件正面上传失败';
-      if (err instanceof Error) {
-        if (err.message.includes('abort')) {
-          errorMessage += '：上传超时，请检查网络连接后重试';
-        } else if (err.message.includes('Failed to fetch')) {
-          errorMessage += '：网络连接中断，请重试';
-        } else if (err.message.includes('PAYLOAD_TOO_LARGE')) {
-          errorMessage += '：文件过大，请重新拍照或选择更小的图片';
-        } else {
-          errorMessage += `：${err.message}`;
-        }
-      }
-      alert(errorMessage);
+      alert('證件正面上傳失敗，請重試');
     } finally {
       setProcessingIdFront(false);
     }
   };
   
-  // 证件拍照（反面）- 超級優化版本  
+  // 证件拍照（反面）- 簡單版本
   const handleIdBack = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || !e.target.files[0]) return;
     
     if (!idFront) {
-      alert('请先完成证件正面拍照');
+      alert('請先完成證件正面拍照');
       return;
     }
     
     const file = e.target.files[0];
     
-    if (file.size > 10 * 1024 * 1024) {
-      alert('文件过大，请选择小于 10MB 的图片');
+    // 檢查檔案大小（限制 3MB，降低限制）
+    if (file.size > 3 * 1024 * 1024) {
+      alert('檔案太大，請選擇小於 3MB 的圖片');
       return;
     }
     
@@ -1074,60 +930,73 @@ export default function ContractPage() {
     setUploadStatus(prev => ({ ...prev, back: '开始处理...' }));
     
     try {
-      console.log('开始处理证件反面...', `文件大小: ${(file.size / 1024 / 1024).toFixed(2)}MB`);
+      console.log('開始處理證件反面...', `檔案大小: ${(file.size / 1024 / 1024).toFixed(2)}MB`);
       
-      // 1. 转换为 base64
+      // 先轉換為 base64 並壓縮
       setUploadStatus(prev => ({ ...prev, back: '读取文件...' }));
       let base64 = await toBase64(file);
-      console.log('原始 base64 长度:', base64.length);
+      console.log('原始 base64 長度:', base64.length);
       
-      // 2. 超級激進壓縮（150KB 目標）
-      setUploadStatus(prev => ({ ...prev, back: '超級壓縮中...' }));
-      base64 = await smartCompressImage(base64, 150 * 1024); // 150KB 目標
-      console.log('压缩后 base64 长度:', base64.length);
+      // 壓縮圖片
+      setUploadStatus(prev => ({ ...prev, back: '壓縮中...' }));
+      base64 = await compressImage(base64, 0.7); // 壓縮到 70% 品質
+      console.log('壓縮後 base64 長度:', base64.length);
       
-      // 3. 加浮水印（降级处理）
-      let watermarked = base64;
+      let watermarked;
       try {
+        // 嘗試加浮水印
         setUploadStatus(prev => ({ ...prev, back: '添加浮水印...' }));
-        watermarked = await addWatermark(base64, `仅限手机租赁使用 ${new Date().toLocaleString('zh-TW', { hour12: false })}`);
-        console.log('浮水印处理完成');
+        console.log('開始加浮水印...');
+        watermarked = await addWatermark(base64, `僅限手機租賃使用 ${new Date().toLocaleString('zh-TW', { hour12: false })}`);
+        console.log('浮水印處理完成');
       } catch (watermarkError) {
-        console.warn('浮水印处理失败，使用原图:', watermarkError);
-        // 降级：浮水印失败不影响上传
+        console.warn('浮水印處理失敗，使用原圖:', watermarkError);
+        watermarked = base64; // 降級：如果浮水印失敗就用原圖
       }
       
-      // 4. 上传文件
-      await uploadFileWithChunks(
-        watermarked, 
-        'id', 
-        '证件反面',
-        (progress) => setUploadProgress(prev => ({ ...prev, back: progress })),
-        (status) => setUploadStatus(prev => ({ ...prev, back: status }))
-      );
+      // 重試上傳機制
+      let uploadSuccess = false;
+      let lastError;
       
-      // 5. 显示成功
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+          console.log(`第 ${attempt} 次上傳嘗試...`);
+          setUploadStatus(prev => ({ ...prev, back: `第 ${attempt} 次上傳嘗試...` }));
+          setUploadProgress(prev => ({ ...prev, back: Math.min(20 * attempt, 80) }));
+          
+          const uploadResponse = await fetch(`/api/orders/${orderId}/upload`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ file: watermarked, type: 'id', name: '證件反面' })
+          });
+          
+          if (!uploadResponse.ok) {
+            throw new Error(`上傳失敗: ${uploadResponse.status}`);
+          }
+          
+          uploadSuccess = true;
+          setUploadProgress(prev => ({ ...prev, back: 100 }));
+          break;
+        } catch (error) {
+          lastError = error;
+          console.warn(`第 ${attempt} 次上傳失敗:`, error);
+          if (attempt < 3) {
+            await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+          }
+        }
+      }
+      
+      if (!uploadSuccess) {
+        throw lastError || new Error('上傳失敗');
+      }
+      
       setIdBack(watermarked);
       setUploadStatus(prev => ({ ...prev, back: '✅ 上传成功' }));
       
     } catch (err) {
-      console.error('证件反面处理失败:', err);
+      console.error('證件反面處理失敗:', err);
       setUploadStatus(prev => ({ ...prev, back: '❌ 上传失败' }));
-      
-      // 更友好的错误信息
-      let errorMessage = '证件反面上传失败';
-      if (err instanceof Error) {
-        if (err.message.includes('abort')) {
-          errorMessage += '：上传超时，请检查网络连接后重试';
-        } else if (err.message.includes('Failed to fetch')) {
-          errorMessage += '：网络连接中断，请重试';
-        } else if (err.message.includes('PAYLOAD_TOO_LARGE')) {
-          errorMessage += '：文件过大，请重新拍照或选择更小的图片';
-        } else {
-          errorMessage += `：${err.message}`;
-        }
-      }
-      alert(errorMessage);
+      alert('證件反面上傳失敗，請重試');
     } finally {
       setProcessingIdBack(false);
     }
