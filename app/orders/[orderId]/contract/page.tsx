@@ -722,12 +722,12 @@ export default function ContractPage() {
       for (let i = 0; i < files.length; i++) {
         console.log(`開始上傳第 ${i + 1} 張外觀照片...`);
         
-        // 壓縮圖片
-        let compressed = await smartCompressImage(arr[i], 1 * 1024 * 1024); // 1MB 目標大小
+        // 超級激進壓縮：目標 150KB（適合行動網路）
+        let compressed = await smartCompressImage(arr[i], 150 * 1024); // 150KB 超小目標
         
         // 使用簡單的重試上傳（外觀照片不分片）
         let uploadSuccess = false;
-        for (let attempt = 1; attempt <= 3; attempt++) {
+        for (let attempt = 1; attempt <= 5; attempt++) { // 增加重試次數
           try {
             const response = await fetch(`/api/orders/${orderId}/upload`, {
               method: 'POST',
@@ -748,8 +748,8 @@ export default function ContractPage() {
             }
           } catch (error) {
             console.warn(`第 ${i + 1} 張外觀照片第 ${attempt} 次上傳失敗:`, error);
-            if (attempt < 3) {
-              await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+            if (attempt < 5) {
+              await new Promise(resolve => setTimeout(resolve, 1500 * attempt)); // 延長等待時間
             }
           }
         }
@@ -915,32 +915,75 @@ export default function ContractPage() {
     throw new Error('上傳失敗，已重試 ' + maxRetries + ' 次');
   };
 
-  // 改进的图片压缩函数
-  const smartCompressImage = async (base64: string, targetMaxSize: number = 500 * 1024): Promise<string> => {
+  // 改进的图片压缩函数 - 添加解析度調整功能
+  const smartCompressImage = async (base64: string, targetMaxSize: number = 200 * 1024): Promise<string> => {
+    console.log(`開始智能壓縮，原始大小: ${(base64.length / 1024).toFixed(2)}KB，目標: ${(targetMaxSize / 1024).toFixed(2)}KB`);
+    
+    // 第一步：調整解析度（像 LINE App 一樣限制解析度）
+    let resized = await resizeImage(base64, 1200); // 限制最大寬度/高度 1200px
+    console.log(`解析度調整完成，大小: ${(resized.length / 1024).toFixed(2)}KB`);
+    
+    // 第二步：品質壓縮
     let quality = 0.8;
-    let compressed = base64;
+    let compressed = resized;
     let attempts = 0;
-    const maxAttempts = 8; // 增加壓縮嘗試次數
+    const maxAttempts = 12; // 增加壓縮嘗試次數
 
-    console.log(`開始壓縮，原始大小: ${(base64.length / 1024).toFixed(2)}KB，目標: ${(targetMaxSize / 1024).toFixed(2)}KB`);
-
-    while (compressed.length > targetMaxSize && attempts < maxAttempts && quality > 0.2) {
+    while (compressed.length > targetMaxSize && attempts < maxAttempts && quality > 0.1) {
       compressed = await compressImage(compressed, quality);
-      quality -= 0.1;
+      quality -= 0.05; // 更細緻的品質調整
       attempts++;
-      console.log(`壓縮第${attempts}次，品質: ${quality}, 大小: ${(compressed.length / 1024).toFixed(2)}KB`);
+      console.log(`壓縮第${attempts}次，品質: ${quality.toFixed(2)}, 大小: ${(compressed.length / 1024).toFixed(2)}KB`);
     }
 
-    console.log(`壓縮完成，最終大小: ${(compressed.length / 1024).toFixed(2)}KB`);
+    console.log(`壓縮完成，最終大小: ${(compressed.length / 1024).toFixed(2)}KB，壓縮率: ${((1 - compressed.length / base64.length) * 100).toFixed(1)}%`);
     return compressed;
   };
 
-  // 证件拍照（正面）- 优化版本
+  // 新增：解析度調整函數（模擬 LINE App 的低解析度相機）
+  const resizeImage = async (base64: string, maxSize: number): Promise<string> => {
+    return new Promise((resolve) => {
+      const img = new window.Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return resolve(base64);
+        
+        // 計算新尺寸（保持比例，限制最大邊）
+        let { width, height } = img;
+        if (width > maxSize || height > maxSize) {
+          if (width > height) {
+            height = (height * maxSize) / width;
+            width = maxSize;
+          } else {
+            width = (width * maxSize) / height;
+            height = maxSize;
+          }
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        
+        // 使用高品質重採樣
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        const resized = canvas.toDataURL('image/jpeg', 0.9);
+        console.log(`解析度調整：${img.width}x${img.height} → ${width}x${height}`);
+        resolve(resized);
+      };
+      img.onerror = () => resolve(base64);
+      img.src = base64;
+    });
+  };
+
+  // 证件拍照（正面）- 超級優化版本
   const handleIdFront = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || !e.target.files[0]) return;
     const file = e.target.files[0];
     
-    // 放宽文件大小限制到 10MB，但会智能压缩
+    // 放宽文件大小限制到 10MB，但会超級激進壓縮
     if (file.size > 10 * 1024 * 1024) {
       alert('文件过大，请选择小于 10MB 的图片');
       return;
@@ -958,9 +1001,9 @@ export default function ContractPage() {
       let base64 = await toBase64(file);
       console.log('原始 base64 长度:', base64.length);
       
-      // 2. 智能压缩
-      setUploadStatus(prev => ({ ...prev, front: '智能压缩中...' }));
-      base64 = await smartCompressImage(base64);
+      // 2. 超級激進壓縮（150KB 目標）
+      setUploadStatus(prev => ({ ...prev, front: '超級壓縮中...' }));
+      base64 = await smartCompressImage(base64, 150 * 1024); // 150KB 目標
       console.log('压缩后 base64 长度:', base64.length);
       
       // 3. 加浮水印（降级处理）
@@ -998,6 +1041,8 @@ export default function ContractPage() {
           errorMessage += '：上传超时，请检查网络连接后重试';
         } else if (err.message.includes('Failed to fetch')) {
           errorMessage += '：网络连接中断，请重试';
+        } else if (err.message.includes('PAYLOAD_TOO_LARGE')) {
+          errorMessage += '：文件过大，请重新拍照或选择更小的图片';
         } else {
           errorMessage += `：${err.message}`;
         }
@@ -1008,7 +1053,7 @@ export default function ContractPage() {
     }
   };
   
-  // 证件拍照（反面）- 优化版本  
+  // 证件拍照（反面）- 超級優化版本  
   const handleIdBack = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || !e.target.files[0]) return;
     
@@ -1036,9 +1081,9 @@ export default function ContractPage() {
       let base64 = await toBase64(file);
       console.log('原始 base64 长度:', base64.length);
       
-      // 2. 智能压缩
-      setUploadStatus(prev => ({ ...prev, back: '智能压缩中...' }));
-      base64 = await smartCompressImage(base64);
+      // 2. 超級激進壓縮（150KB 目標）
+      setUploadStatus(prev => ({ ...prev, back: '超級壓縮中...' }));
+      base64 = await smartCompressImage(base64, 150 * 1024); // 150KB 目標
       console.log('压缩后 base64 长度:', base64.length);
       
       // 3. 加浮水印（降级处理）
@@ -1076,6 +1121,8 @@ export default function ContractPage() {
           errorMessage += '：上传超时，请检查网络连接后重试';
         } else if (err.message.includes('Failed to fetch')) {
           errorMessage += '：网络连接中断，请重试';
+        } else if (err.message.includes('PAYLOAD_TOO_LARGE')) {
+          errorMessage += '：文件过大，请重新拍照或选择更小的图片';
         } else {
           errorMessage += `：${err.message}`;
         }
