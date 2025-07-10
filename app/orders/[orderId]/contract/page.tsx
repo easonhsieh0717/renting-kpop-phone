@@ -713,15 +713,54 @@ export default function ContractPage() {
     if (!e.target.files) return;
     const files = Array.from(e.target.files);
     if (photos.length + files.length > 6) return alert('最多6張');
-    const arr = await Promise.all(files.map(f => toBase64(f)));
-    setPhotos([...photos, ...arr]);
-    // 自動上傳
-    for (let i = 0; i < files.length; i++) {
-      await fetch(`/api/orders/${orderId}/upload`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ file: arr[i], type: 'photo', name: `外觀${photos.length + i + 1}` })
-      });
+    
+    try {
+      const arr = await Promise.all(files.map(f => toBase64(f)));
+      setPhotos([...photos, ...arr]);
+      
+      // 使用優化的上傳函數，逐個上傳
+      for (let i = 0; i < files.length; i++) {
+        console.log(`開始上傳第 ${i + 1} 張外觀照片...`);
+        
+        // 壓縮圖片
+        let compressed = await smartCompressImage(arr[i], 1 * 1024 * 1024); // 1MB 目標大小
+        
+        // 使用簡單的重試上傳（外觀照片不分片）
+        let uploadSuccess = false;
+        for (let attempt = 1; attempt <= 3; attempt++) {
+          try {
+            const response = await fetch(`/api/orders/${orderId}/upload`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ 
+                file: compressed, 
+                type: 'photo', 
+                name: `外觀${photos.length + i + 1}` 
+              })
+            });
+            
+            if (response.ok) {
+              console.log(`第 ${i + 1} 張外觀照片上傳成功`);
+              uploadSuccess = true;
+              break;
+            } else {
+              throw new Error(`HTTP ${response.status}`);
+            }
+          } catch (error) {
+            console.warn(`第 ${i + 1} 張外觀照片第 ${attempt} 次上傳失敗:`, error);
+            if (attempt < 3) {
+              await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+            }
+          }
+        }
+        
+        if (!uploadSuccess) {
+          alert(`第 ${i + 1} 張外觀照片上傳失敗，請稍後重試`);
+        }
+      }
+    } catch (error) {
+      console.error('外觀照片處理失敗:', error);
+      alert('外觀照片處理失敗，請重新選擇');
     }
   };
   const handlePhotoRemove = (idx: number) => setPhotos(photos.filter((_, i) => i !== idx));
@@ -826,130 +865,73 @@ export default function ContractPage() {
     onProgress: (progress: number) => void,
     onStatus: (status: string) => void
   ) => {
-    const maxChunkSize = 1.5 * 1024 * 1024; // 1.5MB 分片大小，降低单次传输量
+    const maxChunkSize = 800 * 1024; // 800KB 分片大小，進一步降低傳輸量確保穩定
     const maxRetries = 5; // 增加重试次数
     const baseDelay = 1000; // 基础延迟时间
 
-    onStatus('检查文件大小...');
+    onStatus('準備上傳檔案...');
     
-    // 如果文件小于分片大小，直接上传
-    if (base64Data.length < maxChunkSize) {
-      onStatus('文件较小，直接上传...');
-      
-      for (let attempt = 1; attempt <= maxRetries; attempt++) {
-        try {
-          onStatus(`第 ${attempt} 次上传尝试...`);
-          
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 30000); // 30秒超时
-          
-          const response = await fetch(`/api/orders/${orderId}/upload`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ file: base64Data, type, name }),
-            signal: controller.signal
-          });
-          
-          clearTimeout(timeoutId);
-          
-          if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-          }
-          
-          onProgress(100);
-          onStatus('上传成功！');
-          return true;
-          
-        } catch (error) {
-          console.warn(`第 ${attempt} 次上传失败:`, error);
-          
-          if (attempt < maxRetries) {
-            // 指数退避策略：每次重试等待时间翻倍
-            const delay = baseDelay * Math.pow(2, attempt - 1);
-            onStatus(`上传失败，${delay/1000}秒后重试...`);
-            await new Promise(resolve => setTimeout(resolve, delay));
-          } else {
-            throw error;
-          }
+    // 暫時停用分片上傳，直接上傳（已壓縮的檔案）
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        onStatus(`第 ${attempt} 次上傳嘗試...`);
+        onProgress(Math.min(20 * attempt, 80)); // 顯示進度
+        
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 60000); // 60秒超時
+        
+        const response = await fetch(`/api/orders/${orderId}/upload`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ file: base64Data, type, name }),
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`HTTP ${response.status}: ${errorText}`);
+        }
+        
+        onProgress(100);
+        onStatus('上傳成功！');
+        return true;
+        
+      } catch (error) {
+        console.warn(`第 ${attempt} 次上傳失敗:`, error);
+        
+        if (attempt < maxRetries) {
+          // 指數退避策略：每次重試等待時間翻倍
+          const delay = baseDelay * Math.pow(2, attempt - 1);
+          onStatus(`上傳失敗，${delay/1000}秒後重試...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+        } else {
+          throw error;
         }
       }
     }
-
-    // 大文件分片上传
-    onStatus('文件较大，准备分片上传...');
     
-    const chunks = splitBase64(base64Data, maxChunkSize);
-    const totalChunks = chunks.length;
-    
-    onStatus(`将分为 ${totalChunks} 个片段上传`);
-    
-    for (let i = 0; i < totalChunks; i++) {
-      let chunkSuccess = false;
-      
-      for (let attempt = 1; attempt <= maxRetries; attempt++) {
-        try {
-          onStatus(`上传第 ${i + 1}/${totalChunks} 个片段 (第${attempt}次尝试)...`);
-          
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 45000); // 分片上传45秒超时
-          
-          const response = await fetch(`/api/orders/${orderId}/upload?part=${i + 1}&total=${totalChunks}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ file: chunks[i], type, name }),
-            signal: controller.signal
-          });
-          
-          clearTimeout(timeoutId);
-          
-          if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-          }
-          
-          chunkSuccess = true;
-          const progress = Math.round(((i + 1) / totalChunks) * 100);
-          onProgress(progress);
-          
-          if (i === totalChunks - 1) {
-            onStatus('所有片段上传完成，正在合并...');
-          }
-          
-          break;
-          
-        } catch (error) {
-          console.warn(`第 ${i + 1} 个片段第 ${attempt} 次上传失败:`, error);
-          
-          if (attempt < maxRetries) {
-            const delay = baseDelay * Math.pow(2, attempt - 1);
-            onStatus(`片段上传失败，${delay/1000}秒后重试...`);
-            await new Promise(resolve => setTimeout(resolve, delay));
-          }
-        }
-      }
-      
-      if (!chunkSuccess) {
-        throw new Error(`第 ${i + 1} 个片段上传失败，已重试 ${maxRetries} 次`);
-      }
-    }
-    
-    onStatus('上传完成！');
-    return true;
+    throw new Error('上傳失敗，已重試 ' + maxRetries + ' 次');
   };
 
   // 改进的图片压缩函数
-  const smartCompressImage = async (base64: string, targetMaxSize: number = 2 * 1024 * 1024): Promise<string> => {
+  const smartCompressImage = async (base64: string, targetMaxSize: number = 500 * 1024): Promise<string> => {
     let quality = 0.8;
     let compressed = base64;
     let attempts = 0;
-    const maxAttempts = 5;
+    const maxAttempts = 8; // 增加壓縮嘗試次數
 
-    while (compressed.length > targetMaxSize && attempts < maxAttempts && quality > 0.3) {
+    console.log(`開始壓縮，原始大小: ${(base64.length / 1024).toFixed(2)}KB，目標: ${(targetMaxSize / 1024).toFixed(2)}KB`);
+
+    while (compressed.length > targetMaxSize && attempts < maxAttempts && quality > 0.2) {
       compressed = await compressImage(compressed, quality);
       quality -= 0.1;
       attempts++;
-      console.log(`压缩第${attempts}次，品质: ${quality}, 大小: ${(compressed.length / 1024 / 1024).toFixed(2)}MB`);
+      console.log(`壓縮第${attempts}次，品質: ${quality}, 大小: ${(compressed.length / 1024).toFixed(2)}KB`);
     }
 
+    console.log(`壓縮完成，最終大小: ${(compressed.length / 1024).toFixed(2)}KB`);
     return compressed;
   };
 
