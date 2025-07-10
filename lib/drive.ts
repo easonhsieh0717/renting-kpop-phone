@@ -4,6 +4,11 @@ import { Readable } from 'stream';
 const FOLDER_ID = process.env.GOOGLE_DRIVE_FOLDER_ID || '';
 const SHARED_DRIVE_ID = process.env.GOOGLE_SHARED_DRIVE_ID || ''; // 新增 Shared Drive ID
 
+// OAuth 配置 (使用現有的變數名稱)
+const OAUTH_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
+const OAUTH_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || '';
+const OAUTH_REFRESH_TOKEN = process.env.GOOGLE_OAUTH_REFRESH_TOKEN || '';
+
 // 從 URL 提取 ID 的工具函數
 function extractIdFromUrl(urlOrId: string): string {
   if (!urlOrId) return '';
@@ -37,14 +42,39 @@ async function isSharedDrive(driveId: string): Promise<boolean> {
 }
 
 export async function getDriveClient() {
-  const auth = new google.auth.GoogleAuth({
-    credentials: {
-      client_email: process.env.GOOGLE_SHEETS_CLIENT_EMAIL,
-      private_key: (process.env.GOOGLE_SHEETS_PRIVATE_KEY || '').replace(/\\n/g, '\n'),
-    },
-    scopes: ['https://www.googleapis.com/auth/drive'],
-  });
-  return google.drive({ version: 'v3', auth });
+  // 調試：檢查環境變數狀態
+  console.log('=== Drive Client 環境變數檢查 ===');
+  console.log('OAUTH_CLIENT_ID:', OAUTH_CLIENT_ID ? `已設置 (${OAUTH_CLIENT_ID.substring(0, 20)}...)` : '未設置');
+  console.log('OAUTH_CLIENT_SECRET:', OAUTH_CLIENT_SECRET ? `已設置 (${OAUTH_CLIENT_SECRET.length} 字符)` : '未設置');
+  console.log('OAUTH_REFRESH_TOKEN:', OAUTH_REFRESH_TOKEN ? `已設置 (${OAUTH_REFRESH_TOKEN.substring(0, 20)}...)` : '未設置');
+  console.log('SERVICE_ACCOUNT_EMAIL:', process.env.GOOGLE_SHEETS_CLIENT_EMAIL ? `已設置 (${process.env.GOOGLE_SHEETS_CLIENT_EMAIL})` : '未設置');
+  console.log('=====================================');
+  
+  // 優先使用 OAuth，如果沒有 OAuth 設定則使用 Service Account
+  if (OAUTH_CLIENT_ID && OAUTH_CLIENT_SECRET && OAUTH_REFRESH_TOKEN) {
+    console.log('✅ 使用 OAuth 授權');
+    const oauth2Client = new google.auth.OAuth2(
+      OAUTH_CLIENT_ID,
+      OAUTH_CLIENT_SECRET,
+      'http://localhost:3000/oauth-setup' // 修正重導向 URI
+    );
+    
+    oauth2Client.setCredentials({
+      refresh_token: OAUTH_REFRESH_TOKEN,
+    });
+    
+    return google.drive({ version: 'v3', auth: oauth2Client });
+  } else {
+    console.log('⚠️  使用 Service Account 授權 - OAuth 配置不完整');
+    const auth = new google.auth.GoogleAuth({
+      credentials: {
+        client_email: process.env.GOOGLE_SHEETS_CLIENT_EMAIL,
+        private_key: (process.env.GOOGLE_SHEETS_PRIVATE_KEY || '').replace(/\\n/g, '\n'),
+      },
+      scopes: ['https://www.googleapis.com/auth/drive'],
+    });
+    return google.drive({ version: 'v3', auth });
+  }
 }
 
 // 取得或建立以訂單編號命名的子資料夾
