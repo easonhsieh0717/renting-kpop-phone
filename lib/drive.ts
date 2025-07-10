@@ -2,6 +2,7 @@ import { google } from 'googleapis';
 import { Readable } from 'stream';
 
 const FOLDER_ID = process.env.GOOGLE_DRIVE_FOLDER_ID || '';
+const SHARED_DRIVE_ID = process.env.GOOGLE_SHARED_DRIVE_ID || ''; // 新增 Shared Drive ID
 
 export async function getDriveClient() {
   const auth = new google.auth.GoogleAuth({
@@ -17,25 +18,57 @@ export async function getDriveClient() {
 // 取得或建立以訂單編號命名的子資料夾
 export async function getOrCreateOrderFolder(orderId: string) {
   const drive = await getDriveClient();
-  if (!FOLDER_ID) throw new Error('GOOGLE_DRIVE_FOLDER_ID is not set');
-  // 先查詢是否已存在
-  const res = await drive.files.list({
-    q: `'${FOLDER_ID}' in parents and name = '${orderId}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false`,
+  
+  // 確定使用的父資料夾 ID（優先使用 Shared Drive）
+  const parentFolderId = SHARED_DRIVE_ID || FOLDER_ID;
+  if (!parentFolderId) {
+    throw new Error('Neither GOOGLE_SHARED_DRIVE_ID nor GOOGLE_DRIVE_FOLDER_ID is set');
+  }
+  
+  console.log(`使用父資料夾: ${SHARED_DRIVE_ID ? 'Shared Drive' : 'Standard Drive'} - ${parentFolderId}`);
+  
+  // 查詢參數，支援 Shared Drive
+  const queryParams: any = {
+    q: `'${parentFolderId}' in parents and name = '${orderId}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false`,
     fields: 'files(id, name)',
-  });
+  };
+  
+  // 如果使用 Shared Drive，添加相關參數
+  if (SHARED_DRIVE_ID) {
+    queryParams.supportsAllDrives = true;
+    queryParams.includeItemsFromAllDrives = true;
+    queryParams.corpora = 'drive';
+    queryParams.driveId = SHARED_DRIVE_ID;
+  }
+  
+  // 先查詢是否已存在
+  const res = await drive.files.list(queryParams);
+  
   if (res.data.files && res.data.files.length > 0 && res.data.files[0].id) {
+    console.log(`找到現有資料夾: ${res.data.files[0].id}`);
     return res.data.files[0].id;
   }
+  
   // 不存在則建立
-  const folder = await drive.files.create({
+  const createParams: any = {
     requestBody: {
       name: orderId,
       mimeType: 'application/vnd.google-apps.folder',
-      parents: [FOLDER_ID],
+      parents: [parentFolderId],
     },
     fields: 'id',
-  });
+  };
+  
+  // 如果使用 Shared Drive，添加相關參數
+  if (SHARED_DRIVE_ID) {
+    createParams.supportsAllDrives = true;
+  }
+  
+  console.log(`建立新資料夾: ${orderId}`);
+  const folder = await drive.files.create(createParams);
+  
   if (!folder.data.id) throw new Error('Failed to create folder');
+  console.log(`成功建立資料夾: ${folder.data.id}`);
   return folder.data.id;
 }
 
@@ -44,7 +77,10 @@ export async function uploadOrderFile(orderId: string, fileName: string, mimeTyp
   const drive = await getDriveClient();
   const folderId = await getOrCreateOrderFolder(orderId);
   if (!folderId) throw new Error('No folderId');
-  const res = await drive.files.create({
+  
+  console.log(`上傳檔案到資料夾: ${folderId}, 檔案: ${fileName}`);
+  
+  const uploadParams: any = {
     requestBody: {
       name: fileName,
       parents: [folderId],
@@ -54,6 +90,14 @@ export async function uploadOrderFile(orderId: string, fileName: string, mimeTyp
       body: Readable.from(buffer),
     },
     fields: 'id, webViewLink, webContentLink',
-  });
+  };
+  
+  // 如果使用 Shared Drive，添加相關參數
+  if (SHARED_DRIVE_ID) {
+    uploadParams.supportsAllDrives = true;
+  }
+  
+  const res = await drive.files.create(uploadParams);
+  console.log(`檔案上傳成功: ${res.data.id}`);
   return res.data;
 } 
