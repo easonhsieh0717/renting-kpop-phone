@@ -376,9 +376,7 @@ function renderAttachment2(order: any, depositMode: string | null, needCable: bo
     <div style={{
       ...fontStyle,
       marginTop: '16px',
-      padding: '16px',
-      border: '1px solid #d1d5db',
-      borderRadius: '8px',
+      padding: '0px',
       backgroundColor: '#ffffff'
     }}>
       <span style={boldStyle}>附件二：設備交付確認單</span><br/>
@@ -1314,7 +1312,7 @@ export default function ContractPage() {
           <h2 className="text-lg font-bold mb-4">5. 合約簽署</h2>
           
           <div className="mb-6">
-            <div id="contract-content" className="border rounded-lg p-4 bg-white">
+            <div id="contract-content" className="p-4 bg-white">
               {renderContract(order, depositMode, needCable, needCharger, idNumber, phoneNumber, phoneHighDepositAmount, phoneHighDepositAmount, signed, signatureUrl)}
             </div>
           </div>
