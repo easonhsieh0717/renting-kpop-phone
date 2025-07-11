@@ -153,7 +153,7 @@ function Stepper({ step, setStep }: { step: number; setStep: (n: number) => void
 }
 
 // 合約條款渲染（正式版，動態帶入步驟三資訊）
-function renderContract(order: any, depositMode: string | null, needCable: boolean, needCharger: boolean, idNumber: string, phoneNumber: string, depositAmount: number = 30000, phoneDepositAmount: number = 30000) {
+function renderContract(order: any, depositMode: string | null, needCable: boolean, needCharger: boolean, idNumber: string, phoneNumber: string, depositAmount: number = 30000, phoneDepositAmount: number = 30000, signed: boolean, signatureUrl: string | null) {
   const today = new Date();
   const formatDate = (d: Date) => `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
   
@@ -326,7 +326,15 @@ function renderContract(order: any, depositMode: string | null, needCable: boole
       <div style={{marginBottom: '16px'}}>
         <span style={boldStyle}>簽署欄位</span><br/>
         <span style={fontStyle}>甲方簽章：____________________　日期：{formatDate(today)}</span><br/>
-        <span style={fontStyle}>乙方簽章：____________________　日期：{formatDate(today)}</span><br/>
+        {signed && signatureUrl ? (
+          <div style={{display: 'flex', alignItems: 'center', marginTop: '8px'}}>
+            <span style={fontStyle}>乙方簽章：</span>
+            <img src={signatureUrl} alt="乙方簽名" style={{maxWidth: '200px', maxHeight: '80px', marginLeft: '8px'}} />
+            <span style={fontStyle}>　日期：{formatDate(today)}</span>
+          </div>
+        ) : (
+          <span style={fontStyle}>乙方簽章：____________________　日期：{formatDate(today)}</span>
+        )}
       </div>
       
       <div style={{marginBottom: '16px'}}>
@@ -1306,8 +1314,8 @@ export default function ContractPage() {
           <h2 className="text-lg font-bold mb-4">5. 合約簽署</h2>
           
           <div className="mb-6">
-            <div className="border rounded-lg p-4 bg-white">
-              {renderContract(order, depositMode, needCable, needCharger, idNumber, phoneNumber, phoneHighDepositAmount, phoneHighDepositAmount)}
+            <div id="contract-content" className="border rounded-lg p-4 bg-white">
+              {renderContract(order, depositMode, needCable, needCharger, idNumber, phoneNumber, phoneHighDepositAmount, phoneHighDepositAmount, signed, signatureUrl)}
             </div>
           </div>
 
@@ -1327,13 +1335,20 @@ export default function ContractPage() {
             >
               上一步
             </button>
-            <button 
-              onClick={() => setModalOpen(true)} 
-              disabled={!agreed}
-              className="px-4 py-2 bg-blue-600 text-white rounded disabled:bg-gray-300"
-            >
-              開始簽署
-            </button>
+            {!signed && (
+              <button 
+                onClick={() => setModalOpen(true)} 
+                disabled={!agreed}
+                className="px-4 py-2 bg-blue-600 text-white rounded disabled:bg-gray-300"
+              >
+                開始簽署
+              </button>
+            )}
+            {signed && (
+              <div className="px-4 py-2 bg-green-600 text-white rounded">
+                ✓ 已簽署完成
+              </div>
+            )}
           </div>
         </div>
       )}
