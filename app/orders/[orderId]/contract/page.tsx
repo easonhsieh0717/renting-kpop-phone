@@ -392,7 +392,6 @@ function renderAttachment2(order: any, depositMode: string | null, needCable: bo
         {needCable && '原廠USB-C充電線，'}
         專用保護殼</span><br/>
       <span style={fontStyle}>- 押金模式：{depositMode === 'high' ? '高押金（免證件）' : depositMode === 'low' ? '低押金（需證件及預授權）' : '未選擇'}</span><br/>
-      <span style={fontStyle}>- 甲方簽章：____________________</span><br/>
     </div>
   );
 }
