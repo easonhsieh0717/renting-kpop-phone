@@ -161,7 +161,7 @@ function renderContract(order: any, depositMode: string | null, needCable: boole
   const fontStyle = {
     fontFamily: '"Noto Sans TC", "Microsoft JhengHei", "PingFang TC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif',
     color: '#000000',
-    fontSize: '16px',
+    fontSize: '14px',
     lineHeight: '1.6',
     WebkitFontSmoothing: 'antialiased' as const,
     MozOsxFontSmoothing: 'grayscale' as const,
@@ -176,7 +176,7 @@ function renderContract(order: any, depositMode: string | null, needCable: boole
   const titleStyle = {
     ...fontStyle,
     fontWeight: 'bold' as const,
-    fontSize: '20px',
+    fontSize: '18px',
     marginBottom: '16px'
   };
   
@@ -360,7 +360,7 @@ function renderAttachment2(order: any, depositMode: string | null, needCable: bo
   const fontStyle = {
     fontFamily: '"Noto Sans TC", "Microsoft JhengHei", "PingFang TC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif',
     color: '#000000',
-    fontSize: '16px',
+    fontSize: '14px',
     lineHeight: '1.6',
     WebkitFontSmoothing: 'antialiased' as const,
     MozOsxFontSmoothing: 'grayscale' as const,
@@ -392,7 +392,7 @@ function renderAttachment2(order: any, depositMode: string | null, needCable: bo
         {needCable && '原廠USB-C充電線，'}
         專用保護殼</span><br/>
       <span style={fontStyle}>- 押金模式：{depositMode === 'high' ? '高押金（免證件）' : depositMode === 'low' ? '低押金（需證件及預授權）' : '未選擇'}</span><br/>
-      <span style={fontStyle}>- 甲方簽章：____________________　乙方簽章：____________________</span><br/>
+      <span style={fontStyle}>- 甲方簽章：____________________</span><br/>
     </div>
   );
 }
@@ -666,7 +666,7 @@ export default function ContractPage() {
               
               // 使用統一的高品質設定
               const canvas = await html2canvas(pageDiv, {
-                scale: 2.5,
+                scale: 2.0,
                 useCORS: true,
                 backgroundColor: '#ffffff',
                 allowTaint: false,
