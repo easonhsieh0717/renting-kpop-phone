@@ -101,7 +101,7 @@ function createPaymentSuccessEmail(orderData: {
             <h3>📞 客服聯絡方式</h3>
             <p><strong>客服電話：</strong>02-8252-7208</p>
             <p><strong>客服時間：</strong>週一至週日 09:00-21:00</p>
-            <p><strong>LINE客服：</strong>@rent-phone（請加入官方帳號）</p>
+            <p><strong>LINE客服：</strong><a href="https://line.me/ti/p/@563amdnh" style="color: #0066cc; text-decoration: none;">@563amdnh</a>（請加入官方帳號）</p>
             <p><strong>緊急聯絡：</strong>如遇設備問題，請立即聯繫客服</p>
           </div>
           
@@ -299,7 +299,7 @@ function createPreAuthSuccessEmail(data: {
           
           <div class="contact-info">
             <h3 style="color: #1F2937; margin-top: 0;">📞 聯絡我們</h3>
-            <p style="margin: 5px 0;">LINE客服：@kpopphone</p>
+            <p style="margin: 5px 0;">LINE客服：<a href="https://line.me/ti/p/@563amdnh" style="color: #0066cc; text-decoration: none;">@563amdnh</a></p>
             <p style="margin: 5px 0;">營業時間：週一至週日 10:00-20:00</p>
             <p style="margin: 5px 0;">如有任何問題，歡迎隨時聯繫我們！</p>
           </div>
