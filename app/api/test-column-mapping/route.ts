@@ -35,6 +35,36 @@ const COLUMN_MAPPING = {
   EXTRA_NOTES: 25,          // Z: 額外備註
 };
 
+// 欄位英文與中文對應表
+const FIELD_NAME_TO_CHINESE: { [key: string]: string } = {
+  ORDER_ID: '訂單編號',
+  PHONE_IMEI: 'IMEI',
+  START_DATE: '開始日期',
+  END_DATE: '結束日期',
+  TOTAL_AMOUNT: '總金額',
+  CUSTOMER_NAME: '客戶姓名',
+  CUSTOMER_EMAIL: '客戶Email',
+  CUSTOMER_PHONE: '客戶電話',
+  PAYMENT_STATUS: '付款狀態',
+  CREATE_TIME: '建立時間',
+  DISCOUNT_CODE: '折扣碼',
+  DISCOUNT_AMOUNT: '總共折扣',
+  FINAL_PAYMENT: '最終付款',
+  CONTRACT_SIGNATURE: '租賃文件簽署',
+  CARRIER_NUMBER: '手機載具號碼',
+  INVOICE_NO: '發票號碼',
+  INVOICE_STATUS: '發票狀態',
+  INVOICE_TIME: '發票開立時間',
+  DEPOSIT_TRADE_NO: '保證金交易編號',
+  DEPOSIT_AMOUNT: '保證金金額',
+  DEPOSIT_STATUS: '保證金狀態',
+  REFUND_AMOUNT: '已退刷金額',
+  REFUND_TIME: '退刷時間',
+  DAMAGE_FEE: '損壞費用',
+  ECPAY_TRADE_NO: 'ECPay交易編號',
+  EXTRA_NOTES: '額外備註',
+};
+
 export async function GET(request: NextRequest) {
   try {
     // 建立 Google Sheets 連接
@@ -57,14 +87,21 @@ export async function GET(request: NextRequest) {
 
     const headers = headerResponse.data.values?.[0] || [];
 
-    // 檢查欄位對應
-    const mappingCheck = Object.entries(COLUMN_MAPPING).map(([fieldName, columnIndex]) => ({
-      fieldName,
-      columnIndex,
-      columnLetter: String.fromCharCode(65 + columnIndex), // A=65
-      currentHeader: headers[columnIndex] || '(空白)',
-      isCorrect: headers[columnIndex] !== undefined
-    }));
+    // 檢查欄位對應（允許中英文）
+    const mappingCheck = Object.entries(COLUMN_MAPPING).map(([fieldName, columnIndex]) => {
+      const currentHeader = headers[columnIndex] || '(空白)';
+      const expectedChinese = FIELD_NAME_TO_CHINESE[fieldName];
+      const isCorrect =
+        currentHeader === fieldName ||
+        currentHeader === expectedChinese;
+      return {
+        fieldName,
+        columnIndex,
+        columnLetter: String.fromCharCode(65 + columnIndex), // A=65
+        currentHeader,
+        isCorrect,
+      };
+    });
 
     return NextResponse.json({
       success: true,
