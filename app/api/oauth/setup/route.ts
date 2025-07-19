@@ -30,11 +30,17 @@ export async function GET(request: NextRequest) {
         }, { status: 500 });
       }
       
+      // 根據環境決定重導向 URI
+      const isProduction = process.env.VERCEL_URL || process.env.NODE_ENV === 'production';
+      const redirectUri = isProduction 
+        ? `https://renting-kpop-phone.vercel.app/oauth-setup`
+        : 'http://localhost:3000/oauth-setup';
+      
       // 生成授權 URL
       const oauth2Client = new google.auth.OAuth2(
         OAUTH_CLIENT_ID,
         OAUTH_CLIENT_SECRET,
-        'http://localhost:3000/oauth-setup' // 修正重導向 URI
+        redirectUri
       );
       
       const authUrl = oauth2Client.generateAuthUrl({
@@ -47,7 +53,7 @@ export async function GET(request: NextRequest) {
         authUrl,
         debug: {
           client_id: OAUTH_CLIENT_ID,
-          redirect_uri: 'http://localhost:3000/oauth-setup',
+          redirect_uri: redirectUri,
           scope: 'https://www.googleapis.com/auth/drive'
         }
       });
@@ -71,11 +77,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Authorization code is required' }, { status: 400 });
     }
     
+    // 根據環境決定重導向 URI
+    const isProduction = process.env.VERCEL_URL || process.env.NODE_ENV === 'production';
+    const redirectUri = isProduction 
+      ? `https://renting-kpop-phone.vercel.app/oauth-setup`
+      : 'http://localhost:3000/oauth-setup';
+    
     // 使用授權碼取得 tokens
     const oauth2Client = new google.auth.OAuth2(
       OAUTH_CLIENT_ID,
       OAUTH_CLIENT_SECRET,
-      'http://localhost:3000/oauth-setup'
+      redirectUri
     );
     
     const { tokens } = await oauth2Client.getToken(code);
