@@ -32,8 +32,8 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ 
           valid: true,
           message: 'Refresh token 有效',
-          expires_in: credentials.expires_in,
-          token_type: credentials.token_type
+          expires_in: (credentials as any).expires_in,
+          token_type: (credentials as any).token_type
         });
       } else {
         return NextResponse.json({ 
