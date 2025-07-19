@@ -36,6 +36,14 @@ export async function GET(request: NextRequest) {
         ? `https://renting-kpop-phone.vercel.app/oauth-setup`
         : 'http://localhost:3000/oauth-setup';
       
+      // 調試：檢查環境和重定向 URI
+      console.log('=== 環境調試 ===');
+      console.log('VERCEL_URL:', process.env.VERCEL_URL);
+      console.log('NODE_ENV:', process.env.NODE_ENV);
+      console.log('isProduction:', isProduction);
+      console.log('redirectUri:', redirectUri);
+      console.log('=== 環境調試結束 ===');
+      
       // 生成授權 URL
       const oauth2Client = new google.auth.OAuth2(
         OAUTH_CLIENT_ID,
