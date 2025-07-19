@@ -336,6 +336,49 @@ export default function AdminPage() {
               </div>
             </div>
 
+            {/* OAuth Token 狀態檢查卡片 */}
+            <div className="bg-white overflow-hidden shadow rounded-lg">
+              <div className="p-6">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <svg className="h-8 w-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div className="ml-5 w-0 flex-1">
+                    <dl>
+                      <dt className="text-sm font-medium text-gray-500 truncate">
+                        OAuth Token 狀態
+                      </dt>
+                      <dd className="text-lg font-medium text-gray-900">
+                        檢查 Refresh Token 有效性
+                      </dd>
+                    </dl>
+                  </div>
+                </div>
+                <div className="mt-4">
+                  <button
+                    onClick={async () => {
+                      try {
+                        const response = await fetch('/api/oauth/check-token');
+                        const data = await response.json();
+                        if (data.valid) {
+                          alert('✅ Refresh Token 有效！');
+                        } else {
+                          alert(`❌ ${data.message || 'Token 已過期，請重新獲取'}`);
+                        }
+                      } catch (error) {
+                        alert('檢查 Token 時發生錯誤');
+                      }
+                    }}
+                    className="w-full bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                  >
+                    檢查 Token 狀態
+                  </button>
+                </div>
+              </div>
+            </div>
+
             {/* OAuth 設定卡片 */}
             <div className="bg-white overflow-hidden shadow rounded-lg">
               <div className="p-6">
