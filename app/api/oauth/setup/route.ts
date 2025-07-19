@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { google } from 'googleapis';
 
-const OAUTH_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
-const OAUTH_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || '';
+const OAUTH_CLIENT_ID = process.env.OAUTH_CLIENT_ID || process.env.GOOGLE_CLIENT_ID || '';
+const OAUTH_CLIENT_SECRET = process.env.OAUTH_CLIENT_SECRET || process.env.GOOGLE_CLIENT_SECRET || '';
 
 export async function GET(request: NextRequest) {
   try {
