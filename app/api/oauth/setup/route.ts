@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
       }
       
       // 根據環境決定重導向 URI
-      const isProduction = process.env.VERCEL_URL || process.env.NODE_ENV === 'production';
+      const isProduction = !!(process.env.VERCEL_URL || process.env.NODE_ENV === 'production');
       const redirectUri = isProduction 
         ? `https://renting-kpop-phone.vercel.app/oauth-setup`
         : 'http://localhost:3000/oauth-setup';
@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
     }
     
     // 根據環境決定重導向 URI
-    const isProduction = process.env.VERCEL_URL || process.env.NODE_ENV === 'production';
+    const isProduction = !!(process.env.VERCEL_URL || process.env.NODE_ENV === 'production');
     const redirectUri = isProduction 
       ? `https://renting-kpop-phone.vercel.app/oauth-setup`
       : 'http://localhost:3000/oauth-setup';
