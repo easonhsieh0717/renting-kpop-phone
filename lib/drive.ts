@@ -4,10 +4,10 @@ import { Readable } from 'stream';
 const FOLDER_ID = process.env.GOOGLE_DRIVE_FOLDER_ID || '';
 const SHARED_DRIVE_ID = process.env.GOOGLE_SHARED_DRIVE_ID || ''; // 新增 Shared Drive ID
 
-// OAuth 配置 (使用現有的變數名稱)
-const OAUTH_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
-const OAUTH_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || '';
-const OAUTH_REFRESH_TOKEN = process.env.GOOGLE_OAUTH_REFRESH_TOKEN || '';
+// OAuth 配置 (統一使用 OAUTH_ 前綴)
+const OAUTH_CLIENT_ID = process.env.OAUTH_CLIENT_ID || process.env.GOOGLE_CLIENT_ID || '';
+const OAUTH_CLIENT_SECRET = process.env.OAUTH_CLIENT_SECRET || process.env.GOOGLE_CLIENT_SECRET || '';
+const OAUTH_REFRESH_TOKEN = process.env.OAUTH_REFRESH_TOKEN || process.env.GOOGLE_OAUTH_REFRESH_TOKEN || '';
 
 // 從 URL 提取 ID 的工具函數
 function extractIdFromUrl(urlOrId: string): string {
@@ -55,8 +55,7 @@ export async function getDriveClient() {
     console.log('✅ 使用 OAuth 授權');
     const oauth2Client = new google.auth.OAuth2(
       OAUTH_CLIENT_ID,
-      OAUTH_CLIENT_SECRET,
-      'http://localhost:3000/oauth-setup' // 修正重導向 URI
+      OAUTH_CLIENT_SECRET
     );
     
     oauth2Client.setCredentials({

@@ -53,7 +53,11 @@ export async function GET(request: NextRequest) {
       
       const authUrl = oauth2Client.generateAuthUrl({
         access_type: 'offline',
-        scope: ['https://www.googleapis.com/auth/drive'],
+        scope: [
+          'https://www.googleapis.com/auth/drive.file',
+          'https://www.googleapis.com/auth/drive',
+          'https://www.googleapis.com/auth/drive.metadata.readonly'
+        ],
         prompt: 'consent' // 強制顯示同意畫面以獲取 refresh token
       });
       
