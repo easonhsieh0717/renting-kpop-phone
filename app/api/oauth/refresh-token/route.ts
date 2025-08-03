@@ -160,6 +160,8 @@ export async function GET(request: NextRequest) {
     if (!refreshToken) {
       return NextResponse.json({ 
         hasToken: false,
+        lastRefreshTime: null,
+        currentTime: new Date().toISOString(),
         message: '沒有設定 refresh token'
       });
     }
@@ -177,7 +179,9 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Token status check error:', error);
     return NextResponse.json({ 
-      success: false,
+      hasToken: false,
+      lastRefreshTime: null,
+      currentTime: new Date().toISOString(),
       error: 'Internal server error',
       message: '檢查 token 狀態時發生錯誤'
     }, { status: 500 });

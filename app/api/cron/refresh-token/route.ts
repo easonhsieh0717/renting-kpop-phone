@@ -51,7 +51,30 @@ export async function GET(request: NextRequest) {
       body: JSON.stringify({ force: true })
     });
 
-    const refreshResult = await refreshResponse.json();
+    if (!refreshResponse.ok) {
+      const errorText = await refreshResponse.text();
+      console.error('Refresh token API error:', refreshResponse.status, errorText);
+      return NextResponse.json({ 
+        success: false,
+        error: 'Refresh token API failed',
+        message: 'Token 刷新 API 失敗',
+        details: `HTTP ${refreshResponse.status}: ${errorText.substring(0, 200)}`
+      }, { status: 500 });
+    }
+
+    let refreshResult;
+    try {
+      refreshResult = await refreshResponse.json();
+    } catch (error) {
+      const errorText = await refreshResponse.text();
+      console.error('Failed to parse refresh response:', error, errorText);
+      return NextResponse.json({ 
+        success: false,
+        error: 'Invalid JSON response',
+        message: 'Token 刷新回應格式錯誤',
+        details: `JSON 解析失敗: ${errorText.substring(0, 200)}`
+      }, { status: 500 });
+    }
 
     if (refreshResult.success) {
       console.log('Token refresh completed successfully');
