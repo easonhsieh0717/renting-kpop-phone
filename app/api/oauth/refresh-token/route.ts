@@ -64,8 +64,16 @@ export async function POST(request: NextRequest) {
   try {
     const { force = false } = await request.json();
     
-    if (!OAUTH_CLIENT_ID || !OAUTH_CLIENT_SECRET || !OAUTH_REFRESH_TOKEN) {
-      const error = 'OAuth configuration missing';
+    // 檢查環境變數並提供詳細資訊
+    const missingVars = [];
+    if (!OAUTH_CLIENT_ID) missingVars.push('OAUTH_CLIENT_ID/GOOGLE_CLIENT_ID');
+    if (!OAUTH_CLIENT_SECRET) missingVars.push('OAUTH_CLIENT_SECRET/GOOGLE_CLIENT_SECRET');
+    if (!OAUTH_REFRESH_TOKEN) missingVars.push('OAUTH_REFRESH_TOKEN/GOOGLE_OAUTH_REFRESH_TOKEN');
+    
+    if (missingVars.length > 0) {
+      const error = `OAuth configuration missing: ${missingVars.join(', ')}`;
+      console.error('OAuth configuration error:', error);
+      
       await logTokenRefresh({
         timestamp: new Date().toISOString(),
         status: 'failed',
@@ -75,7 +83,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ 
         success: false,
         error,
-        message: 'OAuth 配置不完整，請檢查環境變數'
+        message: 'OAuth 配置不完整，請檢查環境變數',
+        details: `缺少環境變數: ${missingVars.join(', ')}`
       }, { status: 400 });
     }
 
