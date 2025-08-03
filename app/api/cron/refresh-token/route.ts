@@ -148,6 +148,7 @@ export async function GET(request: NextRequest) {
         message: 'Token 自動刷新失敗',
         details: errorMessage
       }, { status: 500 });
+    }
 
   } catch (error) {
     console.error('Cron token refresh error:', error);
