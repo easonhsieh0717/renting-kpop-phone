@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { updateReservationStatus } from '../../../../lib/sheets/reservations';
 import crypto from 'crypto';
 import { google } from 'googleapis';
 
@@ -209,9 +208,8 @@ export async function POST(req: NextRequest) {
           await updatePreAuthStatus(orderId, 'HELD', ecpayTradeNo);
           console.log(`Pre-authorization successful for transaction ${orderId}, ECPay TradeNo: ${ecpayTradeNo}, status updated.`);
         } else {
-          // 一般租金交易成功
-          await updateReservationStatus(orderId, 'PAID');
-          console.log(`Payment successful for order ${orderId}, status updated.`);
+          // 一般租金交易成功（在 example 中不處理）
+          console.log(`Payment successful for order ${orderId}, but updateReservationStatus not available in example.`);
         }
       } else {
         if (isDepositTransaction) {
@@ -223,21 +221,18 @@ export async function POST(req: NextRequest) {
           await updatePreAuthStatus(orderId, 'PREAUTH_FAILED');
           console.log(`Pre-authorization failed for transaction ${orderId}. RtnCode: ${RtnCode}`);
         } else {
-          // 一般租金交易失敗
-          await updateReservationStatus(orderId, 'FAILED');
-          console.log(`Payment not successful for order ${orderId}. RtnCode: ${RtnCode}`);
+          // 一般租金交易失敗（在 example 中不處理）
+          console.log(`Payment not successful for order ${orderId}. RtnCode: ${RtnCode}, but updateReservationStatus not available in example.`);
         }
       }
       return new NextResponse('1|OK');
     } else if (data.succ && data.od_sob) {
-      // 信用卡即時授權格式
+      // 信用卡即時授權格式（在 example 中不處理）
       if (data.succ === '1') {
-        await updateReservationStatus(data.od_sob, 'PAID');
-        console.log(`Credit auth payment successful for order ${data.od_sob}, status updated.`);
+        console.log(`Credit auth payment successful for order ${data.od_sob}, but updateReservationStatus not available in example.`);
         return new NextResponse('1|OK');
       } else {
-        await updateReservationStatus(data.od_sob, 'FAILED');
-        console.log(`Credit auth payment failed for order ${data.od_sob}.`);
+        console.log(`Credit auth payment failed for order ${data.od_sob}, but updateReservationStatus not available in example.`);
         return new NextResponse('0|Failed');
       }
     } else {

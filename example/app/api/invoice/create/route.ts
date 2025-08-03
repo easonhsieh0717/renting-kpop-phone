@@ -1,7 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { google } from 'googleapis';
 import crypto from 'crypto';
-import { formatDateTimeInTaipei } from '@/lib/utils';
+
+// 在 example 中直接定義 formatDateTimeInTaipei 函數
+function formatDateTimeInTaipei(date: Date): string {
+  return date.toLocaleString('zh-TW', {
+    timeZone: 'Asia/Taipei',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  });
+}
 
 async function getGoogleSheetsClient() {
   const auth = new google.auth.GoogleAuth({
