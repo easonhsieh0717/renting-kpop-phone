@@ -15,12 +15,17 @@ export async function GET(request: NextRequest) {
       }, { status: 401 });
     }
 
-    // 檢查是否需要刷新 token
+    // 檢查是否需要刷新 token（測試時跳過時間檢查）
     const lastRefreshTime = process.env.LAST_TOKEN_REFRESH_TIME;
     const now = new Date();
     const fiveDaysInMs = 5 * 24 * 60 * 60 * 1000; // 5天
 
-    if (lastRefreshTime) {
+    // 檢查是否為測試模式（從 URL 參數或請求頭判斷）
+    const url = new URL(request.url);
+    const isTestMode = url.searchParams.get('test') === 'true' || 
+                      request.headers.get('x-test-mode') === 'true';
+
+    if (lastRefreshTime && !isTestMode) {
       const lastRefresh = new Date(lastRefreshTime);
       const timeSinceLastRefresh = now.getTime() - lastRefresh.getTime();
       

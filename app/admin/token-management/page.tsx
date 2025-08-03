@@ -70,11 +70,12 @@ export default function TokenManagementPage() {
   const testAutoRefresh = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/cron/refresh-token', {
+      const response = await fetch('/api/cron/refresh-token?test=true', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer renting-kpop-phone-cron-secret-2024-08-03-16-30-00'
+          'Authorization': 'Bearer renting-kpop-phone-cron-secret-2024-08-03-16-30-00',
+          'x-test-mode': 'true'
         }
       });
       
