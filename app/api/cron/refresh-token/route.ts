@@ -38,7 +38,12 @@ export async function GET(request: NextRequest) {
     // 執行 token 刷新
     console.log('Starting automatic token refresh...');
     
-    const refreshResponse = await fetch(`${process.env.VERCEL_URL || 'http://localhost:3000'}/api/oauth/refresh-token`, {
+    // 確保 URL 有正確的協議前綴
+    const baseUrl = process.env.VERCEL_URL 
+      ? `https://${process.env.VERCEL_URL}` 
+      : 'http://localhost:3000';
+    
+    const refreshResponse = await fetch(`${baseUrl}/api/oauth/refresh-token`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -53,7 +58,7 @@ export async function GET(request: NextRequest) {
       
       // 記錄自動刷新到 Google Sheet
       try {
-        await fetch(`${process.env.VERCEL_URL || 'http://localhost:3000'}/api/oauth/log-refresh`, {
+        await fetch(`${baseUrl}/api/oauth/log-refresh`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -84,7 +89,7 @@ export async function GET(request: NextRequest) {
       
       // 記錄失敗的自動刷新
       try {
-        await fetch(`${process.env.VERCEL_URL || 'http://localhost:3000'}/api/oauth/log-refresh`, {
+        await fetch(`${baseUrl}/api/oauth/log-refresh`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

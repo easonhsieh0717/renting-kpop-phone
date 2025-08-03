@@ -20,7 +20,11 @@ interface TokenRefreshLog {
 async function logTokenRefresh(log: TokenRefreshLog) {
   try {
     // 使用專門的記錄 API
-    const response = await fetch(`${process.env.VERCEL_URL || 'http://localhost:3000'}/api/oauth/log-refresh`, {
+    const baseUrl = process.env.VERCEL_URL 
+      ? `https://${process.env.VERCEL_URL}` 
+      : 'http://localhost:3000';
+    
+    const response = await fetch(`${baseUrl}/api/oauth/log-refresh`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
