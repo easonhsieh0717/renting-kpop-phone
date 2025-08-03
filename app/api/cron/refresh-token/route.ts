@@ -43,49 +43,52 @@ export async function GET(request: NextRequest) {
     // 執行 token 刷新
     console.log('Starting automatic token refresh...');
     
-    // 確保 URL 有正確的協議前綴
-    const baseUrl = process.env.VERCEL_URL 
-      ? `https://${process.env.VERCEL_URL}` 
-      : 'http://localhost:3000';
-    
-    const refreshResponse = await fetch(`${baseUrl}/api/oauth/refresh-token`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ force: true })
-    });
-
-    if (!refreshResponse.ok) {
-      const errorText = await refreshResponse.text();
-      console.error('Refresh token API error:', refreshResponse.status, errorText);
-      return NextResponse.json({ 
-        success: false,
-        error: 'Refresh token API failed',
-        message: 'Token 刷新 API 失敗',
-        details: `HTTP ${refreshResponse.status}: ${errorText.substring(0, 200)}`
-      }, { status: 500 });
-    }
-
-    let refreshResult;
+    // 直接調用 OAuth 刷新功能，避免 API 調用問題
     try {
-      refreshResult = await refreshResponse.json();
-    } catch (error) {
-      const errorText = await refreshResponse.text();
-      console.error('Failed to parse refresh response:', error, errorText);
-      return NextResponse.json({ 
-        success: false,
-        error: 'Invalid JSON response',
-        message: 'Token 刷新回應格式錯誤',
-        details: `JSON 解析失敗: ${errorText.substring(0, 200)}`
-      }, { status: 500 });
-    }
-
-    if (refreshResult.success) {
+      const { google } = await import('googleapis');
+      
+      const OAUTH_CLIENT_ID = process.env.OAUTH_CLIENT_ID || process.env.GOOGLE_CLIENT_ID || '';
+      const OAUTH_CLIENT_SECRET = process.env.OAUTH_CLIENT_SECRET || process.env.GOOGLE_CLIENT_SECRET || '';
+      const OAUTH_REFRESH_TOKEN = process.env.OAUTH_REFRESH_TOKEN || process.env.GOOGLE_OAUTH_REFRESH_TOKEN || '';
+      
+      if (!OAUTH_CLIENT_ID || !OAUTH_CLIENT_SECRET || !OAUTH_REFRESH_TOKEN) {
+        throw new Error('OAuth configuration missing');
+      }
+      
+      // 創建 OAuth2 客戶端
+      const oauth2Client = new google.auth.OAuth2(
+        OAUTH_CLIENT_ID,
+        OAUTH_CLIENT_SECRET
+      );
+      
+      // 設定 refresh token
+      oauth2Client.setCredentials({
+        refresh_token: OAUTH_REFRESH_TOKEN
+      });
+      
+      // 使用 refresh token 獲取新的 tokens
+      const { credentials } = await oauth2Client.refreshAccessToken();
+      
+      if (!credentials.refresh_token) {
+        throw new Error('No new refresh token received');
+      }
+      
+      const refreshResult = {
+        success: true,
+        message: 'Token 刷新成功',
+        newRefreshToken: credentials.refresh_token,
+        expiresIn: (credentials as any).expires_in,
+        timestamp: new Date().toISOString()
+      };
+      
       console.log('Token refresh completed successfully');
       
       // 記錄自動刷新到 Google Sheet
       try {
+        const baseUrl = process.env.VERCEL_URL 
+          ? `https://${process.env.VERCEL_URL}` 
+          : 'http://localhost:3000';
+          
         await fetch(`${baseUrl}/api/oauth/log-refresh`, {
           method: 'POST',
           headers: {
@@ -94,8 +97,8 @@ export async function GET(request: NextRequest) {
           body: JSON.stringify({
             timestamp: now.toISOString(),
             status: 'success',
-            newRefreshToken: refreshResult.newRefreshToken,
-            expiresIn: refreshResult.expiresIn,
+            newRefreshToken: credentials.refresh_token,
+            expiresIn: (credentials as any).expires_in,
             refreshType: 'automatic'
           })
         });
@@ -112,11 +115,17 @@ export async function GET(request: NextRequest) {
         refreshResult,
         lastRefreshTime: now.toISOString()
       });
-    } else {
-      console.error('Token refresh failed:', refreshResult);
+      
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('Automatic token refresh failed:', errorMessage);
       
       // 記錄失敗的自動刷新
       try {
+        const baseUrl = process.env.VERCEL_URL 
+          ? `https://${process.env.VERCEL_URL}` 
+          : 'http://localhost:3000';
+          
         await fetch(`${baseUrl}/api/oauth/log-refresh`, {
           method: 'POST',
           headers: {
@@ -125,21 +134,21 @@ export async function GET(request: NextRequest) {
           body: JSON.stringify({
             timestamp: now.toISOString(),
             status: 'failed',
-            error: refreshResult.error || 'Unknown error',
+            error: errorMessage,
             refreshType: 'automatic'
           })
         });
-      } catch (error) {
-        console.error('Failed to log automatic refresh failure:', error);
+      } catch (logError) {
+        console.error('Failed to log automatic refresh failure:', logError);
       }
       
       return NextResponse.json({ 
         success: false,
         error: 'Token refresh failed',
         message: 'Token 自動刷新失敗',
-        details: refreshResult
+        details: errorMessage
       }, { status: 500 });
-    }
+
   } catch (error) {
     console.error('Cron token refresh error:', error);
     return NextResponse.json({ 
