@@ -74,9 +74,22 @@ export default function TokenManagementPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer default-secret'
+          'Authorization': 'Bearer renting-kpop-phone-cron-secret-2024-08-03-16-30-00'
         }
       });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('API 回應錯誤:', response.status, errorText);
+        setRefreshResult({
+          success: false,
+          message: 'API 回應錯誤',
+          error: `HTTP ${response.status}`,
+          details: errorText.substring(0, 200) + '...'
+        });
+        return;
+      }
+      
       const data = await response.json();
       setRefreshResult(data);
     } catch (error) {
@@ -84,7 +97,7 @@ export default function TokenManagementPage() {
       setRefreshResult({
         success: false,
         message: '測試自動刷新失敗',
-        error: 'Network error'
+        error: error instanceof Error ? error.message : 'Network error'
       });
     } finally {
       setLoading(false);
