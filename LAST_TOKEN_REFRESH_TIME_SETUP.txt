@@ -1,0 +1,73 @@
+# LAST_TOKEN_REFRESH_TIME 設定說明
+
+## 🕐 **LAST_TOKEN_REFRESH_TIME 值**
+
+以下是一個有效的 LAST_TOKEN_REFRESH_TIME 值，你可以直接使用：
+
+```
+2024-08-03T08:00:00.000Z
+```
+
+## 🔧 **如何設定到 Vercel**
+
+1. 前往 Vercel 儀表板
+2. 選擇你的專案：renting-kpop-phone
+3. 點擊 Settings → Environment Variables
+4. 新增環境變數：
+   - **Name:** LAST_TOKEN_REFRESH_TIME
+   - **Value:** 2024-08-03T08:00:00.000Z
+   - **Environment:** Production, Preview, Development（全選）
+
+## 📅 **時間格式說明**
+
+LAST_TOKEN_REFRESH_TIME 必須使用 ISO 8601 格式：
+- 格式：YYYY-MM-DDTHH:mm:ss.sssZ
+- 範例：2024-08-03T08:00:00.000Z
+- 時區：UTC（Z 表示 UTC 時區）
+
+## 🔄 **如何更新時間**
+
+當你手動刷新 token 後，應該更新這個值為當前時間：
+
+### 當前時間（用於更新）：
+```
+2024-08-03T16:30:00.000Z
+```
+
+### 未來 5 天後（自動刷新時間）：
+```
+2024-08-08T16:30:00.000Z
+```
+
+## 📋 **完整的環境變數設定**
+
+確保你的 Vercel 環境變數包含：
+
+```env
+# 新增的變數
+CRON_SECRET=renting-kpop-phone-cron-secret-2024-08-03-16-30-00
+LAST_TOKEN_REFRESH_TIME=2024-08-03T08:00:00.000Z
+```
+
+## ⚠️ **重要注意事項**
+
+1. **時間格式必須正確**：使用 ISO 8601 格式
+2. **使用 UTC 時區**：以 Z 結尾
+3. **手動更新**：每次手動刷新後更新此值
+4. **自動更新**：系統會記錄但不會自動更新環境變數
+
+## 🧪 **測試方法**
+
+設定完成後，前往：
+```
+https://renting-kpop-phone.vercel.app/admin/token-management
+```
+
+檢查「最後刷新時間」是否顯示正確。
+
+## 📝 **記錄**
+
+- 設定時間：2024-08-03 16:30:00
+- 專案：renting-kpop-phone
+- 用途：記錄最後 token 刷新時間
+- 下次自動刷新：2024-08-08（5天後） 
