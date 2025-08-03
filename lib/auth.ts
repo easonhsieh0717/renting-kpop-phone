@@ -43,8 +43,8 @@ export function isAuthorized(req: NextRequest): boolean {
 
 // Google OAuth配置
 export const GOOGLE_OAUTH_CONFIG = {
-  clientId: process.env.GOOGLE_OAUTH_CLIENT_ID,
-  clientSecret: process.env.GOOGLE_OAUTH_CLIENT_SECRET,
+  clientId: process.env.GOOGLE_CLIENT_ID,
+  clientSecret: process.env.GOOGLE_CLIENT_SECRET,
   redirectUri: process.env.NODE_ENV === 'production' 
     ? 'https://renting-kpop-phone.vercel.app/api/auth/callback'
     : 'http://localhost:3000/api/auth/callback',

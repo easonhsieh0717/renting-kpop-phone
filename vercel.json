@@ -5,6 +5,15 @@
     },
     "app/api/invoice/create/route.ts": {
       "maxDuration": 30
+    },
+    "app/api/cron/refresh-token/route.ts": {
+      "maxDuration": 60
     }
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/cron/refresh-token",
+      "schedule": "0 0 */5 * *"
+    }
+  ]
 } 

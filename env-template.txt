@@ -18,3 +18,9 @@ GOOGLE_OAUTH_REFRESH_TOKEN=your_refresh_token
 # 使用Gmail的話需要設定應用程式密碼，不是一般密碼
 EMAIL_USER=your_email@gmail.com
 EMAIL_PASSWORD=your_app_specific_password_here
+
+# Token 自動刷新設定
+# 定時任務安全金鑰（建議設定一個隨機字串）
+CRON_SECRET=your-secure-random-string-here
+# 最後刷新時間（系統會自動更新，初始值可設為當前時間）
+LAST_TOKEN_REFRESH_TIME=2024-01-01T00:00:00.000Z

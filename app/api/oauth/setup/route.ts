@@ -10,12 +10,10 @@ export async function GET(request: NextRequest) {
     const action = searchParams.get('action');
     
     if (action === 'get_auth_url') {
-      // 調試：檢查所有可能的環境變數
+      // 調試：檢查環境變數
       console.log('=== 環境變數調試 ===');
       console.log('GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID ? 'EXISTS' : 'MISSING');
       console.log('GOOGLE_CLIENT_SECRET:', process.env.GOOGLE_CLIENT_SECRET ? 'EXISTS' : 'MISSING');
-      console.log('GOOGLE_OAUTH_CLIENT_ID:', process.env.GOOGLE_OAUTH_CLIENT_ID ? 'EXISTS' : 'MISSING');
-      console.log('GOOGLE_OAUTH_CLIENT_SECRET:', process.env.GOOGLE_OAUTH_CLIENT_SECRET ? 'EXISTS' : 'MISSING');
       console.log('OAUTH_CLIENT_ID:', OAUTH_CLIENT_ID ? 'EXISTS' : 'MISSING');
       console.log('OAUTH_CLIENT_SECRET:', OAUTH_CLIENT_SECRET ? 'EXISTS' : 'MISSING');
       console.log('=== 環境變數調試結束 ===');
