@@ -7,6 +7,7 @@ export interface Phone {
   imageUrl: string
   daily_rate_1_2: number
   daily_rate_3_plus: number
+  daily_rate_5_plus: number
   deposit: number
   active: boolean
   highDeposit: number; // 新增高押金欄位

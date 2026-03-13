@@ -64,7 +64,7 @@ export async function getPhones(): Promise<Phone[]> {
 
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: process.env.GOOGLE_SHEET_ID,
-      range: 'phones!A2:I', // 擴展到I欄讀取高押金欄位
+      range: 'phones!A2:J', // 擴展到J欄讀取滿五天費率
     });
     console.log('Successfully fetched data from spreadsheet.');
 
@@ -79,11 +79,12 @@ export async function getPhones(): Promise<Phone[]> {
           spec: row[3] || 'Unknown Spec',
           specs: (row[3] || '').split(',').filter((s: string) => s.trim()),
           imageUrl: row[2] || '/images/s24-ultra.jpg',
-          daily_rate_1_2: safeParseInt(row[4], 500),
-          daily_rate_3_plus: safeParseInt(row[5], 450),
+          daily_rate_1_2: safeParseInt(row[4], 650),
+          daily_rate_3_plus: safeParseInt(row[5], 600),
           deposit: safeParseInt(row[6], 30000),
           active: safeParseBoolean(row[7], true),
-          highDeposit: safeParseInt(row[8], 30000), // 新增高押金欄位
+          highDeposit: safeParseInt(row[8], 30000),
+          daily_rate_5_plus: safeParseInt(row[9], 550), // 滿五天費率
         };
 
         console.log(`Phone ${index + 1}:`, {
@@ -91,6 +92,7 @@ export async function getPhones(): Promise<Phone[]> {
           name: phone.name,
           daily_rate_1_2: phone.daily_rate_1_2,
           daily_rate_3_plus: phone.daily_rate_3_plus,
+          daily_rate_5_plus: phone.daily_rate_5_plus,
           deposit: phone.deposit,
           highDeposit: phone.highDeposit,
           active: phone.active

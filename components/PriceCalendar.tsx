@@ -46,7 +46,7 @@ export default function PriceCalendar({ phone, onDateChange, disabledDates }: Pr
       days = differenceInDays(to, from) + 1;
 
       if (days > 0) {
-        const rate = days >= 3 ? phone.daily_rate_3_plus : phone.daily_rate_1_2;
+        const rate = days >= 5 ? phone.daily_rate_5_plus : days >= 3 ? phone.daily_rate_3_plus : phone.daily_rate_1_2;
         price = days * rate;
       }
 
@@ -76,7 +76,7 @@ export default function PriceCalendar({ phone, onDateChange, disabledDates }: Pr
 
   const rentalPrice = useMemo(() => {
     if (rentalDays > 0) {
-      const rate = rentalDays >= 3 ? phone.daily_rate_3_plus : phone.daily_rate_1_2;
+      const rate = rentalDays >= 5 ? phone.daily_rate_5_plus : rentalDays >= 3 ? phone.daily_rate_3_plus : phone.daily_rate_1_2;
       return rentalDays * rate;
     }
     return 0;

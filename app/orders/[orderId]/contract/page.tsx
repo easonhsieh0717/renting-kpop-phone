@@ -138,7 +138,7 @@ function SignatureModal({ open, onClose, onSign }: { open: boolean; onClose: () 
 }
 
 function Stepper({ step, setStep }: { step: number; setStep: (n: number) => void }) {
-  const steps = ["手機外觀", "證件拍照", "個人資料/押金", "保證金處理", "合約簽署"];
+  const steps = ["手機外觀", "證件拍照", "個人資料/押金", "押金確認", "合約簽署"];
   return (
     <div className="flex items-center mb-6">
       {steps.map((s, i) => (
@@ -197,7 +197,7 @@ function renderContract(order: any, depositMode: string | null, needCable: boole
         <span style={fontStyle}>&nbsp;&nbsp;- IMEI序號：{order[1]}</span><br/>
         <span style={fontStyle}>&nbsp;&nbsp;- 配件：原廠USB-C充電線、專用保護殼</span><br/>
         <span style={fontStyle}>&nbsp;&nbsp;- 初始狀況：外觀無明顯刮痕、無凹陷、無裂痕，功能正常，有特別狀態以照片拍攝為準</span><br/>
-        <span style={fontStyle}>&nbsp;&nbsp;- 清潔要求：乙方應保持設備清潔，歸還時不得有污漬、異味或損壞，否則甲方將收取清潔費用NT$500，於押金或預授權中扣除。</span><br/>
+        <span style={fontStyle}>&nbsp;&nbsp;- 清潔要求：乙方應保持設備清潔，歸還時不得有污漬、異味或損壞，否則甲方將收取清潔費用NT$500，於押金中扣除。</span><br/>
       </div>
       
       <div style={{marginBottom: '16px'}}>
@@ -209,7 +209,7 @@ function renderContract(order: any, depositMode: string | null, needCable: boole
       
       <div style={{marginBottom: '16px'}}>
         <span style={boldStyle}>第三條 租金與押金</span><br/>
-        <span style={fontStyle}>1. </span><span style={boldStyle}>租金：</span><span style={fontStyle}> 每日租金NT$600，乙方應於設備交付時以現金或電子支付方式一次付清全額租金，或依雙方書面約定按日結算。</span><br/>
+        <span style={fontStyle}>1. </span><span style={boldStyle}>租金：</span><span style={fontStyle}> 採階梯式計價：1~2天每日NT$650、滿3天每日NT$600、滿5天每日NT$550。乙方應於設備交付時以現金或電子支付方式一次付清全額租金，或依雙方書面約定按日結算。</span><br/>
         <span style={fontStyle}>2. </span><span style={boldStyle}>押金方案（已選擇）：</span><br/>
         {depositMode === 'high' && (
           <>
@@ -227,15 +227,7 @@ function renderContract(order: any, depositMode: string | null, needCable: boole
             <span style={fontStyle}>&nbsp;&nbsp;- 證件要求：需提供身分證/護照/駕照正本，三選一</span><br/>
           </>
         )}
-        {depositMode === 'preauth' && (
-          <>
-            <span style={fontStyle}>&nbsp;&nbsp;</span><span style={boldStyle}>預授權模式（需證件正本核對）：</span><br/>
-            <span style={fontStyle}>&nbsp;&nbsp;- 預授權金額：NT${depositAmount.toLocaleString()}（信用卡）</span><br/>
-            <span style={fontStyle}>&nbsp;&nbsp;- 繳納方式：設備交付前完成信用卡預授權</span><br/>
-            <span style={fontStyle}>&nbsp;&nbsp;- 證件要求：無需提供身分證件</span><br/>
-          </>
-        )}
-        <span style={fontStyle}>3. </span><span style={boldStyle}>押金退還：</span><span style={fontStyle}> 設備歸還且驗收無誤後，甲方於24小時內退還押金或解除預授權。</span><br/>
+        <span style={fontStyle}>3. </span><span style={boldStyle}>押金退還：</span><span style={fontStyle}> 設備歸還且驗收無誤後，甲方於24小時內退還押金。</span><br/>
       </div>
       
       {/* 繼續其他條款 - 使用相同的內聯樣式模式 */}
@@ -244,9 +236,9 @@ function renderContract(order: any, depositMode: string | null, needCable: boole
         <span style={fontStyle}>1. </span><span style={boldStyle}>交付程序：</span><span style={fontStyle}> 甲乙雙方於交付時共同檢查設備外觀、功能及配件，簽署《設備交付確認單》（附件二），並拍照存證（包含螢幕、機身、配件完整性）。</span><br/>
         <span style={fontStyle}>2. </span><span style={boldStyle}>歸還驗收：</span><span style={fontStyle}> 乙方應於租期結束當日親自或委託快遞將設備歸還至甲方指定地點。甲方依《損害賠償參考表》（附件一）檢查設備並計算賠償（如適用）。</span><br/>
         <span style={fontStyle}>3. </span><span style={boldStyle}>逾期處理：</span><br/>
-        <span style={fontStyle}>&nbsp;&nbsp;- 逾期未歸還，每日加收租金NT$600。</span><br/>
-        <span style={fontStyle}>&nbsp;&nbsp;- 逾期超過3日未歸還，視為設備遺失，甲方將扣除全額押金或預授權金額，並保留向乙方追償損失的權利。</span><br/>
-        <span style={fontStyle}>4. </span><span style={boldStyle}>損壞或遺失賠償：</span><span style={fontStyle}> 乙方應賠償設備維修或重置費用（依附件一），並支付營業損失補償（每日NT$600，最高15日，計NT$9,000）。</span><br/>
+        <span style={fontStyle}>&nbsp;&nbsp;- 逾期未歸還，每日加收租金NT$650。</span><br/>
+        <span style={fontStyle}>&nbsp;&nbsp;- 逾期超過3日未歸還，視為設備遺失，甲方將扣除全額押金，並保留向乙方追償損失的權利。</span><br/>
+        <span style={fontStyle}>4. </span><span style={boldStyle}>損壞或遺失賠償：</span><span style={fontStyle}> 乙方應賠償設備維修或重置費用（依附件一），並支付營業損失補償（每日NT$650，最高15日，計NT$9,750）。</span><br/>
         <span style={fontStyle}>5. </span><span style={boldStyle}>爭議處理：</span><span style={fontStyle}> 若對設備狀況有爭議，雙方同意委託三星原廠授權維修中心進行鑑定，鑑定費用由爭議發起方預付，鑑定結果為最終依據。</span><br/>
       </div>
       
@@ -268,16 +260,6 @@ function renderContract(order: any, depositMode: string | null, needCable: boole
         <span style={fontStyle}>3. 租期結束後7日內，甲方銷毀乙方證件影本或歸還正本。乙方有權要求甲方提供書面銷毀證明。</span><br/>
       </div>
       
-      {depositMode === 'preauth' && (
-        <div style={{marginBottom: '16px'}}>
-          <span style={boldStyle}>第七條 預授權規範</span><br/>
-          <span style={fontStyle}>1. 預授權模式下，乙方於交付設備前以信用卡完成NT${depositAmount.toLocaleString()}預授權。</span><br/>
-          <span style={fontStyle}>2. 設備歸還且驗收無誤後，甲方於3個工作日內解除預授權。</span><br/>
-          <span style={fontStyle}>3. 若設備未歸還、損壞或違約，甲方得依附件一執行扣款，並提供扣款明細。</span><br/>
-          <span style={fontStyle}>4. 乙方對扣款有異議，應於收到扣款通知後7日內提出，甲方應提供證明文件（包含維修報價單或鑑定報告）。</span><br/>
-        </div>
-      )}
-      
       {depositMode === 'low' && (
         <div style={{marginBottom: '16px'}}>
           <span style={boldStyle}>第七條 證件抵押規範</span><br/>
@@ -290,7 +272,7 @@ function renderContract(order: any, depositMode: string | null, needCable: boole
       
       <div style={{marginBottom: '16px'}}>
         <span style={boldStyle}>第八條 違約與解約</span><br/>
-        <span style={fontStyle}>1. </span><span style={boldStyle}>乙方違約情事：</span><span style={fontStyle}> 包括但不限於逾期未歸還、設備遺失、未經同意轉租、故意損壞設備。甲方得終止契約，扣除押金或預授權，並保留追償權利。</span><br/>
+        <span style={fontStyle}>1. </span><span style={boldStyle}>乙方違約情事：</span><span style={fontStyle}> 包括但不限於逾期未歸還、設備遺失、未經同意轉租、故意損壞設備。甲方得終止契約，扣除押金，並保留追償權利。</span><br/>
         <span style={fontStyle}>2. </span><span style={boldStyle}>爭議解決：</span><br/>
         <span style={fontStyle}>&nbsp;&nbsp;- 雙方應以協商為原則解決爭議。</span><br/>
         <span style={fontStyle}>&nbsp;&nbsp;- 協商不成，提交中華民國消費者保護委員會或第三方調解機構調解。</span><br/>
@@ -391,7 +373,7 @@ function renderAttachment2(order: any, depositMode: string | null, needCable: bo
         {needCharger && '原廠充電頭，'}
         {needCable && '原廠USB-C充電線，'}
         專用保護殼</span><br/>
-      <span style={fontStyle}>- 押金模式：{depositMode === 'high' ? '高押金（免證件）' : depositMode === 'low' ? '低押金（需證件及預授權）' : '未選擇'}</span><br/>
+      <span style={fontStyle}>- 押金模式：{depositMode === 'high' ? '高押金（免證件）' : depositMode === 'low' ? '低押金（需證件正本）' : '未選擇'}</span><br/>
     </div>
   );
 }
@@ -422,13 +404,11 @@ export default function ContractPage() {
   const [processingIdBack, setProcessingIdBack] = useState(false);
   const [uploadProgress, setUploadProgress] = useState({ front: 0, back: 0 });
   const [uploadStatus, setUploadStatus] = useState({ front: '', back: '' });
-  // 4. 保證金處理
+  // 4. 押金確認
   const [depositAmount, setDepositAmount] = useState(30000);
   const [depositPaid, setDepositPaid] = useState(false);
-  const [depositProcessing, setDepositProcessing] = useState(false);
-  const [preauthLoading, setPreauthLoading] = useState(false);
   const [phoneDepositAmount, setPhoneDepositAmount] = useState(30000);
-  const [phoneHighDepositAmount, setPhoneHighDepositAmount] = useState(30000); // 新增高押金金額狀態
+  const [phoneHighDepositAmount, setPhoneHighDepositAmount] = useState(30000);
   const [agreed, setAgreed] = useState(false);
 
   // 身分證格式驗證
@@ -465,7 +445,6 @@ export default function ContractPage() {
               // 設置高押金金額
               if (phoneResult.data.highDeposit) {
                 setPhoneHighDepositAmount(phoneResult.data.highDeposit);
-                // 同時設置預授權金額為高押金金額
                 setDepositAmount(phoneResult.data.highDeposit);
               }
             }
@@ -482,21 +461,6 @@ export default function ContractPage() {
           setSigned(false);
           setSignatureUrl(null);
         }
-        // 從Google Sheet讀取預授權金額（第19欄，索引19）
-        const sheetDepositAmount = parseInt(data[19]) || phoneResult?.data?.highDeposit || 30000;
-        setDepositAmount(sheetDepositAmount);
-        
-        // 檢查預授權狀態（第20欄，索引20）
-        const depositStatus = data[20];
-        if (depositStatus === 'HELD') {
-          // 預授權已完成
-          setDepositPaid(true);
-          setDepositProcessing(false);
-        } else if (data[18]) {
-          // 有預授權交易號但狀態未確定，開始檢查狀態
-          checkDepositStatusAfterReturn();
-        }
-        
         setLoading(false);
       })
       .catch(() => {
@@ -505,104 +469,11 @@ export default function ContractPage() {
       });
   }, [orderId]);
 
-  // 檢查預授權狀態（用於頁面載入或返回時）
-  const checkDepositStatusAfterReturn = async () => {
-    try {
-      setDepositProcessing(true);
-      
-      const statusResponse = await fetch(`/api/orders/${orderId}/deposit-status`);
-      const statusResult = await statusResponse.json();
-      
-      if (statusResult.success && statusResult.status === 'HELD') {
-        // 預授權成功
-        setDepositPaid(true);
-        setDepositProcessing(false);
-        alert('🎉 預授權已完成！您現在可以繼續簽署合約。');
-      } else if (statusResult.success && statusResult.status === 'PREAUTH_FAILED') {
-        // 預授權失敗
-        setDepositProcessing(false);
-        alert('❌ 預授權失敗，請重新嘗試。');
-      } else if (statusResult.data?.hasPreAuthTransaction) {
-        // 有預授權交易但狀態不明，開始定期檢查
-        alert('正在檢查您的預授權狀態，請稍候...');
-        startPaymentStatusChecker();
-      } else {
-        setDepositProcessing(false);
-      }
-    } catch (error) {
-      console.error('檢查預授權狀態失敗:', error);
-      setDepositProcessing(false);
-    }
-  };
-
-  // 開始付款狀態檢查器（提取為獨立函數）
-  const startPaymentStatusChecker = () => {
-    const checkPaymentStatus = async () => {
-      try {
-        const statusResponse = await fetch(`/api/orders/${orderId}/deposit-status`);
-        const statusResult = await statusResponse.json();
-        
-        if (statusResult.success && statusResult.status === 'HELD') {
-          // 預授權成功
-          setDepositPaid(true);
-          setDepositProcessing(false);
-          setPreauthLoading(false);
-          alert('🎉 預授權完成！您現在可以繼續簽署合約。');
-          return true; // 停止檢查
-        } else if (statusResult.success && statusResult.status === 'PREAUTH_FAILED') {
-          // 預授權失敗
-          setDepositProcessing(false);
-          setPreauthLoading(false);
-          alert('❌ 預授權失敗，請重新嘗試。');
-          return true; // 停止檢查
-        }
-        return false; // 繼續檢查
-      } catch (error) {
-        console.error('檢查付款狀態失敗:', error);
-        return false; // 繼續檢查
-      }
-    };
-
-    // 立即檢查一次，然後每10秒檢查一次，最多檢查30次（5分鐘）
-    let checkCount = 0;
-    const maxChecks = 30;
-    
-    const statusChecker = setInterval(async () => {
-      checkCount++;
-      const shouldStop = await checkPaymentStatus();
-      
-      if (shouldStop || checkCount >= maxChecks) {
-        clearInterval(statusChecker);
-        if (checkCount >= maxChecks) {
-          setDepositProcessing(false);
-          setPreauthLoading(false);
-          alert('⏰ 付款狀態檢查超時。\n\n如果您已完成付款，請重新整理頁面檢查狀態。\n如果仍有問題，請聯繫客服。');
-        }
-      }
-    }, 10000); // 每10秒檢查一次
-
-    // 立即檢查一次
-    setTimeout(async () => {
-      const shouldStop = await checkPaymentStatus();
-      if (shouldStop) {
-        clearInterval(statusChecker);
-      }
-    }, 2000); // 2秒後進行第一次檢查
-  };
-
   useEffect(() => {
     // 進入合約頁即隱藏浮動按鈕，離開時恢復
     if (typeof window !== 'undefined') {
       const fb = document.querySelector('.fixed.bottom-6.right-6.z-50');
       if (fb) (fb as HTMLElement).style.display = 'none';
-      
-      // 檢查是否從付款頁面返回
-      const savedUrl = sessionStorage.getItem('contractPageUrl');
-      if (savedUrl && savedUrl === window.location.href) {
-        // 清除保存的URL
-        sessionStorage.removeItem('contractPageUrl');
-        // 如果有預授權交易，會在頁面載入時自動檢查狀態
-      }
       
       return () => { if (fb) (fb as HTMLElement).style.display = ''; };
     }
@@ -743,100 +614,6 @@ export default function ContractPage() {
     }
   };
   const handlePhotoRemove = (idx: number) => setPhotos(photos.filter((_, i) => i !== idx));
-
-  // 預授權處理
-  const handlePreauth = async () => {
-    if (preauthLoading) return;
-    setPreauthLoading(true);
-
-    try {
-      const response = await fetch(`/api/orders/${orderId}/deposit`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          depositAmount: depositAmount, // 修正：傳入正確的金額
-          clientBackURL: window.location.href // 傳送當前頁面URL
-        })
-      });
-      const result = await response.json();
-
-      if (result.success) {
-        // 檢測是否為手機裝置
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        
-        if (isMobile) {
-          // 手機版：顯示付款說明，然後直接跳轉
-          if (confirm('即將跳轉到付款頁面，付款完成後請點選「回到商店」回到此頁面。\n\n重要提醒：\n1. 請記住目前的網址以便返回\n2. 付款完成後點選「回到商店」\n3. 或直接開啟新分頁保存此頁面\n\n確定要繼續嗎？')) {
-            // 儲存當前頁面URL到sessionStorage，方便用戶返回
-            const currentUrl = window.location.href;
-            sessionStorage.setItem('contractPageUrl', currentUrl);
-            
-            // 手機版：直接在同一視窗跳轉到ECPay
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = result.ecpayUrl;
-            // 不設定target，直接在同一視窗跳轉
-
-            // 添加所有ECPay參數
-            Object.entries(result.paymentParams).forEach(([key, value]) => {
-              const input = document.createElement('input');
-              input.type = 'hidden';
-              input.name = key;
-              input.value = value as string;
-              form.appendChild(input);
-            });
-
-            document.body.appendChild(form);
-            form.submit();
-            document.body.removeChild(form);
-            
-            // 注意：這裡不能設定setDepositProcessing(true)，因為頁面會跳轉
-          } else {
-            setPreauthLoading(false);
-            return;
-          }
-        } else {
-          // 電腦版：在新分頁開啟
-          const form = document.createElement('form');
-          form.method = 'POST';
-          form.action = result.ecpayUrl;
-          form.target = '_blank';
-
-          // 添加所有ECPay參數
-          Object.entries(result.paymentParams).forEach(([key, value]) => {
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = key;
-            input.value = value as string;
-            form.appendChild(input);
-          });
-
-          document.body.appendChild(form);
-          form.submit();
-          document.body.removeChild(form);
-          
-          // 顯示等待付款狀態
-          setDepositProcessing(true);
-          alert('付款頁面已在新分頁開啟，請完成付款。\n\n此頁面將開始檢查付款狀態...');
-          
-          // 開始檢查付款狀態
-          startPaymentStatusChecker();
-        }
-      } else {
-        setDepositProcessing(false);
-        alert(`預授權失敗: ${result.message}`);
-      }
-    } catch (error) {
-      setDepositProcessing(false);
-      alert(`預授權失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
-    } finally {
-      setPreauthLoading(false);
-    }
-  };
-
-
 
   // 证件拍照（正面）- 簡單版本
   const handleIdFront = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1014,7 +791,7 @@ export default function ContractPage() {
   const canNext1 = photos.length >= 2;
   const canNext2 = !!idFront && !!idBack;
   const canNext3 = !!depositMode && validateIdNumber(idNumber) && validatePhoneNumber(phoneNumber);
-  const canNext4 = depositMode === 'preauth' ? depositPaid : true; // 預授權模式需完成付款，其他模式直接通過
+  const canNext4 = true; // 押金為現金收取，直接通過
 
   if (loading) return <div className="p-8 text-center">載入中...</div>;
   if (error) return <div className="p-8 text-center text-red-500">{error}</div>;
@@ -1177,14 +954,6 @@ export default function ContractPage() {
                   <span className="text-gray-900">現金 NT$3,000 + 身分證/護照/駕照正本，三選一</span>
                 </label>
               </div>
-              <div className="flex items-start">
-                <input type="radio" id="preauth" checked={depositMode==='preauth'} onChange={()=>setDepositMode('preauth')} className="mt-1 mr-2" />
-                <label htmlFor="preauth" className="flex-1">
-                  <span className="font-medium">🔒 預授權模式（需證件正本核對）：</span>
-                  <br/>
-                  <span className="text-gray-900">信用卡預授權 NT${phoneHighDepositAmount.toLocaleString()}，需核對證件正本</span>
-                </label>
-              </div>
             </div>
           </div>
           <div className="mb-4">
@@ -1205,63 +974,7 @@ export default function ContractPage() {
       )}
       {step === 4 && (
         <div>
-          <h2 className="text-lg font-bold mb-4">4. 保證金處理</h2>
-          
-          {depositMode === 'preauth' && (
-            <div className="mb-6">
-              <div className="p-4 bg-green-50 border border-green-200 rounded-lg mb-4">
-                <h3 className="font-semibold text-green-800 mb-2">🔒 預授權模式</h3>
-                <p className="text-green-700 text-sm mb-3">
-                  您選擇了預授權模式，需要完成信用卡預授權才能繼續簽署合約。
-                </p>
-                
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">預授權金額</label>
-                  <div className="flex items-center space-x-2">
-                    <span className="text-sm">NT$</span>
-                    <input
-                      type="number"
-                      value={depositAmount}
-                      onChange={(e) => setDepositAmount(parseInt(e.target.value) || 30000)}
-                      className="w-32 px-3 py-2 border border-gray-300 rounded-md"
-                      min="1000"
-                      max="50000"
-                      step="1000"
-                    />
-                    <button
-                      onClick={() => setDepositAmount(30000)}
-                      className="px-3 py-1 text-xs bg-gray-200 rounded"
-                    >
-                      重設為30000
-                    </button>
-                  </div>
-                </div>
-
-                {!depositPaid ? (
-                  <button
-                    onClick={handlePreauth}
-                    disabled={depositProcessing}
-                    className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
-                  >
-                    {depositProcessing ? '處理中...' : '開始預授權刷卡'}
-                  </button>
-                ) : (
-                  <div className="text-green-600 font-medium">
-                    ✅ 預授權完成（NT${depositAmount}）
-                  </div>
-                )}
-
-                {depositProcessing && (
-                  <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded">
-                    <div className="flex items-center">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
-                      <span className="text-blue-800 text-sm">預授權處理中，請在新開啟的視窗完成刷卡...</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
+          <h2 className="text-lg font-bold mb-4">4. 押金確認</h2>
 
           {depositMode === 'high' && (
             <div className="mb-6">
